@@ -3255,25 +3255,25 @@ export default function TradingGame() {
 
                                         <div style={styles.phoneStatusRight}>
                                             <svg
-                                                width="22"
-                                                height="16"
-                                                viewBox="0 0 22 16"
+                                                width="21"
+                                                height="18"
+                                                viewBox="0 0 21 18"
                                                 style={styles.statusSvg}
                                                 aria-label="Cellular signal"
                                             >
                                                 {[0, 1, 2, 3].map((bar) => {
-                                                    const heights = [4, 7, 10, 13];
-                                                    const x = 1 + bar * 5.05;
-                                                    const y = 15 - heights[bar];
+                                                    const heights = [4.4, 7.2, 10, 12.8];
+                                                    const x = 1.25 + bar * 4.7;
+                                                    const y = 15.4 - heights[bar];
 
                                                     return (
                                                         <rect
                                                             key={bar}
                                                             x={x}
                                                             y={y}
-                                                            width="3.7"
+                                                            width="3.25"
                                                             height={heights[bar]}
-                                                            rx="0.45"
+                                                            rx="0.35"
                                                             fill="currentColor"
                                                             opacity={bar < cellStrength ? 1 : 0.28}
                                                         />
@@ -3282,33 +3282,39 @@ export default function TradingGame() {
                                             </svg>
 
                                             <svg
-                                                width="23"
-                                                height="17"
-                                                viewBox="0 0 23 17"
+                                                width="21"
+                                                height="18"
+                                                viewBox="0 0 21 18"
                                                 style={styles.statusSvg}
                                                 aria-label="Wi-Fi"
                                             >
                                                 <path
-                                                    d="M2.15 5.05C7.2 0.95 15.8 0.95 20.85 5.05L18.45 7.35C14.65 4.45 8.35 4.45 4.55 7.35Z"
-                                                    fill="currentColor"
+                                                    d="M2.7 5.1C6.95 1.45 14.05 1.45 18.3 5.1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2.8"
+                                                    strokeLinecap="butt"
                                                     opacity={wifiStrength >= 3 ? 1 : 0.25}
                                                 />
                                                 <path
-                                                    d="M6.05 8.85C8.95 6.65 14.05 6.65 16.95 8.85L14.55 11.15C12.8 9.9 10.2 9.9 8.45 11.15Z"
-                                                    fill="currentColor"
+                                                    d="M5.95 8.45C8.55 6.3 12.45 6.3 15.05 8.45"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2.8"
+                                                    strokeLinecap="butt"
                                                     opacity={wifiStrength >= 2 ? 1 : 0.25}
                                                 />
                                                 <path
-                                                    d="M9.25 12.65C10.5 11.75 12.5 11.75 13.75 12.65L11.5 14.95Z"
+                                                    d="M8.75 11.8C9.65 11.15 11.35 11.15 12.25 11.8L10.5 13.65Z"
                                                     fill="currentColor"
                                                     opacity={wifiStrength >= 1 ? 1 : 0.25}
                                                 />
                                             </svg>
 
                                             <svg
-                                                width="34"
-                                                height="20"
-                                                viewBox="0 0 34 20"
+                                                width="31"
+                                                height="18"
+                                                viewBox="0 0 31 18"
                                                 style={styles.statusSvg}
                                                 aria-label="Battery"
                                             >
@@ -3316,43 +3322,43 @@ export default function TradingGame() {
                                                     <clipPath id="iphoneBatteryClip">
                                                         <rect
                                                             x="1"
-                                                            y="3"
-                                                            width="27.2"
-                                                            height="14"
-                                                            rx="3.2"
+                                                            y="2.75"
+                                                            width="25"
+                                                            height="12.5"
+                                                            rx="2.8"
                                                         />
                                                     </clipPath>
                                                 </defs>
 
                                                 <rect
                                                     x="1"
-                                                    y="3"
-                                                    width="27.2"
-                                                    height="14"
-                                                    rx="3.2"
+                                                    y="2.75"
+                                                    width="25"
+                                                    height="12.5"
+                                                    rx="2.8"
                                                     fill="rgba(255,255,255,0.34)"
                                                 />
 
                                                 <rect
                                                     x="1"
-                                                    y="3"
-                                                    width={`${Math.max(2, Math.min(27.2, ((batteryPercent ?? 67) / 100) * 27.2))}`}
-                                                    height="14"
+                                                    y="2.75"
+                                                    width={`${Math.max(2, Math.min(25, ((batteryPercent ?? 67) / 100) * 25))}`}
+                                                    height="12.5"
                                                     rx="0"
                                                     fill="rgba(255,255,255,0.96)"
                                                     clipPath="url(#iphoneBatteryClip)"
                                                 />
 
                                                 <path
-                                                    d="M29.45 7.35H30.1C30.95 7.35 31.45 8.45 31.45 10C31.45 11.55 30.95 12.65 30.1 12.65H29.45Z"
+                                                    d="M27.15 6.45H27.85C28.55 6.45 29 7.55 29 9C29 10.45 28.55 11.55 27.85 11.55H27.15Z"
                                                     fill="rgba(255,255,255,0.34)"
                                                 />
 
                                                 <text
-                                                    x="14.6"
-                                                    y="14.85"
+                                                    x="13.5"
+                                                    y="13.72"
                                                     textAnchor="middle"
-                                                    fontSize="13.15"
+                                                    fontSize="13.45"
                                                     fontWeight="900"
                                                     fill="#050505"
                                                     fontFamily="Arial, sans-serif"
@@ -4192,9 +4198,9 @@ const styles: Record<string, CSSProperties> = {
         boxSizing: "border-box", // <--- changed
     },
     phoneStatusBar: {
-        height: 42, // <--- changed
+        height: 44, // <--- changed
         display: "grid", // <--- changed
-        gridTemplateColumns: "1fr 84px 1.18fr", // <--- changed
+        gridTemplateColumns: "1fr 88px 1fr", // <--- changed: iPhone-style left / island / right alignment
         alignItems: "center", // <--- changed
         color: "#ffffff", // <--- changed
         fontSize: 13, // <--- changed
@@ -4202,19 +4208,20 @@ const styles: Record<string, CSSProperties> = {
         opacity: 0.96, // <--- changed
         position: "relative", // <--- changed
         zIndex: 2, // <--- changed
-        padding: "0 9px", // <--- changed
+        padding: "0 12px", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
     phoneStatusLeft: {
         display: "flex", // <--- changed
         justifyContent: "flex-start", // <--- changed
         alignItems: "center", // <--- changed
-        gap: 6, // <--- changed
+        gap: 5, // <--- changed
         letterSpacing: -0.45, // <--- changed
-        paddingLeft: 5, // <--- changed
+        paddingLeft: 3, // <--- changed
         fontSize: 15, // <--- changed
         fontWeight: 900, // <--- changed
         color: "#ffffff", // <--- changed
+        lineHeight: "18px", // <--- changed: aligns time with status icons
     },
     phoneLocationSvg: {
         color: "#ffffff", // <--- changed
@@ -4223,12 +4230,13 @@ const styles: Record<string, CSSProperties> = {
         filter: "drop-shadow(0 0 1px rgba(0,0,0,0.25))", // <--- changed
     },
     phoneDynamicIsland: {
-        width: 84, // <--- changed
+        width: 88, // <--- changed
         height: 25, // <--- changed
         borderRadius: 999, // <--- changed
         background: "#000000", // <--- changed
         boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)", // <--- changed
         justifySelf: "center", // <--- changed
+        alignSelf: "center", // <--- changed
         position: "relative", // <--- changed
     },
     phoneCameraDot: {
@@ -4246,14 +4254,18 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         justifyContent: "flex-end", // <--- changed
         alignItems: "center", // <--- changed
-        gap: 6, // <--- changed
-        paddingRight: 0, // <--- changed
+        gap: 4, // <--- changed: closes horizontal gap between service, Wi-Fi, and battery
+        paddingRight: 1, // <--- changed
         color: "#ffffff", // <--- changed
+        height: 18, // <--- changed: keeps all three icons on the same vertical center line
+        lineHeight: 0, // <--- changed
     },
     statusSvg: {
         display: "block", // <--- changed
         color: "#ffffff", // <--- changed
         flexShrink: 0, // <--- changed
+        height: 18, // <--- changed: normalizes status icon height
+        overflow: "visible", // <--- changed
         filter: "drop-shadow(0 0 1px rgba(0,0,0,0.18))", // <--- changed
     },
     phoneBlankContent: {
