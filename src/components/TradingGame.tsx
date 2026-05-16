@@ -121,13 +121,27 @@ function formatCountdown(seconds: number) {
     return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function getEasternTimeZoneLabel(date: Date) {
+function getMarketSessionName(timestamp: number) {
+    const date = new Date(timestamp);
+
     const parts = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/New_York",
-        timeZoneName: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
     }).formatToParts(date);
 
-    return parts.find((part) => part.type === "timeZoneName")?.value ?? "EST";
+    const hour = Number(parts.find((part) => part.type === "hour")?.value ?? 0);
+    const minute = Number(parts.find((part) => part.type === "minute")?.value ?? 0);
+    const minutes = hour * 60 + minute;
+
+    if (minutes >= 18 * 60 || minutes < 2 * 60) return "Asian"; // <--- changed
+    if (minutes >= 2 * 60 && minutes < 7 * 60) return "London"; // <--- changed
+    if (minutes >= 7 * 60 && minutes < 9 * 60 + 30) return "Pre New York"; // <--- changed
+    if (minutes >= 9 * 60 + 30 && minutes < 16 * 60) return "New York"; // <--- changed
+    if (minutes >= 16 * 60 && minutes < 18 * 60) return "After Hours"; // <--- changed
+
+    return "Market"; // <--- changed
 }
 
 function formatMarketDateTime(timestamp: number) {
@@ -148,7 +162,20 @@ function formatMarketDateTime(timestamp: number) {
         .replace(" AM", "")
         .replace(" PM", "");
 
-    return `${day} ${time} ${getEasternTimeZoneLabel(date)}`;
+    return `${day} ${time} ET • ${getMarketSessionName(timestamp)}`; // <--- changed
+}
+
+function getSimulatedMarketProgressMs(elapsedInside15mMs: number) {
+    const simulatedCandleDurationMs = TIMEFRAME_SECONDS["15m"] * 1000;
+    const realMarketCandleDurationMs = 15 * 60 * 1000;
+
+    const progress = clamp(
+        elapsedInside15mMs / simulatedCandleDurationMs,
+        0,
+        1
+    );
+
+    return progress * realMarketCandleDurationMs; // <--- changed
 }
 
 function formatMoney(value: number) {
@@ -1123,10 +1150,7 @@ export default function TradingGame() {
     }
 
     function deleteLivePositionSetup() {
-        setPosition(null); // <--- changed
-        setTakeProfit(null); // <--- changed
-        setStopLoss(null); // <--- changed
-        hidePositionControls(); // <--- changed
+        handleClosePosition(); // <--- changed: trash on live position closes order and realizes P/L
         dragModeRef.current = null; // <--- changed
         createExitMovedRef.current = false; // <--- changed
         isDraggingExitLineRef.current = false; // <--- changed
@@ -2233,8 +2257,8 @@ export default function TradingGame() {
 
     const marketDateTimeText = formatMarketDateTime(
         (market.activeCandleTimeMs ?? fallbackMarketSessionStartRef.current) +
-        Math.max(0, elapsedInsideCurrent15m)
-    ); // <--- changed
+        getSimulatedMarketProgressMs(Math.max(0, elapsedInsideCurrent15m))
+    ); // <--- changed: updates live during the candle
 
     useEffect(() => {
         const timer = setInterval(() => {
