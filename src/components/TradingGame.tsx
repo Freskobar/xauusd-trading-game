@@ -3470,17 +3470,21 @@ const styles: Record<string, CSSProperties> = {
     },
     marketTimeBlock: {
         background: "#050505", // <--- changed
-        borderTop: "1px solid rgba(255,255,255,0.06)", // <--- changed
+        borderTop: "none", // <--- changed
         borderBottom: "none", // <--- changed
-        padding: "8px 16px 10px", // <--- changed
+        padding: "2px 16px 10px", // <--- changed
+        marginTop: "-2px", // <--- changed
         display: "flex", // <--- changed
         flexDirection: "column", // <--- changed
-        alignItems: "flex-start", // <--- changed
-        gap: 3, // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        gap: 4, // <--- changed
+        textAlign: "center", // <--- changed
     },
     marketTimeLabel: {
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
         gap: 7, // <--- changed
         color: "#707070", // <--- changed
         fontSize: 10, // <--- changed
@@ -3489,6 +3493,7 @@ const styles: Record<string, CSSProperties> = {
         textTransform: "uppercase", // <--- changed
         whiteSpace: "nowrap", // <--- changed
         lineHeight: 1, // <--- changed
+        width: "100%", // <--- changed
     },
     liveDot: {
         width: 7, // <--- changed
@@ -3505,6 +3510,8 @@ const styles: Record<string, CSSProperties> = {
         letterSpacing: 0.2, // <--- changed
         whiteSpace: "nowrap", // <--- changed
         lineHeight: 1.15, // <--- changed
+        textAlign: "center", // <--- changed
+        width: "100%", // <--- changed
     },
     marketSessionValue: {
         color: "#14c78a", // <--- changed
@@ -3513,6 +3520,8 @@ const styles: Record<string, CSSProperties> = {
         letterSpacing: 0.3, // <--- changed
         whiteSpace: "nowrap", // <--- changed
         lineHeight: 1.1, // <--- changed
+        textAlign: "center", // <--- changed
+        width: "100%", // <--- changed
     },
     chartTools: {
         position: "relative", // <--- changed
