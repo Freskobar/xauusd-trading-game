@@ -3472,14 +3472,15 @@ const styles: Record<string, CSSProperties> = {
         background: "#050505", // <--- changed
         borderTop: "none", // <--- changed
         borderBottom: "none", // <--- changed
-        padding: "2px 16px 10px", // <--- changed
-        marginTop: "-2px", // <--- changed
+        padding: "0px 16px 2px", // <--- changed
+        marginTop: "-8px", // <--- changed
         display: "flex", // <--- changed
         flexDirection: "column", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        gap: 4, // <--- changed
+        gap: 1, // <--- changed
         textAlign: "center", // <--- changed
+        lineHeight: 1, // <--- changed
     },
     marketTimeLabel: {
         display: "flex", // <--- changed
@@ -3505,7 +3506,7 @@ const styles: Record<string, CSSProperties> = {
     },
     marketTimeValue: {
         color: "#ffffff", // <--- changed
-        fontSize: 14, // <--- changed
+        fontSize: 13, // <--- changed
         fontWeight: 900, // <--- changed
         letterSpacing: 0.2, // <--- changed
         whiteSpace: "nowrap", // <--- changed
@@ -3515,7 +3516,7 @@ const styles: Record<string, CSSProperties> = {
     },
     marketSessionValue: {
         color: "#14c78a", // <--- changed
-        fontSize: 12, // <--- changed
+        fontSize: 11, // <--- changed
         fontWeight: 900, // <--- changed
         letterSpacing: 0.3, // <--- changed
         whiteSpace: "nowrap", // <--- changed
