@@ -121,14 +121,14 @@ const HOME_APP_GRID_VERTICAL_OFFSET = 20; // <--- changed: moves the entire app 
 const HOME_SEARCH_WIDTH = 70; // <--- changed: width of the search bar
 const HOME_SEARCH_HEIGHT = 25; // <--- changed: height of the search bar
 const HOME_SEARCH_RADIUS = 999; // <--- changed: roundness of the search bar corners
-const HOME_SEARCH_VERTICAL_OFFSET = 30; // <--- changed: moves the search bar up/down
+const HOME_SEARCH_VERTICAL_OFFSET = 15; // <--- changed: moves the search bar up/down
 
-const HOME_DOCK_WIDTH =  800; // <--- changed: width of the dock/background bar
+const HOME_DOCK_WIDTH = 300; // <--- changed: width of the dock/background bar
 const HOME_DOCK_APP_SIZE = HOME_APP_SIZE; // <--- changed: size of dock apps/icons
-const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 30; // <--- changed: height of the dock
+const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 20; // <--- changed: height of the dock
 const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
-const HOME_DOCK_VERTICAL_OFFSET = 50; // <--- changed: moves the dock up/down
-const HOME_DOCK_APP_HORIZONTAL_GAP = HOME_APP_GRID_GAP; // <--- changed: space between dock apps
+const HOME_DOCK_VERTICAL_OFFSET = 42; // <--- changed: moves the dock up/down
+const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -601,6 +601,145 @@ function fallbackCandles(): CsvCandle[] {
     return candles;
 }
 
+
+
+function PhoneServiceSvg({ strength = 4 }: { strength?: number }) {
+    return (
+        <svg
+            width="21"
+            height="18"
+            viewBox="0 0 21 18"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            shapeRendering="geometricPrecision"
+            style={{ display: "block", overflow: "visible" }}
+            aria-label="Cellular signal"
+        >
+            {[0, 1, 2, 3].map((bar) => {
+                const heights = [4.4, 7.2, 10, 12.8];
+                const x = 1.25 + bar * 4.7;
+                const y = 15.4 - heights[bar];
+
+                return (
+                    <rect
+                        key={bar}
+                        x={x}
+                        y={y}
+                        width="3.25"
+                        height={heights[bar]}
+                        rx="0.35"
+                        fill="currentColor"
+                        opacity={bar < strength ? 1 : 0.28}
+                    />
+                );
+            })}
+        </svg>
+    );
+}
+
+function PhoneWifiSvg({ strength = 3 }: { strength?: number }) {
+    return (
+        <svg
+            width="21"
+            height="18"
+            viewBox="0 0 21 18"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            shapeRendering="geometricPrecision"
+            style={{ display: "block", overflow: "visible" }}
+            aria-label="Wi-Fi"
+            preserveAspectRatio="xMidYMid meet"
+        >
+            <path
+                d="M2.65 5.25C6.9 1.45 14.1 1.45 18.35 5.25L16.3 7.25C12.95 4.45 8.05 4.45 4.7 7.25Z"
+                fill="currentColor"
+                opacity={strength >= 3 ? 1 : 0.25}
+            />
+            <path
+                d="M5.8 8.95C8.45 6.7 12.55 6.7 15.2 8.95L13.15 10.95C11.55 9.65 9.45 9.65 7.85 10.95Z"
+                fill="currentColor"
+                opacity={strength >= 2 ? 1 : 0.25}
+            />
+            <path
+                d="M8.65 12.55C9.65 11.65 11.35 11.65 12.35 12.55L10.5 14.45Z"
+                fill="currentColor"
+                opacity={strength >= 1 ? 1 : 0.25}
+            />
+        </svg>
+    );
+}
+
+function PhoneBatterySvg({ percent }: { percent: number | null }) {
+    const safePercent = Math.max(0, Math.min(100, percent ?? 67));
+    const fillWidth = Math.max(2, Math.min(25, (safePercent / 100) * 25));
+
+    return (
+        <svg
+            width="31"
+            height="18"
+            viewBox="0 0 31 18"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            shapeRendering="geometricPrecision"
+            style={{ display: "block", overflow: "visible" }}
+            aria-label="Battery"
+        >
+            <defs>
+                <clipPath id="iphoneBatteryClipCrisp">
+                    <rect
+                        x="1"
+                        y="2.75"
+                        width="25"
+                        height="12.5"
+                        rx="2.8"
+                    />
+                </clipPath>
+            </defs>
+
+            <rect
+                x="1"
+                y="2.75"
+                width="25"
+                height="12.5"
+                rx="2.8"
+                fill="rgba(255,255,255,0.34)"
+            />
+
+            <rect
+                x="1"
+                y="2.75"
+                width={fillWidth}
+                height="12.5"
+                rx="0"
+                fill="rgba(255,255,255,0.96)"
+                clipPath="url(#iphoneBatteryClipCrisp)"
+            />
+
+            <path
+                d="M27.15 6.45H27.85C28.55 6.45 29 7.55 29 9C29 10.45 28.55 11.55 27.85 11.55H27.15Z"
+                fill="rgba(255,255,255,0.34)"
+            />
+
+            <text
+                x="13.5"
+                y="13.72"
+                textAnchor="middle"
+                fontSize={typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) > 768 ? "10.9" : "12.4"}
+                fontWeight="900"
+                fill="#050505"
+                fontFamily="Arial, sans-serif"
+                style={{
+                    WebkitFontSmoothing: "antialiased",
+                    textRendering: "geometricPrecision",
+                }}
+            >
+                {safePercent}
+            </text>
+        </svg>
+    );
+}
+
+
 export default function TradingGame() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const appStartRef = useRef(Date.now());
@@ -629,6 +768,7 @@ export default function TradingGame() {
     const [quantity, setQuantity] = useState(1);
     const [now, setNow] = useState(Date.now());
     const [isLandscape, setIsLandscape] = useState(false); // <--- changed
+    const [isDesktopStatusRender, setIsDesktopStatusRender] = useState(false); // <--- changed: desktop-only fake phone status bar polish
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
     const [phoneClosing, setPhoneClosing] = useState(false); // <--- changed
@@ -2405,6 +2545,8 @@ export default function TradingGame() {
             setIsLandscape(
                 isPhoneSizedScreen && window.innerWidth > window.innerHeight
             ); // <--- changed: desktop PC should never show rotate blocker
+
+            setIsDesktopStatusRender(!isPhoneSizedScreen); // <--- changed: desktop-only fake phone status bar polish
         };
 
         document.documentElement.style.overflow = "hidden";
@@ -3290,7 +3432,7 @@ export default function TradingGame() {
                                 onClick={(event) => event.stopPropagation()}
                             >
                                 <div style={styles.phoneDevice}>
-                                    <div style={styles.phoneStatusBar}>
+                                    <div style={{ ...styles.phoneStatusBar, ...(isDesktopStatusRender ? styles.phoneStatusBarDesktop : {}) }}>
                                         <div style={styles.phoneStatusLeft}>
                                             <span>{phoneStatusTime}</span>
 
@@ -3315,115 +3457,10 @@ export default function TradingGame() {
                                         </div>
 
                                         <div style={styles.phoneStatusRight}>
-                                            <svg
-                                                width="21"
-                                                height="18"
-                                                viewBox="0 0 21 18"
-                                                style={styles.statusSvg}
-                                                aria-label="Cellular signal"
-                                            >
-                                                {[0, 1, 2, 3].map((bar) => {
-                                                    const heights = [4.4, 7.2, 10, 12.8];
-                                                    const x = 1.25 + bar * 4.7;
-                                                    const y = 15.4 - heights[bar];
-
-                                                    return (
-                                                        <rect
-                                                            key={bar}
-                                                            x={x}
-                                                            y={y}
-                                                            width="3.25"
-                                                            height={heights[bar]}
-                                                            rx="0.35"
-                                                            fill="currentColor"
-                                                            opacity={bar < cellStrength ? 1 : 0.28}
-                                                        />
-                                                    );
-                                                })}
-                                            </svg>
-
-                                            <svg
-                                                width="21"
-                                                height="18"
-                                                viewBox="0 0 21 18"
-                                                style={styles.statusSvg}
-                                                aria-label="Wi-Fi"
-                                                preserveAspectRatio="xMidYMid meet"
-                                            >
-                                                <path
-                                                    d="M2.65 5.25C6.9 1.45 14.1 1.45 18.35 5.25L16.3 7.25C12.95 4.45 8.05 4.45 4.7 7.25Z"
-                                                    fill="currentColor"
-                                                    opacity={wifiStrength >= 3 ? 1 : 0.25}
-                                                />
-                                                <path
-                                                    d="M5.8 8.95C8.45 6.7 12.55 6.7 15.2 8.95L13.15 10.95C11.55 9.65 9.45 9.65 7.85 10.95Z"
-                                                    fill="currentColor"
-                                                    opacity={wifiStrength >= 2 ? 1 : 0.25}
-                                                />
-                                                <path
-                                                    d="M8.65 12.55C9.65 11.65 11.35 11.65 12.35 12.55L10.5 14.45Z"
-                                                    fill="currentColor"
-                                                    opacity={wifiStrength >= 1 ? 1 : 0.25}
-                                                />
-                                            </svg>
-
-                                            <svg
-                                                width="31"
-                                                height="18"
-                                                viewBox="0 0 31 18"
-                                                style={styles.statusSvg}
-                                                aria-label="Battery"
-                                            >
-                                                <defs>
-                                                    <clipPath id="iphoneBatteryClip">
-                                                        <rect
-                                                            x="1"
-                                                            y="2.75"
-                                                            width="25"
-                                                            height="12.5"
-                                                            rx="2.8"
-                                                        />
-                                                    </clipPath>
-                                                </defs>
-
-                                                <rect
-                                                    x="1"
-                                                    y="2.75"
-                                                    width="25"
-                                                    height="12.5"
-                                                    rx="2.8"
-                                                    fill="rgba(255,255,255,0.34)"
-                                                />
-
-                                                <rect
-                                                    x="1"
-                                                    y="2.75"
-                                                    width={`${Math.max(2, Math.min(25, ((batteryPercent ?? 67) / 100) * 25))}`}
-                                                    height="12.5"
-                                                    rx="0"
-                                                    fill="rgba(255,255,255,0.96)"
-                                                    clipPath="url(#iphoneBatteryClip)"
-                                                />
-
-                                                <path
-                                                    d="M27.15 6.45H27.85C28.55 6.45 29 7.55 29 9C29 10.45 28.55 11.55 27.85 11.55H27.15Z"
-                                                    fill="rgba(255,255,255,0.34)"
-                                                />
-
-                                                <text
-                                                    x="13.5"
-                                                    y="13.72"
-                                                    textAnchor="middle"
-                                                    fontSize="13.45"
-                                                    fontWeight="900"
-                                                    fill="#050505"
-                                                    fontFamily="Arial, sans-serif"
-                                                >
-                                                    {batteryPercent ?? 67}
-                                                </text>
-                                            </svg>
-                                        </div>
-                                    </div>
+                                            <PhoneServiceSvg strength={cellStrength} /> {/* <--- changed: crisp SVG status icon */}
+                                            <PhoneWifiSvg strength={wifiStrength} /> {/* <--- changed: crisp SVG status icon */}
+                                            <PhoneBatterySvg percent={batteryPercent} /> {/* <--- changed: crisp SVG status icon */}
+                                        </div>                                    </div>
 
                                     <div style={styles.phoneHomeScreen}> {/* <--- changed */}
                                         <div style={styles.phoneAppGrid}> {/* <--- changed */}
@@ -4301,6 +4338,25 @@ const styles: Record<string, CSSProperties> = {
         padding: "0 12px", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
+    phoneStatusBarDesktop: {
+        height: 32, // <--- changed: desktop-only status bar height
+        padding: "0 16px", // <--- changed: desktop-only cleaner spacing
+        WebkitFontSmoothing: "antialiased", // <--- changed
+        textRendering: "geometricPrecision", // <--- changed
+    },
+    phoneStatusTimeDesktop: {
+        fontSize: 13.5, // <--- changed: desktop-only larger time
+        fontWeight: 850, // <--- changed
+        letterSpacing: "-0.15px", // <--- changed
+        opacity: 0.98, // <--- changed
+    },
+    phoneStatusIconsDesktop: {
+        gap: 7, // <--- changed: desktop-only cleaner icon spacing
+        opacity: 0.98, // <--- changed
+    },
+    phoneStatusIconDesktop: {
+        opacity: 0.98, // <--- changed: no transform scaling; preserves crisp original sizing
+    },
     phoneStatusLeft: {
         display: "flex", // <--- changed
         justifyContent: "flex-start", // <--- changed
@@ -4344,11 +4400,12 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         justifyContent: "flex-end", // <--- changed
         alignItems: "center", // <--- changed
-        gap: 4, // <--- changed: closes horizontal gap between service, Wi-Fi, and battery
-        paddingRight: 1, // <--- changed
+        gap: 2, // <--- changed: closer to original iPhone-style spacing
         color: "#ffffff", // <--- changed
-        height: 18, // <--- changed: keeps all three icons on the same vertical center line
-        lineHeight: 0, // <--- changed
+        height: 18, // <--- changed
+        overflow: "visible", // <--- changed
+        WebkitFontSmoothing: "antialiased", // <--- changed
+        textRendering: "geometricPrecision", // <--- changed
     },
     statusSvg: {
         display: "block", // <--- changed
