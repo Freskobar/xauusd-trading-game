@@ -431,6 +431,7 @@ export default function TradingGame() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const appStartRef = useRef(Date.now());
     const csvCandlesRef = useRef<CsvCandle[]>([]);
+    const pausedAtRef = useRef<number | null>(null); // <--- changed
 
     const [balance, setBalance] = useState(10000);
     const [timeframe, setTimeframe] = useState("15m");
@@ -438,6 +439,7 @@ export default function TradingGame() {
     const [now, setNow] = useState(Date.now());
     const [isLandscape, setIsLandscape] = useState(false); // <--- changed
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
+    const [simulationPaused, setSimulationPaused] = useState(false); // <--- changed
     const [bullCandleColor, setBullCandleColor] = useState(GREEN); // <--- changed
     const [bearCandleColor, setBearCandleColor] = useState(RED); // <--- changed
     const [visibleTimeframes, setVisibleTimeframes] = useState<Record<string, boolean>>({ // <--- changed
@@ -614,6 +616,22 @@ export default function TradingGame() {
             hidePositionControls(); // <--- changed
         }
     }, [position, price, takeProfit, stopLoss]);
+
+    function handleToggleSimulationPause() {
+        setSimulationPaused((prev) => {
+            const nextPaused = !prev;
+
+            if (nextPaused) {
+                pausedAtRef.current = Date.now(); // <--- changed
+            } else if (pausedAtRef.current !== null) {
+                const pausedDuration = Date.now() - pausedAtRef.current;
+                appStartRef.current += pausedDuration; // <--- changed: prevents candle timer jump after resume
+                pausedAtRef.current = null;
+            }
+
+            return nextPaused;
+        });
+    }
 
     function toggleTimeframeVisibility(tf: string) {
         setVisibleTimeframes((prev) => {
@@ -2114,7 +2132,8 @@ export default function TradingGame() {
     const base15mMs = TIMEFRAME_SECONDS["15m"] * 1000;
     const completedInSelectedCandle = market.active15mIndex % selectedGroupSize;
     const remainingBaseCandles = selectedGroupSize - completedInSelectedCandle;
-    const elapsedInsideCurrent15m = now - appStartRef.current;
+    const effectiveNow = simulationPaused && pausedAtRef.current !== null ? pausedAtRef.current : now; // <--- changed
+    const elapsedInsideCurrent15m = effectiveNow - appStartRef.current;
 
     const remainingMs =
         remainingBaseCandles * base15mMs - elapsedInsideCurrent15m;
@@ -2125,11 +2144,13 @@ export default function TradingGame() {
 
     useEffect(() => {
         const timer = setInterval(() => {
-            setNow(Date.now());
+            if (!simulationPaused) {
+                setNow(Date.now());
+            }
         }, 250);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [simulationPaused]);
 
     useEffect(() => {
         const preventContextMenu = (event: Event) => event.preventDefault();
@@ -2178,6 +2199,8 @@ export default function TradingGame() {
 
     useEffect(() => {
         const tickInterval = setInterval(() => {
+            if (simulationPaused) return; // <--- changed
+
             setMarket((prev) => {
                 if (!prev.loaded || !prev.plannedCandle) return prev;
 
@@ -2206,10 +2229,12 @@ export default function TradingGame() {
         }, 120);
 
         return () => clearInterval(tickInterval);
-    }, [base15mMs]);
+    }, [base15mMs, simulationPaused]);
 
     useEffect(() => {
         const closeInterval = setInterval(() => {
+            if (simulationPaused) return; // <--- changed
+
             setMarket((prev) => {
                 if (!prev.loaded || !prev.plannedCandle) return prev;
 
@@ -2270,7 +2295,7 @@ export default function TradingGame() {
         }, TIMEFRAME_SECONDS["15m"] * 1000);
 
         return () => clearInterval(closeInterval);
-    }, []);
+    }, [simulationPaused]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -2896,7 +2921,9 @@ export default function TradingGame() {
                         aria-label="Chart settings"
                     >
                         <span style={styles.settingsIcon}>
-                            <span style={styles.settingsGearOuter}>⚙</span>
+                            <span style={styles.settingsCogRing}>
+                                <span style={styles.settingsCogDot} />
+                            </span>
                         </span>
                     </button>
 
@@ -2980,6 +3007,21 @@ export default function TradingGame() {
                 </div>
 
                 <div style={styles.chartWrap}>
+                    <button
+                        style={styles.pauseButton}
+                        onClick={handleToggleSimulationPause}
+                        aria-label={simulationPaused ? "Resume simulation" : "Pause simulation"}
+                    >
+                        {simulationPaused ? (
+                            <span style={styles.playIcon} />
+                        ) : (
+                            <span style={styles.pauseIcon}>
+                                <span style={styles.pauseBar} />
+                                <span style={styles.pauseBar} />
+                            </span>
+                        )}
+                    </button>
+
                     <canvas
                         ref={canvasRef}
                         onMouseDown={handleChartMouseDown}
@@ -3232,9 +3274,24 @@ const styles: Record<string, CSSProperties> = {
         fontSize: 16, // <--- changed
         lineHeight: 1, // <--- changed
     },
-    settingsGearOuter: {
+    settingsCogRing: {
+        width: 17, // <--- changed
+        height: 17, // <--- changed
+        border: "2px solid #ffffff", // <--- changed
+        borderRadius: 999, // <--- changed
+        position: "relative", // <--- changed
         display: "block", // <--- changed
-        transform: "translateY(-0.5px)", // <--- changed
+        boxSizing: "border-box", // <--- changed
+    },
+    settingsCogDot: {
+        position: "absolute", // <--- changed
+        width: 5, // <--- changed
+        height: 5, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "#ffffff", // <--- changed
+        left: "50%", // <--- changed
+        top: "50%", // <--- changed
+        transform: "translate(-50%, -50%)", // <--- changed
     },
     settingsMenu: {
         position: "absolute", // <--- changed
@@ -3363,6 +3420,47 @@ const styles: Record<string, CSSProperties> = {
         flex: 1,
         minHeight: 0,
         background: "#050505",
+        position: "relative", // <--- changed
+    },
+    pauseButton: {
+        position: "absolute", // <--- changed
+        right: 16, // <--- changed
+        bottom: 18, // <--- changed
+        width: 44, // <--- changed
+        height: 44, // <--- changed
+        borderRadius: 16, // <--- changed
+        border: "1px solid rgba(255,255,255,0.14)", // <--- changed
+        background: "rgba(18,18,18,0.82)", // <--- changed
+        boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
+        backdropFilter: "blur(10px)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        cursor: "pointer", // <--- changed
+        zIndex: 20, // <--- changed
+        padding: 0, // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    pauseIcon: {
+        display: "flex", // <--- changed
+        gap: 5, // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+    },
+    pauseBar: {
+        width: 5, // <--- changed
+        height: 18, // <--- changed
+        borderRadius: 4, // <--- changed
+        background: "#ffffff", // <--- changed
+        display: "block", // <--- changed
+    },
+    playIcon: {
+        width: 0, // <--- changed
+        height: 0, // <--- changed
+        borderTop: "9px solid transparent", // <--- changed
+        borderBottom: "9px solid transparent", // <--- changed
+        borderLeft: "14px solid #ffffff", // <--- changed
+        transform: "translateX(2px)", // <--- changed
     },
     tradePanel: {
         background: "#1b1b1b",
