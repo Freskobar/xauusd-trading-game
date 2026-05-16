@@ -120,6 +120,36 @@ function formatCountdown(seconds: number) {
     return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+function getEasternTimeZoneLabel(date: Date) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        timeZoneName: "short",
+    }).formatToParts(date);
+
+    return parts.find((part) => part.type === "timeZoneName")?.value ?? "EST";
+}
+
+function formatMarketDateTime(timestamp: number) {
+    const date = new Date(timestamp);
+
+    const day = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        weekday: "long",
+    }).format(date);
+
+    const time = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    })
+        .format(date)
+        .replace(" AM", "")
+        .replace(" PM", "");
+
+    return `${day} ${time} ${getEasternTimeZoneLabel(date)}`;
+}
+
 function formatMoney(value: number) {
     const sign = value < 0 ? "-" : "";
     const formattedValue = Math.round(Math.abs(value)).toLocaleString("en-US"); // <--- changed
@@ -430,6 +460,7 @@ function fallbackCandles(): CsvCandle[] {
 export default function TradingGame() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const appStartRef = useRef(Date.now());
+    const marketSessionStartRef = useRef(new Date("2026-05-18T08:30:00-04:00").getTime()); // <--- changed
     const csvCandlesRef = useRef<CsvCandle[]>([]);
     const pauseStartedAtRef = useRef<number | null>(null); // <--- changed
     const totalPausedMsRef = useRef(0); // <--- changed
@@ -2171,6 +2202,12 @@ export default function TradingGame() {
         Math.ceil(Math.max(0, remainingMs) / 1000)
     );
 
+    const marketDateTimeText = formatMarketDateTime(
+        marketSessionStartRef.current +
+        market.active15mIndex * 15 * 60 * 1000 +
+        Math.max(0, elapsedInsideCurrent15m)
+    ); // <--- changed
+
     useEffect(() => {
         const timer = setInterval(() => {
             setNow(Date.now()); // <--- changed: keep UI clock alive; countdown is frozen by pause math
@@ -2556,6 +2593,18 @@ export default function TradingGame() {
             drawExitLine(stopLoss, "line");
         }
 
+        // <--- changed: current price line now renders behind candles
+        const backgroundPriceY = priceToY(price);
+
+        ctx.strokeStyle = "rgba(255,255,255,0.35)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(0, backgroundPriceY);
+        ctx.lineTo(width, backgroundPriceY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
         visible.forEach((c, i) => {
             const x = startX + i * candleStep;
             const color = c.close >= c.open ? bullCandleColor : bearCandleColor; // <--- changed
@@ -2813,15 +2862,6 @@ export default function TradingGame() {
         drawPositionControls(); // <--- changed
         const priceY = priceToY(price);
 
-        ctx.strokeStyle = "rgba(255,255,255,0.35)";
-        ctx.lineWidth = 1;
-        ctx.setLineDash([]); // <--- changed: current price line is solid
-        ctx.beginPath();
-        ctx.moveTo(0, priceY);
-        ctx.lineTo(width, priceY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
         const labelW = priceLabelWidth;
         const labelH = priceLabelHeight;
         const labelX = width - labelW - priceLabelRight;
@@ -2944,6 +2984,17 @@ export default function TradingGame() {
                                 {tf}
                             </button>
                         ))}
+                </div>
+
+                <div style={styles.marketTimeBar}> {/* <--- changed */}
+                    <div style={styles.marketTimeLeft}>
+                        <span style={styles.liveDot} />
+                        MARKET TIME
+                    </div>
+
+                    <div style={styles.marketTimeValue}>
+                        {marketDateTimeText}
+                    </div>
                 </div>
 
                 <div style={styles.chartTools}> {/* <--- changed */}
@@ -3290,6 +3341,43 @@ const styles: Record<string, CSSProperties> = {
         fontSize: 16,
         fontWeight: 700,
         cursor: "pointer",
+    },
+    marketTimeBar: {
+        height: 38, // <--- changed
+        background: "linear-gradient(180deg, #101010 0%, #070707 100%)", // <--- changed
+        borderBottom: "1px solid rgba(255,255,255,0.06)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "space-between", // <--- changed
+        padding: "0 16px", // <--- changed
+        gap: 12, // <--- changed
+    },
+    marketTimeLeft: {
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 7, // <--- changed
+        color: "#707070", // <--- changed
+        fontSize: 10, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: 0.8, // <--- changed
+        textTransform: "uppercase", // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+    },
+    liveDot: {
+        width: 7, // <--- changed
+        height: 7, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "#14c78a", // <--- changed
+        boxShadow: "0 0 12px rgba(20,199,138,0.85)", // <--- changed
+        display: "inline-block", // <--- changed
+    },
+    marketTimeValue: {
+        color: "#ffffff", // <--- changed
+        fontSize: 13, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: 0.2, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        textAlign: "right", // <--- changed
     },
     chartTools: {
         position: "relative", // <--- changed
