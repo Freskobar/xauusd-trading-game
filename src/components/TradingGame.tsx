@@ -436,7 +436,7 @@ export default function TradingGame() {
 
     function getSimElapsedMs() {
         const currentPauseDuration =
-            simulationPaused && pauseStartedAtRef.current !== null
+            simulationPausedRef.current && pauseStartedAtRef.current !== null
                 ? Date.now() - pauseStartedAtRef.current
                 : 0;
 
@@ -456,6 +456,7 @@ export default function TradingGame() {
     const [isLandscape, setIsLandscape] = useState(false); // <--- changed
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [simulationPaused, setSimulationPaused] = useState(false); // <--- changed
+    const simulationPausedRef = useRef(false); // <--- changed
     const [bullCandleColor, setBullCandleColor] = useState(GREEN); // <--- changed
     const [bearCandleColor, setBearCandleColor] = useState(RED); // <--- changed
     const [visibleTimeframes, setVisibleTimeframes] = useState<Record<string, boolean>>({ // <--- changed
@@ -533,7 +534,7 @@ export default function TradingGame() {
     }, [position, balance, openPnl]);
 
     useEffect(() => {
-        if (!pendingOrder || !pendingOrder.confirmed || position) return;
+        if (!pendingOrder || !pendingOrder.confirmed || position || balance <= 0) return; // <--- changed
 
         const fillTolerance = 0.00001; // <--- changed
 
@@ -573,7 +574,7 @@ export default function TradingGame() {
         setPendingOrder(null);
         setShowPositionControls(false); // <--- changed
         setPositionControlsOpacity(0); // <--- changed
-    }, [pendingOrder, position, price]);
+    }, [pendingOrder, position, price, balance]);
 
     useEffect(() => {
         if (!position) return;
@@ -636,6 +637,7 @@ export default function TradingGame() {
     function handleToggleSimulationPause() {
         setSimulationPaused((prev) => {
             const nextPaused = !prev;
+            simulationPausedRef.current = nextPaused; // <--- changed
 
             if (nextPaused) {
                 pauseStartedAtRef.current = Date.now(); // <--- changed
@@ -687,8 +689,12 @@ export default function TradingGame() {
         setTimeframe("15m");
     }
 
+    function canPlaceTrade() {
+        return balance > 0 && !position; // <--- changed
+    }
+
     function handleBuy() {
-        if (position) return;
+        if (!canPlaceTrade()) return; // <--- changed
 
         setPosition({
             side: "long",
@@ -706,7 +712,7 @@ export default function TradingGame() {
     }
 
     function handleSell() {
-        if (position) return;
+        if (!canPlaceTrade()) return; // <--- changed
 
         setPosition({
             side: "short",
@@ -957,7 +963,7 @@ export default function TradingGame() {
     }
 
     function handlePendingOrderButton() {
-        if (position) return;
+        if (!canPlaceTrade()) return; // <--- changed
 
         if (pendingOrder) {
             setPendingOrder((prev) =>
@@ -2220,7 +2226,7 @@ export default function TradingGame() {
 
     useEffect(() => {
         const tickInterval = setInterval(() => {
-            if (simulationPaused) return; // <--- changed
+            if (simulationPausedRef.current) return; // <--- changed
 
             setMarket((prev) => {
                 if (!prev.loaded || !prev.plannedCandle) return prev;
@@ -2254,7 +2260,7 @@ export default function TradingGame() {
 
     useEffect(() => {
         const closeInterval = setInterval(() => {
-            if (simulationPaused) return; // <--- changed
+            if (simulationPausedRef.current) return; // <--- changed
 
             const elapsed = getSimElapsedMs(); // <--- changed
             if (elapsed < TIMEFRAME_SECONDS["15m"] * 1000) return; // <--- changed
@@ -2321,7 +2327,7 @@ export default function TradingGame() {
         }, 120); // <--- changed
 
         return () => clearInterval(closeInterval);
-    }, [simulationPaused]);
+    }, []);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -3120,16 +3126,31 @@ export default function TradingGame() {
                         </>
                     ) : (
                         <>
-                            <button style={styles.buy} onClick={handleBuy}>
+                            <button
+                                style={{
+                                    ...styles.buy,
+                                    opacity: balance > 0 ? 1 : 0.35, // <--- changed
+                                }}
+                                onClick={handleBuy}
+                            >
                                 BUY
                             </button>
 
-                            <button style={styles.sell} onClick={handleSell}>
+                            <button
+                                style={{
+                                    ...styles.sell,
+                                    opacity: balance > 0 ? 1 : 0.35, // <--- changed
+                                }}
+                                onClick={handleSell}
+                            >
                                 SELL
                             </button>
 
                             <button
-                                style={styles.pendingOrder}
+                                style={{
+                                    ...styles.pendingOrder,
+                                    opacity: balance > 0 ? 1 : 0.35, // <--- changed
+                                }}
                                 onClick={handlePendingOrderButton}
                             >
                                 PENDING ORDER
