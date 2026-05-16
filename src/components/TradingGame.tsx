@@ -133,13 +133,8 @@ const HOME_DOCK_APP_HORIZONTAL_GAP = HOME_APP_GRID_GAP; // <--- changed: space b
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
 const HOME_APP_GRID_WIDTH = HOME_APP_GRID_COLUMNS * HOME_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_APP_GRID_GAP; // <--- changed: fixed app grid width so iPhone Safari cannot stretch gaps
-const HOME_HOME_SAFE_SIDE_PADDING = 14; // <--- changed: keeps home apps/dock from touching or clipping against phone edges
-const HOME_PHONE_AVAILABLE_WIDTH = `calc(100% - ${HOME_HOME_SAFE_SIDE_PADDING * 2}px)`; // <--- changed: real iPhone safe width
-const HOME_LAYOUT_SCALE = `min(1, calc((100% - ${HOME_HOME_SAFE_SIDE_PADDING * 2}px) / ${Math.max(HOME_APP_GRID_WIDTH, HOME_DOCK_WIDTH)}))`; // <--- changed: scales full home layout down only when needed
-const HOME_DOCK_CONTENT_WIDTH = HOME_APP_GRID_COLUMNS * HOME_DOCK_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_DOCK_APP_HORIZONTAL_GAP; // <--- changed: fixed dock content width
-
-
-
+const HOME_SAFE_SIDE_PADDING = 14; // <--- changed: keeps layout away from phone edges without scaling everything
+const HOME_SAFE_WIDTH = `calc(100% - ${HOME_SAFE_SIDE_PADDING * 2}px)`; // <--- changed: available phone width
 
 function formatCountdown(seconds: number) {
     const safeSeconds = Math.max(0, seconds);
@@ -4371,7 +4366,8 @@ const styles: Record<string, CSSProperties> = {
         overflow: "hidden", // <--- changed
     },
     phoneAppGrid: {
-        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed grid width so iPhone cannot stretch gaps
+        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed grid width on PC
+        maxWidth: HOME_SAFE_WIDTH, // <--- changed: prevents iPhone side clipping
         display: "grid", // <--- changed
         gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_APP_SIZE}px)`, // <--- changed: exact app columns
         gridTemplateRows: `repeat(${HOME_APP_GRID_ROWS}, auto)`, // <--- changed: exact 5 rows
@@ -4382,8 +4378,8 @@ const styles: Record<string, CSSProperties> = {
         position: "absolute", // <--- changed
         top: HOME_APP_GRID_VERTICAL_OFFSET, // <--- changed: app grid vertical knob
         left: "50%", // <--- changed
-        transform: `translateX(-50%) scale(${HOME_LAYOUT_SCALE})`, // <--- changed: prevents iPhone left/right clipping
-        transformOrigin: "center top", // <--- changed
+        transform: "translateX(-50%)", // <--- changed
+        overflow: "visible", // <--- changed
         minHeight: 0, // <--- changed
     },
     phoneAppSlot: {
@@ -4445,8 +4441,7 @@ const styles: Record<string, CSSProperties> = {
         position: "absolute", // <--- changed: prevents iPhone Safari flex spacing drift
         left: "50%", // <--- changed
         bottom: HOME_DOCK_VERTICAL_OFFSET + HOME_DOCK_HEIGHT + HOME_SEARCH_VERTICAL_OFFSET, // <--- changed: search vertical offset knob
-        transform: `translateX(-50%) scale(${HOME_LAYOUT_SCALE})`, // <--- changed: matches scaled home layout
-        transformOrigin: "center bottom", // <--- changed
+        transform: "translateX(-50%)", // <--- changed
         background: "rgba(255,255,255,0.22)", // <--- changed
         color: "rgba(255,255,255,0.86)", // <--- changed
         backdropFilter: "blur(12px)", // <--- changed
@@ -4465,27 +4460,22 @@ const styles: Record<string, CSSProperties> = {
         transform: "translateY(-0.5px)", // <--- changed
     },
     phoneDock: {
-        width: HOME_DOCK_WIDTH, // <--- changed: dock width knob
-        maxWidth: HOME_PHONE_AVAILABLE_WIDTH, // <--- changed: prevents dock clipping on narrow iPhones
+        width: `min(${HOME_DOCK_WIDTH}px, calc(100% - ${HOME_SAFE_SIDE_PADDING * 2}px))`, // <--- changed: dock width knob capped to phone safe width
         height: HOME_DOCK_HEIGHT, // <--- changed: dock height knob
         borderRadius: HOME_DOCK_RADIUS, // <--- changed
         position: "absolute", // <--- changed: fixed dock placement on PC + iPhone
         left: "50%", // <--- changed
         bottom: HOME_DOCK_VERTICAL_OFFSET, // <--- changed: dock vertical knob
-        transform: `translateX(-50%) scale(${HOME_LAYOUT_SCALE})`, // <--- changed: prevents dock left/right clipping on iPhone
-        transformOrigin: "center bottom", // <--- changed
+        transform: "translateX(-50%)", // <--- changed
         background: "rgba(255,255,255,0.18)", // <--- changed
         border: "1px solid rgba(255,255,255,0.14)", // <--- changed
         backdropFilter: "blur(18px)", // <--- changed
         WebkitBackdropFilter: "blur(18px)", // <--- changed
         boxShadow: "inset 0 1px 1px rgba(255,255,255,0.14), 0 14px 34px rgba(0,0,0,0.34)", // <--- changed
-        display: "grid", // <--- changed
-        gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_DOCK_APP_SIZE}px)`, // <--- changed: exact dock app sizing
-        columnGap: HOME_DOCK_APP_HORIZONTAL_GAP, // <--- changed: dock horizontal gap knob
+        display: "flex", // <--- changed: flex prevents dock overflow on narrow iPhones
+        gap: HOME_DOCK_APP_HORIZONTAL_GAP, // <--- changed: dock horizontal gap knob
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        justifyItems: "center", // <--- changed: keeps dock apps centered on iPhone
-        minWidth: HOME_DOCK_CONTENT_WIDTH, // <--- changed: fixed dock content width
         padding: "9px 9px", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
