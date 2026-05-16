@@ -162,6 +162,18 @@ function formatMarketDateTime(timestamp: number) {
     return `${day} ${time} ET`; // <--- changed
 }
 
+function formatPhoneStatusTime(timestamp: number) {
+    return new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    })
+        .format(new Date(timestamp))
+        .replace(" AM", "")
+        .replace(" PM", ""); // <--- changed
+}
+
 function getSimulatedMarketProgressMs(elapsedInside15mMs: number) {
     const simulatedCandleDurationMs = TIMEFRAME_SECONDS["15m"] * 1000;
     const realMarketCandleDurationMs = 15 * 60 * 1000;
@@ -586,12 +598,14 @@ export default function TradingGame() {
         ); // <--- changed
     }
 
-    const [balance, setBalance] = useState(10000);
+    const [balance, setBalance] = useState(5000); // <--- changed
     const [timeframe, setTimeframe] = useState("15m");
     const [quantity, setQuantity] = useState(1);
     const [now, setNow] = useState(Date.now());
     const [isLandscape, setIsLandscape] = useState(false); // <--- changed
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
+    const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
+    const [phoneClosing, setPhoneClosing] = useState(false); // <--- changed
     const [simulationPaused, setSimulationPaused] = useState(false); // <--- changed
     const simulationPausedRef = useRef(false); // <--- changed
     const [bullCandleColor, setBullCandleColor] = useState(GREEN); // <--- changed
@@ -771,6 +785,24 @@ export default function TradingGame() {
             hidePositionControls(); // <--- changed
         }
     }, [position, price, takeProfit, stopLoss]);
+
+    function openPhonePanel() {
+        if (phoneOpen) return; // <--- changed
+
+        setPhoneClosing(false); // <--- changed
+        setPhoneOpen(true); // <--- changed
+    }
+
+    function closePhonePanel() {
+        if (!phoneOpen || phoneClosing) return; // <--- changed
+
+        setPhoneClosing(true); // <--- changed
+
+        window.setTimeout(() => {
+            setPhoneOpen(false); // <--- changed
+            setPhoneClosing(false); // <--- changed
+        }, 280);
+    }
 
     function handleToggleSimulationPause() {
         setSimulationPaused((prev) => {
@@ -2323,6 +2355,7 @@ export default function TradingGame() {
 
     const marketDateTimeText = formatMarketDateTime(currentMarketTimestamp); // <--- changed
     const marketSessionText = `${getMarketSessionName(currentMarketTimestamp)} Session`; // <--- changed
+    const phoneStatusTime = formatPhoneStatusTime(currentMarketTimestamp); // <--- changed
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -2336,7 +2369,12 @@ export default function TradingGame() {
         const preventContextMenu = (event: Event) => event.preventDefault();
 
         const updateOrientationState = () => {
-            setIsLandscape(window.innerWidth > window.innerHeight); // <--- changed
+            const isPhoneSizedScreen =
+                Math.min(window.innerWidth, window.innerHeight) <= 768; // <--- changed
+
+            setIsLandscape(
+                isPhoneSizedScreen && window.innerWidth > window.innerHeight
+            ); // <--- changed: desktop PC should never show rotate blocker
         };
 
         document.documentElement.style.overflow = "hidden";
@@ -3042,6 +3080,31 @@ export default function TradingGame() {
 
     return (
         <div style={styles.app}>
+            <style>
+                {`
+                    @keyframes phoneSlideBounceIn {
+                        0% { transform: translateY(115%); opacity: 0; }
+                        70% { transform: translateY(-10px); opacity: 1; }
+                        100% { transform: translateY(0); opacity: 1; }
+                    }
+
+                    @keyframes phoneSlideDownOut {
+                        0% { transform: translateY(0); opacity: 1; }
+                        100% { transform: translateY(120%); opacity: 0; }
+                    }
+
+                    @keyframes phoneBackdropIn {
+                        0% { opacity: 0; backdrop-filter: blur(0px); }
+                        100% { opacity: 1; backdrop-filter: blur(3px); }
+                    }
+
+                    @keyframes phoneBackdropOut {
+                        0% { opacity: 1; backdrop-filter: blur(3px); }
+                        100% { opacity: 0; backdrop-filter: blur(0px); }
+                    }
+                `}
+            </style>
+
             {isLandscape && ( // <--- changed
                 <div style={styles.orientationBlocker}>
                     <div style={styles.orientationTitle}>Rotate Back</div>
@@ -3052,6 +3115,61 @@ export default function TradingGame() {
             )}
 
             <div style={styles.gameFrame}>
+                {phoneOpen && ( // <--- changed
+                    <div
+                        style={{
+                            ...styles.phoneFocusLayer,
+                            ...(phoneClosing ? styles.phoneFocusLayerClosing : {}),
+                        }}
+                        onClick={closePhonePanel}
+                    >
+                        <div
+                            style={styles.phoneOutsideClickLayer}
+                            onClick={closePhonePanel}
+                        >
+                            <div
+                                style={{
+                                    ...styles.phonePanel,
+                                    ...(phoneClosing ? styles.phonePanelClosing : {}),
+                                }}
+                                onClick={(event) => event.stopPropagation()}
+                            >
+                                <div style={styles.phoneDevice}>
+                                    <div style={styles.phoneStatusBar}>
+                                        <div style={styles.phoneStatusLeft}>
+                                            {phoneStatusTime}
+                                        </div>
+
+                                        <div style={styles.phoneDynamicIsland}>
+                                            <span style={styles.phoneCameraDot} />
+                                        </div>
+
+                                        <div style={styles.phoneStatusRight}>
+                                            <button
+                                                style={styles.phoneCloseButton}
+                                                onClick={closePhonePanel}
+                                                aria-label="Close phone"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div style={styles.phoneBlankContent}>
+                                        <div style={styles.phoneAppIcon} />
+                                        <div style={styles.phoneBlankTitle}>Phone Hub</div>
+                                        <div style={styles.phoneBlankSubtitle}>
+                                            Blank starting point
+                                        </div>
+                                    </div>
+
+                                    <div style={styles.phoneHomeBar} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div style={styles.topPanel}>
                     <div style={styles.topMetric}> {/* <--- changed */}
                         <div style={styles.label}>BALANCE</div>
@@ -3109,6 +3227,20 @@ export default function TradingGame() {
                 </div>
 
                 <div style={styles.marketTimeBlock}> {/* <--- changed */}
+                    <div style={styles.phoneInlineAnchor}> {/* <--- changed */}
+                        <button
+                            style={styles.phoneButton}
+                            onClick={openPhonePanel}
+                            aria-label="Open phone"
+                        >
+                            <span style={styles.phoneButtonScreen}>
+                                <span style={styles.phoneButtonNotch} />
+                                <span style={styles.phoneButtonLine} />
+                            </span>
+                        </button>
+
+                    </div>
+
                     <div style={styles.marketTimeCenterColumn}> {/* <--- changed */}
                         <div style={styles.marketTimeLabel}>
                             <span style={styles.liveDot} />
@@ -3539,6 +3671,16 @@ const styles: Record<string, CSSProperties> = {
         textAlign: "center", // <--- changed
         width: "100%", // <--- changed
     },
+    phoneInlineAnchor: {
+        position: "absolute", // <--- changed
+        left: 14, // <--- changed
+        top: "50%", // <--- changed
+        transform: "translateY(-50%)", // <--- changed
+        zIndex: 60, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+    },
     settingsInlineAnchor: {
         position: "absolute", // <--- changed
         right: 14, // <--- changed
@@ -3636,7 +3778,7 @@ const styles: Record<string, CSSProperties> = {
         marginBottom: 16, // <--- changed
     },
     settingsTitle: {
-        fontSize: 18, // <--- changed
+        fontSize: 20, // <--- changed
         fontWeight: 900, // <--- changed
         color: "#ffffff", // <--- changed
         lineHeight: 1, // <--- changed
@@ -3742,6 +3884,212 @@ const styles: Record<string, CSSProperties> = {
         minHeight: 0,
         background: "#050505",
         position: "relative", // <--- changed
+    },
+    phoneButton: {
+        position: "relative", // <--- changed
+        width: 44, // <--- changed
+        height: 44, // <--- changed
+        borderRadius: 16, // <--- changed
+        border: "1px solid rgba(255,255,255,0.14)", // <--- changed
+        background: "rgba(18,18,18,0.82)", // <--- changed
+        boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
+        backdropFilter: "blur(10px)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        cursor: "pointer", // <--- changed
+        zIndex: 20, // <--- changed
+        padding: 0, // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    phoneButtonScreen: {
+        width: 19, // <--- changed
+        height: 27, // <--- changed
+        border: "2px solid #ffffff", // <--- changed
+        borderRadius: 6, // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "center", // <--- changed
+        position: "relative", // <--- changed
+        boxSizing: "border-box", // <--- changed
+    },
+    phoneButtonNotch: {
+        width: 7, // <--- changed
+        height: 2, // <--- changed
+        borderRadius: 99, // <--- changed
+        background: "#ffffff", // <--- changed
+        marginTop: 3, // <--- changed
+    },
+    phoneButtonLine: {
+        position: "absolute", // <--- changed
+        bottom: 3, // <--- changed
+        width: 7, // <--- changed
+        height: 2, // <--- changed
+        borderRadius: 99, // <--- changed
+        background: "rgba(255,255,255,0.75)", // <--- changed
+    },
+    phoneFocusLayer: {
+        position: "absolute", // <--- changed
+        inset: 0, // <--- changed
+        zIndex: 500, // <--- changed: covers every row and blocks outside clicks
+        background: "rgba(0,0,0,0.52)", // <--- changed
+        backdropFilter: "blur(3px)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "stretch", // <--- changed
+        justifyContent: "center", // <--- changed
+        pointerEvents: "auto", // <--- changed
+        animation: "phoneBackdropIn 420ms ease both", // <--- changed
+    },
+    phoneFocusLayerClosing: {
+        animation: "phoneBackdropOut 280ms ease-in both", // <--- changed
+    },
+    phoneOutsideClickLayer: {
+        position: "absolute", // <--- changed
+        inset: 0, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "stretch", // <--- changed
+        justifyContent: "center", // <--- changed
+        pointerEvents: "auto", // <--- changed
+    },
+    phonePanel: {
+        position: "absolute", // <--- changed
+        left: 62, // <--- changed
+        right: 62, // <--- changed
+        top: 128, // <--- changed: sits inside full-app overlay
+        bottom: 102, // <--- changed: leaves buy/sell row blurred and unclickable behind it
+        width: "auto", // <--- changed
+        zIndex: 520, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "stretch", // <--- changed
+        justifyContent: "center", // <--- changed
+        pointerEvents: "none", // <--- changed: side areas close through outside layer
+        animation: "phoneSlideBounceIn 420ms cubic-bezier(0.2, 0.95, 0.25, 1) both", // <--- changed
+        willChange: "transform, opacity", // <--- changed
+    },
+    phonePanelClosing: {
+        animation: "phoneSlideDownOut 280ms ease-in both", // <--- changed
+    },
+    phoneDevice: {
+        width: "min(100%, 360px)", // <--- changed
+        height: "100%", // <--- changed
+        pointerEvents: "auto", // <--- changed: only actual phone captures clicks
+        borderRadius: 42, // <--- changed
+        border: "2px solid rgba(255,255,255,0.2)", // <--- changed
+        background: "linear-gradient(180deg, #171717 0%, #050505 100%)", // <--- changed
+        boxShadow: "0 28px 65px rgba(0,0,0,0.76)", // <--- changed
+        position: "relative", // <--- changed
+        overflow: "hidden", // <--- changed
+        padding: "10px 10px 16px", // <--- changed
+        maxHeight: "100%", // <--- changed
+        boxSizing: "border-box", // <--- changed
+    },
+    phoneStatusBar: {
+        height: 42, // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "1fr 92px 1fr", // <--- changed
+        alignItems: "center", // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 13, // <--- changed
+        fontWeight: 900, // <--- changed
+        opacity: 0.96, // <--- changed
+        position: "relative", // <--- changed
+        zIndex: 2, // <--- changed
+        padding: "0 9px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+    },
+    phoneStatusLeft: {
+        display: "flex", // <--- changed
+        justifyContent: "flex-start", // <--- changed
+        alignItems: "center", // <--- changed
+        letterSpacing: -0.2, // <--- changed
+        paddingLeft: 3, // <--- changed
+    },
+    phoneDynamicIsland: {
+        width: 92, // <--- changed
+        height: 28, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "#000000", // <--- changed
+        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)", // <--- changed
+        justifySelf: "center", // <--- changed
+        position: "relative", // <--- changed
+    },
+    phoneCameraDot: {
+        position: "absolute", // <--- changed
+        right: 12, // <--- changed
+        top: "50%", // <--- changed
+        transform: "translateY(-50%)", // <--- changed
+        width: 7, // <--- changed
+        height: 7, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "radial-gradient(circle at 35% 35%, #203855, #03070d 70%)", // <--- changed
+        boxShadow: "0 0 4px rgba(60,120,255,0.35)", // <--- changed
+    },
+    phoneStatusRight: {
+        display: "flex", // <--- changed
+        justifyContent: "flex-end", // <--- changed
+        alignItems: "center", // <--- changed
+        paddingRight: 1, // <--- changed
+    },
+    phoneCloseButton: {
+        width: 24, // <--- changed
+        height: 24, // <--- changed
+        borderRadius: 999, // <--- changed
+        border: "1px solid rgba(255,255,255,0.12)", // <--- changed
+        background: "rgba(255,255,255,0.08)", // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 17, // <--- changed
+        fontWeight: 900, // <--- changed
+        lineHeight: 1, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        cursor: "pointer", // <--- changed
+        padding: 0, // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    phoneBlankContent: {
+        height: "100%", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        textAlign: "center", // <--- changed
+        paddingBottom: 42, // <--- changed
+        paddingTop: 8, // <--- changed
+        boxSizing: "border-box", // <--- changed
+    },
+    phoneAppIcon: {
+        width: 76, // <--- changed
+        height: 76, // <--- changed
+        borderRadius: 18, // <--- changed
+        background: "linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04))", // <--- changed
+        border: "1px solid rgba(255,255,255,0.12)", // <--- changed
+        boxShadow: "0 12px 24px rgba(0,0,0,0.35)", // <--- changed
+        marginBottom: 14, // <--- changed
+    },
+    phoneBlankTitle: {
+        color: "#ffffff", // <--- changed
+        fontSize: 18, // <--- changed
+        fontWeight: 900, // <--- changed
+        lineHeight: 1, // <--- changed
+        marginBottom: 8, // <--- changed
+    },
+    phoneBlankSubtitle: {
+        color: "#777777", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 800, // <--- changed
+        textTransform: "uppercase", // <--- changed
+        letterSpacing: 0.5, // <--- changed
+    },
+    phoneHomeBar: {
+        position: "absolute", // <--- changed
+        left: "50%", // <--- changed
+        bottom: 8, // <--- changed
+        transform: "translateX(-50%)", // <--- changed
+        width: 92, // <--- changed
+        height: 4, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "rgba(255,255,255,0.78)", // <--- changed
     },
     pauseButton: {
         position: "absolute", // <--- changed
