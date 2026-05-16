@@ -159,7 +159,7 @@ function formatMarketDateTime(timestamp: number) {
         hour12: true,
     }).format(date);
 
-    return `${day} ${time} ET • ${getMarketSessionName(timestamp)}`; // <--- changed
+    return `${day} ${time} ET`; // <--- changed
 }
 
 function getSimulatedMarketProgressMs(elapsedInside15mMs: number) {
@@ -2292,6 +2292,8 @@ export default function TradingGame() {
     const allCandles = useMemo(() => {
         return [...market.closedCandles, market.activeCandle];
     }, [market.closedCandles, market.activeCandle]);
+
+    const selectedGroupSize = getGroupSize(timeframe);
     const base15mMs = TIMEFRAME_SECONDS["15m"] * 1000;
     const currentPauseDuration =
         simulationPaused && pauseStartedAtRef.current !== null
@@ -2322,6 +2324,7 @@ export default function TradingGame() {
     );
 
     const marketDateTimeText = formatMarketDateTime(currentMarketTimestamp); // <--- changed
+    const marketSessionText = `${getMarketSessionName(currentMarketTimestamp)} Session`; // <--- changed
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -3205,14 +3208,18 @@ export default function TradingGame() {
                     )}
                 </div>
 
-                <div style={styles.marketTimeBar}> {/* <--- changed */}
-                    <div style={styles.marketTimeLeft}>
+                <div style={styles.marketTimeBlock}> {/* <--- changed */}
+                    <div style={styles.marketTimeLabel}>
                         <span style={styles.liveDot} />
                         MARKET TIME
                     </div>
 
                     <div style={styles.marketTimeValue}>
                         {marketDateTimeText}
+                    </div>
+
+                    <div style={styles.marketSessionValue}>
+                        {marketSessionText}
                     </div>
                 </div>
 
@@ -3463,18 +3470,17 @@ const styles: Record<string, CSSProperties> = {
         fontWeight: 700,
         cursor: "pointer",
     },
-    marketTimeBar: {
-        height: 38, // <--- changed
-        background: "linear-gradient(180deg, #101010 0%, #070707 100%)", // <--- changed
+    marketTimeBlock: {
+        background: "#050505", // <--- changed
         borderTop: "1px solid rgba(255,255,255,0.06)", // <--- changed
         borderBottom: "none", // <--- changed
+        padding: "8px 16px 10px", // <--- changed
         display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "space-between", // <--- changed
-        padding: "0 16px", // <--- changed
-        gap: 12, // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "flex-start", // <--- changed
+        gap: 3, // <--- changed
     },
-    marketTimeLeft: {
+    marketTimeLabel: {
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         gap: 7, // <--- changed
@@ -3484,6 +3490,7 @@ const styles: Record<string, CSSProperties> = {
         letterSpacing: 0.8, // <--- changed
         textTransform: "uppercase", // <--- changed
         whiteSpace: "nowrap", // <--- changed
+        lineHeight: 1, // <--- changed
     },
     liveDot: {
         width: 7, // <--- changed
@@ -3495,11 +3502,19 @@ const styles: Record<string, CSSProperties> = {
     },
     marketTimeValue: {
         color: "#ffffff", // <--- changed
-        fontSize: 13, // <--- changed
+        fontSize: 14, // <--- changed
         fontWeight: 900, // <--- changed
         letterSpacing: 0.2, // <--- changed
         whiteSpace: "nowrap", // <--- changed
-        textAlign: "right", // <--- changed
+        lineHeight: 1.15, // <--- changed
+    },
+    marketSessionValue: {
+        color: "#14c78a", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: 0.3, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        lineHeight: 1.1, // <--- changed
     },
     chartTools: {
         position: "relative", // <--- changed
