@@ -3108,116 +3108,119 @@ export default function TradingGame() {
                         ))}
                 </div>
 
-                <div style={styles.floatingSettingsWrap}> {/* <--- changed */}
-                    <button
-                        style={styles.settingsButton}
-                        onClick={() => setSettingsOpen((prev) => !prev)}
-                        aria-label="Chart settings"
-                    >
-                        <span style={styles.settingsIcon}>
-                            <span style={styles.sliderIconLine}>
-                                <span style={styles.sliderIconKnobLeft} />
-                            </span>
-                            <span style={styles.sliderIconLine}>
-                                <span style={styles.sliderIconKnobRight} />
-                            </span>
-                            <span style={styles.sliderIconLine}>
-                                <span style={styles.sliderIconKnobCenter} />
-                            </span>
-                        </span>
-                    </button>
+                <div style={styles.marketTimeBlock}> {/* <--- changed */}
+                    <div style={styles.marketTimeCenterColumn}> {/* <--- changed */}
+                        <div style={styles.marketTimeLabel}>
+                            <span style={styles.liveDot} />
+                            MARKET TIME
+                        </div>
 
-                    {settingsOpen && (
-                        <div style={styles.settingsMenu}>
-                            <div style={styles.settingsHeader}>
-                                <div>
-                                    <div style={styles.settingsTitle}>Chart Settings</div>
-                                    <div style={styles.settingsSubtitle}>Customize your game view</div>
+                        <div style={styles.marketTimeValue}>
+                            {marketDateTimeText}
+                        </div>
+
+                        <div style={styles.marketSessionValue}>
+                            {marketSessionText}
+                        </div>
+                    </div>
+
+                    <div style={styles.settingsInlineAnchor}> {/* <--- changed */}
+                        <button
+                            style={styles.settingsButton}
+                            onClick={() => setSettingsOpen((prev) => !prev)}
+                            aria-label="Chart settings"
+                        >
+                            <span style={styles.settingsIcon}>
+                                <span style={styles.sliderIconLine}>
+                                    <span style={styles.sliderIconKnobLeft} />
+                                </span>
+                                <span style={styles.sliderIconLine}>
+                                    <span style={styles.sliderIconKnobRight} />
+                                </span>
+                                <span style={styles.sliderIconLine}>
+                                    <span style={styles.sliderIconKnobCenter} />
+                                </span>
+                            </span>
+                        </button>
+
+                        {settingsOpen && (
+                            <div style={styles.settingsMenu}>
+                                <div style={styles.settingsHeader}>
+                                    <div>
+                                        <div style={styles.settingsTitle}>Chart Settings</div>
+                                        <div style={styles.settingsSubtitle}>Customize your game view</div>
+                                    </div>
+
+                                    <button
+                                        style={styles.settingsClose}
+                                        onClick={() => setSettingsOpen(false)}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                <div style={styles.settingsSection}>
+                                    <div style={styles.settingsSectionTitle}>Candles</div>
+
+                                    <div style={styles.colorControlRow}>
+                                        <div>
+                                            <div style={styles.colorLabel}>Bullish</div>
+                                            <div style={styles.colorHint}>Up candle color</div>
+                                        </div>
+
+                                        <input
+                                            type="color"
+                                            value={bullCandleColor}
+                                            onChange={(event) => setBullCandleColor(event.target.value)}
+                                            style={styles.colorPicker}
+                                        />
+                                    </div>
+
+                                    <div style={styles.colorControlRow}>
+                                        <div>
+                                            <div style={styles.colorLabel}>Bearish</div>
+                                            <div style={styles.colorHint}>Down candle color</div>
+                                        </div>
+
+                                        <input
+                                            type="color"
+                                            value={bearCandleColor}
+                                            onChange={(event) => setBearCandleColor(event.target.value)}
+                                            style={styles.colorPicker}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={styles.settingsSection}>
+                                    <div style={styles.settingsSectionTitle}>Top Timeframes</div>
+
+                                    <div style={styles.timeframeToggleGrid}>
+                                        {["15m", "30m", "1h", "4h", "Daily"].map((tf) => (
+                                            <button
+                                                key={tf}
+                                                style={{
+                                                    ...styles.timeframeToggle,
+                                                    ...(visibleTimeframes[tf]
+                                                        ? styles.timeframeToggleActive
+                                                        : {}),
+                                                }}
+                                                onClick={() => toggleTimeframeVisibility(tf)}
+                                            >
+                                                {tf}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <button
-                                    style={styles.settingsClose}
-                                    onClick={() => setSettingsOpen(false)}
+                                    style={styles.resetSettingsButton}
+                                    onClick={resetVisualSettings}
                                 >
-                                    ×
+                                    RESET SETTINGS
                                 </button>
                             </div>
+                        )}
 
-                            <div style={styles.settingsSection}>
-                                <div style={styles.settingsSectionTitle}>Candles</div>
-
-                                <div style={styles.colorControlRow}>
-                                    <div>
-                                        <div style={styles.colorLabel}>Bullish</div>
-                                        <div style={styles.colorHint}>Up candle color</div>
-                                    </div>
-
-                                    <input
-                                        type="color"
-                                        value={bullCandleColor}
-                                        onChange={(event) => setBullCandleColor(event.target.value)}
-                                        style={styles.colorPicker}
-                                    />
-                                </div>
-
-                                <div style={styles.colorControlRow}>
-                                    <div>
-                                        <div style={styles.colorLabel}>Bearish</div>
-                                        <div style={styles.colorHint}>Down candle color</div>
-                                    </div>
-
-                                    <input
-                                        type="color"
-                                        value={bearCandleColor}
-                                        onChange={(event) => setBearCandleColor(event.target.value)}
-                                        style={styles.colorPicker}
-                                    />
-                                </div>
-                            </div>
-
-                            <div style={styles.settingsSection}>
-                                <div style={styles.settingsSectionTitle}>Top Timeframes</div>
-
-                                <div style={styles.timeframeToggleGrid}>
-                                    {["15m", "30m", "1h", "4h", "Daily"].map((tf) => (
-                                        <button
-                                            key={tf}
-                                            style={{
-                                                ...styles.timeframeToggle,
-                                                ...(visibleTimeframes[tf]
-                                                    ? styles.timeframeToggleActive
-                                                    : {}),
-                                            }}
-                                            onClick={() => toggleTimeframeVisibility(tf)}
-                                        >
-                                            {tf}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <button
-                                style={styles.resetSettingsButton}
-                                onClick={resetVisualSettings}
-                            >
-                                RESET SETTINGS
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                <div style={styles.marketTimeBlock}> {/* <--- changed */}
-                    <div style={styles.marketTimeLabel}>
-                        <span style={styles.liveDot} />
-                        MARKET TIME
-                    </div>
-
-                    <div style={styles.marketTimeValue}>
-                        {marketDateTimeText}
-                    </div>
-
-                    <div style={styles.marketSessionValue}>
-                        {marketSessionText}
                     </div>
                 </div>
 
@@ -3469,10 +3472,23 @@ const styles: Record<string, CSSProperties> = {
         cursor: "pointer",
     },
     marketTimeBlock: {
+        position: "relative", // <--- changed
         background: "transparent", // <--- changed
         border: "none", // <--- changed
-        padding: "10px 72px 6px 72px", // <--- changed: moved upward and aligned with settings button
+        padding: "8px 62px 6px", // <--- changed
         marginTop: "0px", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        textAlign: "center", // <--- changed
+        overflow: "visible", // <--- changed
+        minHeight: "auto", // <--- changed
+        height: "auto", // <--- changed
+        flexShrink: 0, // <--- changed
+        width: "100%", // <--- changed
+        boxSizing: "border-box", // <--- changed
+    },
+    marketTimeCenterColumn: {
         display: "flex", // <--- changed
         flexDirection: "column", // <--- changed
         alignItems: "center", // <--- changed
@@ -3480,12 +3496,6 @@ const styles: Record<string, CSSProperties> = {
         gap: 2, // <--- changed
         textAlign: "center", // <--- changed
         lineHeight: 1, // <--- changed
-        overflow: "visible", // <--- changed
-        minHeight: "auto", // <--- changed
-        height: "auto", // <--- changed
-        flexShrink: 0, // <--- changed
-        width: "100%", // <--- changed
-        boxSizing: "border-box", // <--- changed
     },
     marketTimeLabel: {
         display: "flex", // <--- changed
@@ -3529,10 +3539,11 @@ const styles: Record<string, CSSProperties> = {
         textAlign: "center", // <--- changed
         width: "100%", // <--- changed
     },
-    floatingSettingsWrap: {
+    settingsInlineAnchor: {
         position: "absolute", // <--- changed
-        top: "148px", // <--- changed: vertically centered with market time text
         right: 14, // <--- changed
+        top: "50%", // <--- changed
+        transform: "translateY(-50%)", // <--- changed
         zIndex: 60, // <--- changed
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
