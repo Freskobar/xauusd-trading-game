@@ -2511,9 +2511,38 @@ export default function TradingGame() {
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
 
-                ctx.font = "bold 14px Arial";
-                ctx.fillText("◀", leftArrowBox.x + leftArrowBox.w / 2, pendingY + 1);
-                ctx.fillText("▶", rightArrowBox.x + rightArrowBox.w / 2, pendingY + 1);
+                // <--- changed: custom drawn arrows instead of emoji glyphs
+                function drawArrow(cx: number, cy: number, direction: "left" | "right") {
+                    ctx.beginPath();
+
+                    if (direction === "left") {
+                        ctx.moveTo(cx + 4, cy - 6);
+                        ctx.lineTo(cx - 4, cy);
+                        ctx.lineTo(cx + 4, cy + 6);
+                    } else {
+                        ctx.moveTo(cx - 4, cy - 6);
+                        ctx.lineTo(cx + 4, cy);
+                        ctx.lineTo(cx - 4, cy + 6);
+                    }
+
+                    ctx.strokeStyle = "#ffffff";
+                    ctx.lineWidth = 2.2;
+                    ctx.lineCap = "round";
+                    ctx.lineJoin = "round";
+                    ctx.stroke();
+                }
+
+                drawArrow(
+                    leftArrowBox.x + leftArrowBox.w / 2,
+                    pendingY,
+                    "left"
+                );
+
+                drawArrow(
+                    rightArrowBox.x + rightArrowBox.w / 2,
+                    pendingY,
+                    "right"
+                );
 
                 ctx.font = "bold 12px Arial";
                 ctx.fillText(stopLabel, width / 2, pendingY + 1);
