@@ -436,6 +436,7 @@ export default function TradingGame() {
     const [timeframe, setTimeframe] = useState("15m");
     const [quantity, setQuantity] = useState(1);
     const [now, setNow] = useState(Date.now());
+    const [isLandscape, setIsLandscape] = useState(false); // <--- changed
 
     const [market, setMarket] = useState<MarketState>(() => ({
         loaded: false,
@@ -2085,6 +2086,10 @@ export default function TradingGame() {
     useEffect(() => {
         const preventContextMenu = (event: Event) => event.preventDefault();
 
+        const updateOrientationState = () => {
+            setIsLandscape(window.innerWidth > window.innerHeight); // <--- changed
+        };
+
         document.documentElement.style.overflow = "hidden";
         document.body.style.overflow = "hidden";
         document.body.style.userSelect = "none";
@@ -2092,13 +2097,17 @@ export default function TradingGame() {
         document.body.style.setProperty("-webkit-tap-highlight-color", "transparent"); // <--- changed
 
         window.addEventListener("contextmenu", preventContextMenu);
+        window.addEventListener("resize", updateOrientationState); // <--- changed
+        window.addEventListener("orientationchange", updateOrientationState); // <--- changed
+
+        updateOrientationState(); // <--- changed
 
         if (
             screen.orientation &&
             typeof screen.orientation.lock === "function"
         ) {
             screen.orientation.lock("portrait").catch(() => {
-                // Some mobile browsers only allow orientation lock after fullscreen.
+                // Browser may require fullscreen/PWA before real orientation lock works.
             });
         }
 
@@ -2109,6 +2118,8 @@ export default function TradingGame() {
             document.body.style.webkitUserSelect = "";
             document.body.style.removeProperty("-webkit-tap-highlight-color"); // <--- changed
             window.removeEventListener("contextmenu", preventContextMenu);
+            window.removeEventListener("resize", updateOrientationState); // <--- changed
+            window.removeEventListener("orientationchange", updateOrientationState); // <--- changed
         };
     }, []);
 
@@ -2352,19 +2363,7 @@ export default function TradingGame() {
             }
         }
 
-        if (position) {
-            const entryY = priceToY(position.entry);
-
-            drawAlternatingDashedHorizontalLine(entryY, DIM_ENTRY_LINE, LIGHT_ENTRY_LINE); // <--- changed
-        }
-
-        if (pendingOrder) {
-            const pendingY = priceToY(pendingOrder.price);
-
-            drawAlternatingDashedHorizontalLine(pendingY, DIM_BLUE_LINE, LIGHT_BLUE_LINE); // <--- changed
-        }
-
-        function drawExitLine(line: ExitLine) {
+        function drawExitLine(line: ExitLine, drawMode: "line" | "label" = "line") {
             const lineY = priceToY(line.price);
             const isTp = line.kind === "tp";
             const entryPrice = pendingOrder?.price ?? position?.entry ?? price;
@@ -2375,7 +2374,10 @@ export default function TradingGame() {
             const lineColor = isTp ? DIM_GREEN_LINE : DIM_RED_LINE; // <--- changed
             const lightLineColor = isTp ? LIGHT_GREEN_LINE : LIGHT_RED_LINE; // <--- changed
 
-            drawAlternatingDashedHorizontalLine(lineY, lineColor, lightLineColor); // <--- changed
+            if (drawMode === "line") {
+                drawAlternatingDashedHorizontalLine(lineY, lineColor, lightLineColor); // <--- changed
+                return;
+            }
 
             const pnlText = formatMoney(projectedPnl);
             const entryY = priceToY(entryPrice); // <--- changed
@@ -2386,12 +2388,12 @@ export default function TradingGame() {
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
 
-            ctx.lineWidth = 5; // <--- changed: stronger white stroke above candles
-            ctx.strokeStyle = "#ffffff"; // <--- changed
-            ctx.strokeText(pnlText, width / 2, pnlY); // <--- changed
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = "#ffffff";
+            ctx.strokeText(pnlText, width / 2, pnlY);
 
             ctx.fillStyle = color;
-            ctx.fillText(pnlText, width / 2, pnlY); // <--- changed
+            ctx.fillText(pnlText, width / 2, pnlY);
 
             if (line.showTrash) {
                 const buttonSize = 22;
@@ -2417,7 +2419,7 @@ export default function TradingGame() {
                 ctx.fill();
 
                 ctx.fillStyle = "#111111";
-                ctx.font = "bold 20px Arial"; // <--- changed: bigger trash icon
+                ctx.font = "bold 20px Arial";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText(
@@ -2426,6 +2428,27 @@ export default function TradingGame() {
                     trashBox.y + trashBox.h / 2 - 1
                 );
             }
+        }
+
+        // <--- changed: draw all dashed trade lines behind candles
+        if (position) {
+            const entryY = priceToY(position.entry);
+
+            drawAlternatingDashedHorizontalLine(entryY, DIM_ENTRY_LINE, LIGHT_ENTRY_LINE);
+        }
+
+        if (pendingOrder) {
+            const pendingY = priceToY(pendingOrder.price);
+
+            drawAlternatingDashedHorizontalLine(pendingY, DIM_BLUE_LINE, LIGHT_BLUE_LINE);
+        }
+
+        if (takeProfit) {
+            drawExitLine(takeProfit, "line");
+        }
+
+        if (stopLoss) {
+            drawExitLine(stopLoss, "line");
         }
 
         visible.forEach((c, i) => {
@@ -2452,13 +2475,13 @@ export default function TradingGame() {
             ctx.fillRect(x, bodyTop, candleWidth, bodyHeight);
         });
 
-        // <--- changed: draw TP/SL lines and P/L text after candles so labels stay above candles
+        // <--- changed: draw TP/SL labels/buttons after candles while dashed lines stay behind candles
         if (takeProfit) {
-            drawExitLine(takeProfit);
+            drawExitLine(takeProfit, "label");
         }
 
         if (stopLoss) {
-            drawExitLine(stopLoss);
+            drawExitLine(stopLoss, "label");
         }
 
         function drawBlueLineControls() {
@@ -2500,12 +2523,21 @@ export default function TradingGame() {
                 h: buttonSize,
             };
 
-            pendingCheckHitBoxRef.current = shouldHideCheck ? null : checkBox; // <--- changed
+            const controlsOpacity = pendingOrder.confirmed
+                ? pendingOrder.controlsOpacity
+                : 1;
+
+            const controlsAreVisible =
+                pendingOrder.showControls || controlsOpacity > 0; // <--- changed
+
+            pendingCheckHitBoxRef.current =
+                controlsAreVisible && !shouldHideCheck ? checkBox : null; // <--- changed
 
             pendingTrashHitBoxRef.current =
-                shouldHideCheck && !trashShouldMoveLeft && pendingOrder.controlsOpacity > 0
-                    ? null
-                    : trashBox; // <--- changed
+                controlsAreVisible &&
+                    !(shouldHideCheck && !trashShouldMoveLeft && pendingOrder.controlsOpacity > 0)
+                    ? trashBox
+                    : null; // <--- changed
 
             if (!pendingOrder.confirmed) {
                 const stopLabel = pendingOrder.side === "long" ? "BUY STOP" : "SELL STOP";
@@ -2593,10 +2625,6 @@ export default function TradingGame() {
                 pendingLeftArrowHitBoxRef.current = null;
                 pendingRightArrowHitBoxRef.current = null;
             }
-
-            const controlsOpacity = pendingOrder.confirmed
-                ? pendingOrder.controlsOpacity
-                : 1;
 
             if (!pendingOrder.showControls && controlsOpacity <= 0) return;
 
@@ -2745,6 +2773,15 @@ export default function TradingGame() {
 
     return (
         <div style={styles.app}>
+            {isLandscape && ( // <--- changed
+                <div style={styles.orientationBlocker}>
+                    <div style={styles.orientationTitle}>Rotate Back</div>
+                    <div style={styles.orientationText}>
+                        This game is locked to portrait mode.
+                    </div>
+                </div>
+            )}
+
             <div style={styles.gameFrame}>
                 <div style={styles.topPanel}>
                     <div style={styles.topMetric}> {/* <--- changed */}
@@ -2903,6 +2940,32 @@ const styles: Record<string, CSSProperties> = {
         WebkitUserSelect: "none", // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
         touchAction: "none", // <--- changed
+    },
+    orientationBlocker: {
+        position: "fixed", // <--- changed
+        inset: 0, // <--- changed
+        zIndex: 9999, // <--- changed
+        background: "#050505", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        justifyContent: "center", // <--- changed
+        alignItems: "center", // <--- changed
+        textAlign: "center", // <--- changed
+        padding: 24, // <--- changed
+        userSelect: "none", // <--- changed
+        WebkitUserSelect: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    orientationTitle: {
+        fontSize: 28, // <--- changed
+        fontWeight: 900, // <--- changed
+        marginBottom: 10, // <--- changed
+    },
+    orientationText: {
+        fontSize: 16, // <--- changed
+        fontWeight: 700, // <--- changed
+        color: "#a0a0a0", // <--- changed
     },
     gameFrame: {
         width: "min(480px, 100vw)",
