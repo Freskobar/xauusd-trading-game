@@ -2428,6 +2428,25 @@ export default function TradingGame() {
     }, []);
 
     useEffect(() => {
+        const fallbackBatteryInterval = window.setInterval(() => {
+            const maybeNavigator = navigator as Navigator & {
+                getBattery?: () => Promise<unknown>;
+            };
+
+            if (maybeNavigator.getBattery) return;
+
+            setBatteryPercent((prev) => {
+                const current = prev ?? 67;
+                const drift = Math.random() > 0.7 ? -1 : 0;
+
+                return Math.max(35, Math.min(100, current + drift));
+            });
+        }, 22000);
+
+        return () => window.clearInterval(fallbackBatteryInterval);
+    }, []);
+
+    useEffect(() => {
         const maybeNavigator = navigator as Navigator & {
             getBattery?: () => Promise<{
                 level: number;
@@ -2438,7 +2457,7 @@ export default function TradingGame() {
         };
 
         if (!maybeNavigator.getBattery) {
-            setBatteryPercent(87); // <--- changed: fallback when browser blocks real battery info
+            setBatteryPercent(Math.floor(Math.random() * 46) + 45); // <--- changed: realistic fallback when browser blocks real battery info
             return;
         }
 
@@ -2467,7 +2486,7 @@ export default function TradingGame() {
                 battery.addEventListener("chargingchange", updateBattery);
             })
             .catch(() => {
-                setBatteryPercent(87); // <--- changed
+                setBatteryPercent(Math.floor(Math.random() * 46) + 45); // <--- changed
             });
 
         return () => {
@@ -3200,7 +3219,20 @@ export default function TradingGame() {
                                 <div style={styles.phoneDevice}>
                                     <div style={styles.phoneStatusBar}>
                                         <div style={styles.phoneStatusLeft}>
-                                            {phoneStatusTime}
+                                            <span>{phoneStatusTime}</span>
+
+                                            <svg
+                                                width="15"
+                                                height="15"
+                                                viewBox="0 0 24 24"
+                                                style={styles.phoneLocationSvg}
+                                                aria-label="Location services"
+                                            >
+                                                <path
+                                                    d="M4.4 3.5L21.2 10.3C22.1 10.7 22 12 21 12.2L13.8 13.8L12.2 21C12 22 10.7 22.1 10.3 21.2L3.5 4.4C3.2 3.8 3.8 3.2 4.4 3.5Z"
+                                                    fill="currentColor"
+                                                />
+                                            </svg>
                                         </div>
 
                                         <div style={styles.phoneDynamicIsland}>
@@ -3208,57 +3240,132 @@ export default function TradingGame() {
                                         </div>
 
                                         <div style={styles.phoneStatusRight}>
-                                            <div style={styles.cellBars} aria-label="Cellular signal">
-                                                {[1, 2, 3, 4].map((bar) => (
-                                                    <span
-                                                        key={bar}
-                                                        style={{
-                                                            ...styles.cellBar,
-                                                            height: 4 + bar * 3,
-                                                            opacity:
-                                                                bar <= cellStrength
-                                                                    ? 1
-                                                                    : 0.28,
-                                                        }}
-                                                    />
-                                                ))}
-                                            </div>
+                                            <svg
+                                                width="23"
+                                                height="16"
+                                                viewBox="0 0 23 16"
+                                                style={styles.statusSvg}
+                                                aria-label="Cellular signal"
+                                            >
+                                                {[0, 1, 2, 3].map((bar) => {
+                                                    const heights = [4, 7, 10, 13];
+                                                    const x = 1 + bar * 5.2;
+                                                    const y = 15 - heights[bar];
 
-                                            <div style={styles.wifiIcon} aria-label="Wi-Fi">
-                                                <span
-                                                    style={{
-                                                        ...styles.wifiArcLarge,
-                                                        opacity: wifiStrength >= 3 ? 1 : 0.25,
-                                                    }}
-                                                />
-                                                <span
-                                                    style={{
-                                                        ...styles.wifiArcMedium,
-                                                        opacity: wifiStrength >= 2 ? 1 : 0.25,
-                                                    }}
-                                                />
-                                                <span
-                                                    style={{
-                                                        ...styles.wifiArcSmall,
-                                                        opacity: wifiStrength >= 1 ? 1 : 0.25,
-                                                    }}
-                                                />
-                                            </div>
+                                                    return (
+                                                        <rect
+                                                            key={bar}
+                                                            x={x}
+                                                            y={y}
+                                                            width="3.8"
+                                                            height={heights[bar]}
+                                                            rx="1.7"
+                                                            fill="currentColor"
+                                                            opacity={bar < cellStrength ? 1 : 0.28}
+                                                        />
+                                                    );
+                                                })}
+                                            </svg>
 
-                                            <div style={styles.batteryIcon} aria-label="Battery">
-                                                <div
-                                                    style={{
-                                                        ...styles.batteryFill,
-                                                        width: `${Math.max(
-                                                            5,
-                                                            Math.min(100, batteryPercent ?? 87)
-                                                        )}%`,
-                                                    }}
+                                            <svg
+                                                width="24"
+                                                height="17"
+                                                viewBox="0 0 24 17"
+                                                style={styles.statusSvg}
+                                                aria-label="Wi-Fi"
+                                            >
+                                                <path
+                                                    d="M2.4 5.2C7.9 0.9 16.1 0.9 21.6 5.2"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="3"
+                                                    strokeLinecap="round"
+                                                    opacity={wifiStrength >= 3 ? 1 : 0.25}
                                                 />
-                                                <span style={styles.batteryText}>
-                                                    {batteryPercent ?? 87}
-                                                </span>
-                                            </div>
+                                                <path
+                                                    d="M6.5 9.2C9.8 6.8 14.2 6.8 17.5 9.2"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="3"
+                                                    strokeLinecap="round"
+                                                    opacity={wifiStrength >= 2 ? 1 : 0.25}
+                                                />
+                                                <path
+                                                    d="M10.5 13.1C11.4 12.5 12.6 12.5 13.5 13.1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="3"
+                                                    strokeLinecap="round"
+                                                    opacity={wifiStrength >= 1 ? 1 : 0.25}
+                                                />
+                                                <circle
+                                                    cx="12"
+                                                    cy="15"
+                                                    r="1.7"
+                                                    fill="currentColor"
+                                                    opacity={wifiStrength >= 1 ? 1 : 0.25}
+                                                />
+                                            </svg>
+
+                                            <svg
+                                                width="43"
+                                                height="20"
+                                                viewBox="0 0 43 20"
+                                                style={styles.statusSvg}
+                                                aria-label="Battery"
+                                            >
+                                                <defs>
+                                                    <clipPath id="iphoneBatteryClip">
+                                                        <rect
+                                                            x="1"
+                                                            y="2.5"
+                                                            width="36"
+                                                            height="15"
+                                                            rx="5"
+                                                        />
+                                                    </clipPath>
+                                                </defs>
+
+                                                <rect
+                                                    x="1"
+                                                    y="2.5"
+                                                    width="36"
+                                                    height="15"
+                                                    rx="5"
+                                                    fill="rgba(255,255,255,0.34)"
+                                                />
+
+                                                <rect
+                                                    x="1"
+                                                    y="2.5"
+                                                    width={`${Math.max(2, Math.min(36, ((batteryPercent ?? 67) / 100) * 36))}`}
+                                                    height="15"
+                                                    rx="5"
+                                                    fill="rgba(255,255,255,0.96)"
+                                                    clipPath="url(#iphoneBatteryClip)"
+                                                />
+
+                                                <rect
+                                                    x="38.2"
+                                                    y="7"
+                                                    width="3.5"
+                                                    height="6"
+                                                    rx="1.8"
+                                                    fill="rgba(255,255,255,0.34)"
+                                                />
+
+                                                <text
+                                                    x="19"
+                                                    y="14.3"
+                                                    textAnchor="middle"
+                                                    fontSize="11"
+                                                    fontWeight="900"
+                                                    fill="#050505"
+                                                    fontFamily="Arial, sans-serif"
+                                                >
+                                                    {batteryPercent ?? 67}
+                                                </text>
+                                            </svg>
                                         </div>
                                     </div>
 
@@ -4093,7 +4200,7 @@ const styles: Record<string, CSSProperties> = {
     phoneStatusBar: {
         height: 42, // <--- changed
         display: "grid", // <--- changed
-        gridTemplateColumns: "1fr 92px 1fr", // <--- changed
+        gridTemplateColumns: "1fr 84px 1.18fr", // <--- changed
         alignItems: "center", // <--- changed
         color: "#ffffff", // <--- changed
         fontSize: 13, // <--- changed
@@ -4108,12 +4215,22 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         justifyContent: "flex-start", // <--- changed
         alignItems: "center", // <--- changed
-        letterSpacing: -0.2, // <--- changed
-        paddingLeft: 3, // <--- changed
+        gap: 6, // <--- changed
+        letterSpacing: -0.45, // <--- changed
+        paddingLeft: 5, // <--- changed
+        fontSize: 15, // <--- changed
+        fontWeight: 900, // <--- changed
+        color: "#ffffff", // <--- changed
+    },
+    phoneLocationSvg: {
+        color: "#ffffff", // <--- changed
+        transform: "translateY(-1px) rotate(2deg)", // <--- changed
+        display: "block", // <--- changed
+        filter: "drop-shadow(0 0 1px rgba(0,0,0,0.25))", // <--- changed
     },
     phoneDynamicIsland: {
-        width: 92, // <--- changed
-        height: 28, // <--- changed
+        width: 84, // <--- changed
+        height: 25, // <--- changed
         borderRadius: 999, // <--- changed
         background: "#000000", // <--- changed
         boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)", // <--- changed
@@ -4135,89 +4252,15 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         justifyContent: "flex-end", // <--- changed
         alignItems: "center", // <--- changed
-        gap: 5, // <--- changed
-        paddingRight: 1, // <--- changed
+        gap: 6, // <--- changed
+        paddingRight: 0, // <--- changed
+        color: "#ffffff", // <--- changed
     },
-    cellBars: {
-        height: 18, // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "flex-end", // <--- changed
-        gap: 2, // <--- changed
-    },
-    cellBar: {
-        width: 3, // <--- changed
-        borderRadius: 2, // <--- changed
-        background: "#ffffff", // <--- changed
+    statusSvg: {
         display: "block", // <--- changed
-        transition: "opacity 260ms ease", // <--- changed
-    },
-    wifiIcon: {
-        position: "relative", // <--- changed
-        width: 18, // <--- changed
-        height: 15, // <--- changed
-        display: "block", // <--- changed
-    },
-    wifiArcLarge: {
-        position: "absolute", // <--- changed
-        left: 1, // <--- changed
-        top: 1, // <--- changed
-        width: 16, // <--- changed
-        height: 16, // <--- changed
-        borderTop: "2px solid #ffffff", // <--- changed
-        borderRadius: "50%", // <--- changed
-        display: "block", // <--- changed
-        transition: "opacity 260ms ease", // <--- changed
-    },
-    wifiArcMedium: {
-        position: "absolute", // <--- changed
-        left: 5, // <--- changed
-        top: 6, // <--- changed
-        width: 8, // <--- changed
-        height: 8, // <--- changed
-        borderTop: "2px solid #ffffff", // <--- changed
-        borderRadius: "50%", // <--- changed
-        display: "block", // <--- changed
-        transition: "opacity 260ms ease", // <--- changed
-    },
-    wifiArcSmall: {
-        position: "absolute", // <--- changed
-        left: 8, // <--- changed
-        bottom: 1, // <--- changed
-        width: 4, // <--- changed
-        height: 4, // <--- changed
-        borderRadius: "50%", // <--- changed
-        background: "#ffffff", // <--- changed
-        display: "block", // <--- changed
-        transition: "opacity 260ms ease", // <--- changed
-    },
-    batteryIcon: {
-        position: "relative", // <--- changed
-        width: 30, // <--- changed
-        height: 14, // <--- changed
-        border: "1.6px solid rgba(255,255,255,0.95)", // <--- changed
-        borderRadius: 4, // <--- changed
-        boxSizing: "border-box", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        overflow: "visible", // <--- changed
-    },
-    batteryFill: {
-        position: "absolute", // <--- changed
-        left: 2, // <--- changed
-        top: 2, // <--- changed
-        bottom: 2, // <--- changed
-        borderRadius: 2, // <--- changed
-        background: "rgba(255,255,255,0.88)", // <--- changed
-        transition: "width 300ms ease", // <--- changed
-    },
-    batteryText: {
-        position: "relative", // <--- changed
-        zIndex: 1, // <--- changed
-        color: "#050505", // <--- changed
-        fontSize: 8, // <--- changed
-        fontWeight: 900, // <--- changed
-        lineHeight: 1, // <--- changed
+        color: "#ffffff", // <--- changed
+        flexShrink: 0, // <--- changed
+        filter: "drop-shadow(0 0 1px rgba(0,0,0,0.18))", // <--- changed
     },
     phoneBlankContent: {
         height: "100%", // <--- changed
