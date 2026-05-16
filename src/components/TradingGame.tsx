@@ -3531,7 +3531,7 @@ const styles: Record<string, CSSProperties> = {
     },
     floatingSettingsWrap: {
         position: "absolute", // <--- changed
-        top: "132px", // <--- changed: aligned with market time vertically
+        top: "148px", // <--- changed: vertically centered with market time text
         right: 14, // <--- changed
         zIndex: 60, // <--- changed
         display: "flex", // <--- changed
