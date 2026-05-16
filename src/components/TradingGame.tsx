@@ -116,7 +116,7 @@ const TRIM_BASE_CANDLES = 96;
 // Change these numbers to quickly tune the iPhone home screen layout. // <--- changed
 const HOME_APP_SIZE = 56; // <--- changed: size of the normal home screen apps/icons
 const HOME_APP_GRID_GAP = 16; // <--- changed: space between apps in the grid
-const HOME_APP_GRID_VERTICAL_OFFSET = 20; // <--- changed: moves the entire app grid up/down
+const HOME_APP_GRID_VERTICAL_OFFSET = 92; // <--- changed: moves the entire app grid up/down
 
 const HOME_SEARCH_WIDTH = 70; // <--- changed: width of the search bar
 const HOME_SEARCH_HEIGHT = 25; // <--- changed: height of the search bar
@@ -129,6 +129,10 @@ const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 20; // <--- changed: height of the
 const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
 const HOME_DOCK_VERTICAL_OFFSET = 42; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
+
+const PHONE_ASPECT_RATIO = 390 / 844; // <--- changed: locks fake phone shape on Safari
+const PHONE_VIEWPORT_SAFE_HEIGHT = "min(76vh, 720px)"; // <--- changed: keeps phone from being too tall on mobile Safari
+const PHONE_VIEWPORT_SAFE_WIDTH = `calc(${PHONE_VIEWPORT_SAFE_HEIGHT} * ${PHONE_ASPECT_RATIO})`; // <--- changed: width follows height
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -4293,35 +4297,29 @@ const styles: Record<string, CSSProperties> = {
         pointerEvents: "auto", // <--- changed
     },
     phonePanel: {
-        position: "absolute", // <--- changed
-        left: 62, // <--- changed
-        right: 62, // <--- changed
-        top: 128, // <--- changed: sits inside full-app overlay
-        bottom: 102, // <--- changed: leaves buy/sell row blurred and unclickable behind it
-        width: "auto", // <--- changed
-        zIndex: 520, // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "stretch", // <--- changed
-        justifyContent: "center", // <--- changed
-        pointerEvents: "none", // <--- changed: side areas close through outside layer
-        animation: "phoneSlideBounceIn 420ms cubic-bezier(0.2, 0.95, 0.25, 1) both", // <--- changed
-        willChange: "transform, opacity", // <--- changed
+        width: PHONE_VIEWPORT_SAFE_WIDTH, // <--- changed: width follows locked phone aspect ratio
+        height: PHONE_VIEWPORT_SAFE_HEIGHT, // <--- changed: height controls phone size
+        aspectRatio: "390 / 844", // <--- changed: Safari cannot scrunch phone shape
+        maxWidth: "calc(100vw - 24px)", // <--- changed: safe side margin on Safari
+        maxHeight: "calc(100dvh - 120px)", // <--- changed: respects mobile Safari bars
+        position: "relative", // <--- changed
+        pointerEvents: "auto", // <--- changed
+        animation: "phoneSlideBounceIn 420ms cubic-bezier(.2, .95, .2, 1) both", // <--- changed
     },
     phonePanelClosing: {
         animation: "phoneSlideDownOut 280ms ease-in both", // <--- changed
     },
     phoneDevice: {
-        width: "min(100%, 360px)", // <--- changed
-        height: "100%", // <--- changed
+        width: "100%", // <--- changed: follows locked aspect-ratio wrapper
+        height: "100%", // <--- changed: follows locked aspect-ratio wrapper
         pointerEvents: "auto", // <--- changed: only actual phone captures clicks
-        borderRadius: 42, // <--- changed
+        borderRadius: "10.8% / 5%", // <--- changed: scales with phone shape instead of fixed px distortion
         border: "2px solid rgba(255,255,255,0.2)", // <--- changed
         background: "linear-gradient(180deg, #171717 0%, #050505 100%)", // <--- changed
         boxShadow: "0 28px 65px rgba(0,0,0,0.76)", // <--- changed
         position: "relative", // <--- changed
         overflow: "hidden", // <--- changed
         padding: "10px 10px 16px", // <--- changed
-        maxHeight: "100%", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
     phoneStatusBar: {
@@ -4418,17 +4416,17 @@ const styles: Record<string, CSSProperties> = {
         filter: "drop-shadow(0 0 1px rgba(0,0,0,0.18))", // <--- changed
     },
     phoneHomeScreen: {
-        height: "100%", // <--- changed
+        height: "calc(100% - 44px)", // <--- changed: prevents apps from overlapping the top status region
         display: "block", // <--- changed: fixed positioning keeps PC + iPhone spacing identical
-        padding: 0, // <--- changed: remove mobile flex padding differences
+        padding: 0, // <--- changed
         boxSizing: "border-box", // <--- changed
         position: "relative", // <--- changed
         zIndex: 1, // <--- changed
-        overflow: "hidden", // <--- changed
+        overflow: "hidden", // <--- changed: keeps apps/dock inside the phone screen
     },
     phoneAppGrid: {
-        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed grid width so iPhone cannot stretch gaps
-        maxWidth: HOME_SAFE_WIDTH, // <--- changed: prevents side clipping on real iPhones
+        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed grid width so Safari cannot stretch gaps
+        maxWidth: "calc(100% - 28px)", // <--- changed: prevents left/right clipping inside phone
         display: "grid", // <--- changed
         gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_APP_SIZE}px)`, // <--- changed: exact app columns
         gridTemplateRows: `repeat(${HOME_APP_GRID_ROWS}, auto)`, // <--- changed: exact 5 rows
