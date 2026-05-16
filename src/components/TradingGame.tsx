@@ -4315,7 +4315,7 @@ const styles: Record<string, CSSProperties> = {
         width: "100%", // <--- changed: follows locked aspect-ratio wrapper
         height: "100%", // <--- changed: follows locked aspect-ratio wrapper
         pointerEvents: "auto", // <--- changed: only actual phone captures clicks
-        borderRadius: "10.8% / 5%", // <--- changed: scales with phone shape instead of fixed px distortion
+        borderRadius: "14% / 7%", // <--- changed: scales with phone shape instead of fixed px distortion
         border: "2px solid rgba(255,255,255,0.2)", // <--- changed
         background: "linear-gradient(180deg, #171717 0%, #050505 100%)", // <--- changed
         boxShadow: "0 28px 65px rgba(0,0,0,0.76)", // <--- changed
