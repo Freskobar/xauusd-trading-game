@@ -116,7 +116,7 @@ const TRIM_BASE_CANDLES = 96;
 // Change these numbers to quickly tune the iPhone home screen layout. // <--- changed
 const HOME_APP_SIZE = 56; // <--- changed: size of the normal home screen apps/icons
 const HOME_APP_GRID_GAP = 16; // <--- changed: space between apps in the grid
-const HOME_APP_GRID_VERTICAL_OFFSET = 92; // <--- changed: moves the entire app grid up/down
+const HOME_APP_GRID_VERTICAL_OFFSET = 20; // <--- changed: moves the entire app grid up/down
 
 const HOME_SEARCH_WIDTH = 70; // <--- changed: width of the search bar
 const HOME_SEARCH_HEIGHT = 25; // <--- changed: height of the search bar
@@ -127,12 +127,13 @@ const HOME_DOCK_WIDTH = 300; // <--- changed: width of the dock/background bar
 const HOME_DOCK_APP_SIZE = HOME_APP_SIZE; // <--- changed: size of dock apps/icons
 const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 20; // <--- changed: height of the dock
 const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
-const HOME_DOCK_VERTICAL_OFFSET = 42; // <--- changed: moves the dock up/down
+const HOME_DOCK_VERTICAL_OFFSET = 0; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
 
 const PHONE_ASPECT_RATIO = 390 / 844; // <--- changed: locks fake phone shape on Safari
-const PHONE_VIEWPORT_SAFE_HEIGHT = "min(76vh, 720px)"; // <--- changed: keeps phone from being too tall on mobile Safari
-const PHONE_VIEWPORT_SAFE_WIDTH = `calc(${PHONE_VIEWPORT_SAFE_HEIGHT} * ${PHONE_ASPECT_RATIO})`; // <--- changed: width follows height
+const PHONE_VIEWPORT_SAFE_HEIGHT = "min(71vh, 680px)"; // <--- changed: slightly larger overall phone size while keeping proportions
+const PHONE_VIEWPORT_SAFE_WIDTH = `calc((${PHONE_VIEWPORT_SAFE_HEIGHT} * ${PHONE_ASPECT_RATIO}) + 42px)`; // <--- changed: wider phone while keeping same height/placement
+const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel further down
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -4305,6 +4306,7 @@ const styles: Record<string, CSSProperties> = {
         position: "relative", // <--- changed
         pointerEvents: "auto", // <--- changed
         animation: "phoneSlideBounceIn 420ms cubic-bezier(.2, .95, .2, 1) both", // <--- changed
+        marginTop: PHONE_VERTICAL_SHIFT, // <--- changed: shifts whole phone panel down
     },
     phonePanelClosing: {
         animation: "phoneSlideDownOut 280ms ease-in both", // <--- changed
