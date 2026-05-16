@@ -3241,15 +3241,15 @@ export default function TradingGame() {
 
                                         <div style={styles.phoneStatusRight}>
                                             <svg
-                                                width="23"
+                                                width="22"
                                                 height="16"
-                                                viewBox="0 0 23 16"
+                                                viewBox="0 0 22 16"
                                                 style={styles.statusSvg}
                                                 aria-label="Cellular signal"
                                             >
                                                 {[0, 1, 2, 3].map((bar) => {
                                                     const heights = [4, 7, 10, 13];
-                                                    const x = 1 + bar * 5.2;
+                                                    const x = 1 + bar * 5.05;
                                                     const y = 15 - heights[bar];
 
                                                     return (
@@ -3257,9 +3257,9 @@ export default function TradingGame() {
                                                             key={bar}
                                                             x={x}
                                                             y={y}
-                                                            width="3.8"
+                                                            width="3.7"
                                                             height={heights[bar]}
-                                                            rx="1.7"
+                                                            rx="0.9"
                                                             fill="currentColor"
                                                             opacity={bar < cellStrength ? 1 : 0.28}
                                                         />
@@ -3268,49 +3268,54 @@ export default function TradingGame() {
                                             </svg>
 
                                             <svg
-                                                width="24"
+                                                width="23"
                                                 height="17"
-                                                viewBox="0 0 24 17"
+                                                viewBox="0 0 23 17"
                                                 style={styles.statusSvg}
                                                 aria-label="Wi-Fi"
                                             >
                                                 <path
-                                                    d="M2.4 5.2C7.9 0.9 16.1 0.9 21.6 5.2"
+                                                    d="M2.5 5.15C7.55 1.35 15.45 1.35 20.5 5.15"
                                                     fill="none"
                                                     stroke="currentColor"
-                                                    strokeWidth="3"
-                                                    strokeLinecap="round"
+                                                    strokeWidth="2.75"
+                                                    strokeLinecap="butt"
+                                                    strokeLinejoin="round"
                                                     opacity={wifiStrength >= 3 ? 1 : 0.25}
                                                 />
                                                 <path
-                                                    d="M6.5 9.2C9.8 6.8 14.2 6.8 17.5 9.2"
+                                                    d="M6.25 9.05C9.25 6.95 13.75 6.95 16.75 9.05"
                                                     fill="none"
                                                     stroke="currentColor"
-                                                    strokeWidth="3"
-                                                    strokeLinecap="round"
+                                                    strokeWidth="2.75"
+                                                    strokeLinecap="butt"
+                                                    strokeLinejoin="round"
                                                     opacity={wifiStrength >= 2 ? 1 : 0.25}
                                                 />
                                                 <path
-                                                    d="M10.5 13.1C11.4 12.5 12.6 12.5 13.5 13.1"
+                                                    d="M9.9 12.65C10.85 12.05 12.15 12.05 13.1 12.65"
                                                     fill="none"
                                                     stroke="currentColor"
-                                                    strokeWidth="3"
-                                                    strokeLinecap="round"
+                                                    strokeWidth="2.75"
+                                                    strokeLinecap="butt"
+                                                    strokeLinejoin="round"
                                                     opacity={wifiStrength >= 1 ? 1 : 0.25}
                                                 />
-                                                <circle
-                                                    cx="12"
-                                                    cy="15"
-                                                    r="1.7"
+                                                <rect
+                                                    x="10.3"
+                                                    y="14.1"
+                                                    width="2.4"
+                                                    height="2.4"
+                                                    rx="0.65"
                                                     fill="currentColor"
                                                     opacity={wifiStrength >= 1 ? 1 : 0.25}
                                                 />
                                             </svg>
 
                                             <svg
-                                                width="43"
+                                                width="38"
                                                 height="20"
-                                                viewBox="0 0 43 20"
+                                                viewBox="0 0 38 20"
                                                 style={styles.statusSvg}
                                                 aria-label="Battery"
                                             >
@@ -3318,47 +3323,47 @@ export default function TradingGame() {
                                                     <clipPath id="iphoneBatteryClip">
                                                         <rect
                                                             x="1"
-                                                            y="2.5"
-                                                            width="36"
-                                                            height="15"
-                                                            rx="5"
+                                                            y="3"
+                                                            width="31.5"
+                                                            height="14"
+                                                            rx="4"
                                                         />
                                                     </clipPath>
                                                 </defs>
 
                                                 <rect
                                                     x="1"
-                                                    y="2.5"
-                                                    width="36"
-                                                    height="15"
-                                                    rx="5"
+                                                    y="3"
+                                                    width="31.5"
+                                                    height="14"
+                                                    rx="4"
                                                     fill="rgba(255,255,255,0.34)"
                                                 />
 
                                                 <rect
                                                     x="1"
-                                                    y="2.5"
-                                                    width={`${Math.max(2, Math.min(36, ((batteryPercent ?? 67) / 100) * 36))}`}
-                                                    height="15"
-                                                    rx="5"
+                                                    y="3"
+                                                    width={`${Math.max(2, Math.min(31.5, ((batteryPercent ?? 67) / 100) * 31.5))}`}
+                                                    height="14"
+                                                    rx="0"
                                                     fill="rgba(255,255,255,0.96)"
                                                     clipPath="url(#iphoneBatteryClip)"
                                                 />
 
                                                 <rect
-                                                    x="38.2"
-                                                    y="7"
-                                                    width="3.5"
-                                                    height="6"
-                                                    rx="1.8"
+                                                    x="33.5"
+                                                    y="7.2"
+                                                    width="3"
+                                                    height="5.6"
+                                                    rx="0"
                                                     fill="rgba(255,255,255,0.34)"
                                                 />
 
                                                 <text
-                                                    x="19"
-                                                    y="14.3"
+                                                    x="16.75"
+                                                    y="14.6"
                                                     textAnchor="middle"
-                                                    fontSize="11"
+                                                    fontSize="11.8"
                                                     fontWeight="900"
                                                     fill="#050505"
                                                     fontFamily="Arial, sans-serif"
