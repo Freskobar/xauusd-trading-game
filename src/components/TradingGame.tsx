@@ -431,7 +431,8 @@ export default function TradingGame() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const appStartRef = useRef(Date.now());
     const csvCandlesRef = useRef<CsvCandle[]>([]);
-    const pausedAtRef = useRef<number | null>(null); // <--- changed
+    const pauseStartedAtRef = useRef<number | null>(null); // <--- changed
+    const totalPausedMsRef = useRef(0); // <--- changed
 
     const [balance, setBalance] = useState(10000);
     const [timeframe, setTimeframe] = useState("15m");
@@ -622,11 +623,10 @@ export default function TradingGame() {
             const nextPaused = !prev;
 
             if (nextPaused) {
-                pausedAtRef.current = Date.now(); // <--- changed
-            } else if (pausedAtRef.current !== null) {
-                const pausedDuration = Date.now() - pausedAtRef.current;
-                appStartRef.current += pausedDuration; // <--- changed: prevents candle timer jump after resume
-                pausedAtRef.current = null;
+                pauseStartedAtRef.current = Date.now(); // <--- changed
+            } else if (pauseStartedAtRef.current !== null) {
+                totalPausedMsRef.current += Date.now() - pauseStartedAtRef.current; // <--- changed
+                pauseStartedAtRef.current = null; // <--- changed
             }
 
             return nextPaused;
@@ -2132,8 +2132,13 @@ export default function TradingGame() {
     const base15mMs = TIMEFRAME_SECONDS["15m"] * 1000;
     const completedInSelectedCandle = market.active15mIndex % selectedGroupSize;
     const remainingBaseCandles = selectedGroupSize - completedInSelectedCandle;
-    const effectiveNow = simulationPaused && pausedAtRef.current !== null ? pausedAtRef.current : now; // <--- changed
-    const elapsedInsideCurrent15m = effectiveNow - appStartRef.current;
+    const currentPauseDuration =
+        simulationPaused && pauseStartedAtRef.current !== null
+            ? now - pauseStartedAtRef.current
+            : 0; // <--- changed
+
+    const elapsedInsideCurrent15m =
+        now - appStartRef.current - totalPausedMsRef.current - currentPauseDuration; // <--- changed
 
     const remainingMs =
         remainingBaseCandles * base15mMs - elapsedInsideCurrent15m;
@@ -2144,9 +2149,7 @@ export default function TradingGame() {
 
     useEffect(() => {
         const timer = setInterval(() => {
-            if (!simulationPaused) {
-                setNow(Date.now());
-            }
+            setNow(Date.now()); // <--- changed: keep UI clock alive; countdown is frozen by pause math
         }, 250);
 
         return () => clearInterval(timer);
@@ -2204,7 +2207,8 @@ export default function TradingGame() {
             setMarket((prev) => {
                 if (!prev.loaded || !prev.plannedCandle) return prev;
 
-                const elapsed = Date.now() - appStartRef.current;
+                const elapsed =
+                    Date.now() - appStartRef.current - totalPausedMsRef.current; // <--- changed
                 const progress = clamp(elapsed / base15mMs, 0, 1);
 
                 const calculated = candleFromPlanAtProgress(
@@ -2292,6 +2296,8 @@ export default function TradingGame() {
             });
 
             appStartRef.current = Date.now();
+            totalPausedMsRef.current = 0; // <--- changed
+            pauseStartedAtRef.current = simulationPaused ? Date.now() : null; // <--- changed
         }, TIMEFRAME_SECONDS["15m"] * 1000);
 
         return () => clearInterval(closeInterval);
@@ -2921,8 +2927,14 @@ export default function TradingGame() {
                         aria-label="Chart settings"
                     >
                         <span style={styles.settingsIcon}>
-                            <span style={styles.settingsCogRing}>
-                                <span style={styles.settingsCogDot} />
+                            <span style={styles.sliderIconLine}>
+                                <span style={styles.sliderIconKnobLeft} />
+                            </span>
+                            <span style={styles.sliderIconLine}>
+                                <span style={styles.sliderIconKnobRight} />
+                            </span>
+                            <span style={styles.sliderIconLine}>
+                                <span style={styles.sliderIconKnobCenter} />
                             </span>
                         </span>
                     </button>
@@ -3264,34 +3276,54 @@ const styles: Record<string, CSSProperties> = {
     },
     settingsIcon: {
         width: 22, // <--- changed
-        height: 22, // <--- changed
+        height: 18, // <--- changed
         display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        borderRadius: 999, // <--- changed
-        background: "transparent", // <--- changed
+        gap: 4, // <--- changed
         color: "#ffffff", // <--- changed
-        fontSize: 16, // <--- changed
-        lineHeight: 1, // <--- changed
     },
-    settingsCogRing: {
-        width: 17, // <--- changed
-        height: 17, // <--- changed
-        border: "2px solid #ffffff", // <--- changed
-        borderRadius: 999, // <--- changed
+    sliderIconLine: {
+        width: 20, // <--- changed
+        height: 2, // <--- changed
+        borderRadius: 99, // <--- changed
+        background: "#ffffff", // <--- changed
         position: "relative", // <--- changed
         display: "block", // <--- changed
-        boxSizing: "border-box", // <--- changed
     },
-    settingsCogDot: {
+    sliderIconKnobLeft: {
         position: "absolute", // <--- changed
+        left: 3, // <--- changed
+        top: "50%", // <--- changed
         width: 5, // <--- changed
         height: 5, // <--- changed
-        borderRadius: 999, // <--- changed
+        borderRadius: 99, // <--- changed
         background: "#ffffff", // <--- changed
+        transform: "translateY(-50%)", // <--- changed
+        boxShadow: "0 0 0 2px #151515", // <--- changed
+    },
+    sliderIconKnobRight: {
+        position: "absolute", // <--- changed
+        right: 3, // <--- changed
+        top: "50%", // <--- changed
+        width: 5, // <--- changed
+        height: 5, // <--- changed
+        borderRadius: 99, // <--- changed
+        background: "#ffffff", // <--- changed
+        transform: "translateY(-50%)", // <--- changed
+        boxShadow: "0 0 0 2px #151515", // <--- changed
+    },
+    sliderIconKnobCenter: {
+        position: "absolute", // <--- changed
         left: "50%", // <--- changed
         top: "50%", // <--- changed
+        width: 5, // <--- changed
+        height: 5, // <--- changed
+        borderRadius: 99, // <--- changed
+        background: "#ffffff", // <--- changed
         transform: "translate(-50%, -50%)", // <--- changed
+        boxShadow: "0 0 0 2px #151515", // <--- changed
     },
     settingsMenu: {
         position: "absolute", // <--- changed
