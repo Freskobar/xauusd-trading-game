@@ -123,22 +123,20 @@ const HOME_SEARCH_HEIGHT = 25; // <--- changed: height of the search bar
 const HOME_SEARCH_RADIUS = 999; // <--- changed: roundness of the search bar corners
 const HOME_SEARCH_VERTICAL_OFFSET = 15; // <--- changed: moves the search bar up/down
 
-const HOME_DOCK_WIDTH = 300; // <--- changed: width of the dock/background bar
+const HOME_DOCK_WIDTH = 280; // <--- changed: width of the dock/background bar; fits restored phone width
 const HOME_DOCK_APP_SIZE = HOME_APP_SIZE; // <--- changed: size of dock apps/icons
 const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 20; // <--- changed: height of the dock
 const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
 const HOME_DOCK_VERTICAL_OFFSET = 0; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
 
-const PHONE_ASPECT_RATIO = 390 / 844; // <--- changed: locks fake phone shape on Safari
-const PHONE_VIEWPORT_SAFE_HEIGHT = "min(71vh, 680px)"; // <--- changed: slightly larger overall phone size while keeping proportions
-const PHONE_VIEWPORT_SAFE_WIDTH = `calc((${PHONE_VIEWPORT_SAFE_HEIGHT} * ${PHONE_ASPECT_RATIO}) + 42px)`; // <--- changed: wider phone while keeping same height/placement
 const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel further down
+const PHONE_BASE_WIDTH = 330; // <--- changed: restored PC phone width baseline
+const PHONE_BASE_HEIGHT = 640; // <--- changed: shorter restored PC phone height baseline
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
 const HOME_APP_GRID_WIDTH = HOME_APP_GRID_COLUMNS * HOME_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_APP_GRID_GAP; // <--- changed: fixed app grid width so iPhone Safari cannot stretch gaps
-const HOME_DOCK_CONTENT_WIDTH = HOME_APP_GRID_COLUMNS * HOME_DOCK_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_DOCK_APP_HORIZONTAL_GAP; // <--- changed: fixed dock content width
 
 
 
@@ -771,6 +769,7 @@ export default function TradingGame() {
     const [quantity, setQuantity] = useState(1);
     const [now, setNow] = useState(Date.now());
     const [isLandscape, setIsLandscape] = useState(false); // <--- changed
+    const [mobilePhoneScale, setMobilePhoneScale] = useState(1); // <--- changed: mobile-only whole-phone scaling
     const [isDesktopStatusRender, setIsDesktopStatusRender] = useState(false); // <--- changed: desktop-only fake phone status bar polish
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
@@ -2547,6 +2546,17 @@ export default function TradingGame() {
             const isPhoneSizedScreen =
                 Math.min(window.innerWidth, window.innerHeight) <= 768; // <--- changed
 
+
+            const nextPhoneScale = isPhoneSizedScreen
+                ? Math.min(
+                    (window.innerWidth - 24) / PHONE_BASE_WIDTH,
+                    (window.innerHeight - 24) / PHONE_BASE_HEIGHT,
+                    1
+                )
+                : 1; // <--- changed: PC remains untouched
+
+            setMobilePhoneScale(nextPhoneScale); // <--- changed
+
             setIsLandscape(
                 isPhoneSizedScreen && window.innerWidth > window.innerHeight
             ); // <--- changed: desktop PC should never show rotate blocker
@@ -3432,6 +3442,11 @@ export default function TradingGame() {
                             <div
                                 style={{
                                     ...styles.phonePanel,
+                                    transform:
+                                        mobilePhoneScale !== 1
+                                            ? `scale(${mobilePhoneScale})`
+                                            : "none", // <--- changed: mobile scales whole phone; PC stays baseline
+                                    transformOrigin: "top center", // <--- changed
                                     ...(phoneClosing ? styles.phonePanelClosing : {}),
                                 }}
                                 onClick={(event) => event.stopPropagation()}
@@ -4298,24 +4313,21 @@ const styles: Record<string, CSSProperties> = {
         pointerEvents: "auto", // <--- changed
     },
     phonePanel: {
-        width: PHONE_VIEWPORT_SAFE_WIDTH, // <--- changed: width follows locked phone aspect ratio
-        height: PHONE_VIEWPORT_SAFE_HEIGHT, // <--- changed: height controls phone size
-        aspectRatio: "390 / 844", // <--- changed: Safari cannot scrunch phone shape
-        maxWidth: "calc(100vw - 24px)", // <--- changed: safe side margin on Safari
-        maxHeight: "calc(100dvh - 120px)", // <--- changed: respects mobile Safari bars
+        width: PHONE_BASE_WIDTH, // <--- changed: restored PC phone width baseline
+        height: PHONE_BASE_HEIGHT, // <--- changed: restored PC phone height baseline
         position: "relative", // <--- changed
         pointerEvents: "auto", // <--- changed
         animation: "phoneSlideBounceIn 420ms cubic-bezier(.2, .95, .2, 1) both", // <--- changed
-        marginTop: PHONE_VERTICAL_SHIFT, // <--- changed: shifts whole phone panel down
+        marginTop: PHONE_VERTICAL_SHIFT, // <--- changed
     },
     phonePanelClosing: {
         animation: "phoneSlideDownOut 280ms ease-in both", // <--- changed
     },
     phoneDevice: {
-        width: "100%", // <--- changed: follows locked aspect-ratio wrapper
-        height: "100%", // <--- changed: follows locked aspect-ratio wrapper
-        pointerEvents: "auto", // <--- changed: only actual phone captures clicks
-        borderRadius: "10.8% / 5%", // <--- changed: scales with phone shape instead of fixed px distortion
+        width: "100%", // <--- changed: fills restored phone panel width
+        height: "100%", // <--- changed: fills restored phone panel height
+        pointerEvents: "auto", // <--- changed
+        borderRadius: "10.8% / 5%", // <--- changed
         border: "2px solid rgba(255,255,255,0.2)", // <--- changed
         background: "linear-gradient(180deg, #171717 0%, #050505 100%)", // <--- changed
         boxShadow: "0 28px 65px rgba(0,0,0,0.76)", // <--- changed
@@ -4538,7 +4550,6 @@ const styles: Record<string, CSSProperties> = {
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
         justifyItems: "center", // <--- changed: keeps dock apps centered on iPhone
-        minWidth: HOME_DOCK_CONTENT_WIDTH, // <--- changed: fixed dock content width
         padding: "9px 9px", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
