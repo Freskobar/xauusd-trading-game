@@ -437,6 +437,16 @@ export default function TradingGame() {
     const [quantity, setQuantity] = useState(1);
     const [now, setNow] = useState(Date.now());
     const [isLandscape, setIsLandscape] = useState(false); // <--- changed
+    const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
+    const [bullCandleColor, setBullCandleColor] = useState(GREEN); // <--- changed
+    const [bearCandleColor, setBearCandleColor] = useState(RED); // <--- changed
+    const [visibleTimeframes, setVisibleTimeframes] = useState<Record<string, boolean>>({ // <--- changed
+        "15m": true,
+        "30m": true,
+        "1h": true,
+        "4h": true,
+        Daily: true,
+    });
 
     const [market, setMarket] = useState<MarketState>(() => ({
         loaded: false,
@@ -604,6 +614,44 @@ export default function TradingGame() {
             hidePositionControls(); // <--- changed
         }
     }, [position, price, takeProfit, stopLoss]);
+
+    function toggleTimeframeVisibility(tf: string) {
+        setVisibleTimeframes((prev) => {
+            const enabledCount = Object.values(prev).filter(Boolean).length;
+            const isCurrentlyEnabled = prev[tf];
+
+            if (isCurrentlyEnabled && enabledCount <= 1) {
+                return prev;
+            }
+
+            const next = {
+                ...prev,
+                [tf]: !isCurrentlyEnabled,
+            };
+
+            if (!next[timeframe]) {
+                const firstVisible = Object.keys(next).find((key) => next[key]);
+                if (firstVisible) {
+                    setTimeframe(firstVisible);
+                }
+            }
+
+            return next;
+        });
+    }
+
+    function resetVisualSettings() {
+        setBullCandleColor(GREEN);
+        setBearCandleColor(RED);
+        setVisibleTimeframes({
+            "15m": true,
+            "30m": true,
+            "1h": true,
+            "4h": true,
+            Daily: true,
+        });
+        setTimeframe("15m");
+    }
 
     function handleBuy() {
         if (position) return;
@@ -2453,7 +2501,7 @@ export default function TradingGame() {
 
         visible.forEach((c, i) => {
             const x = startX + i * candleStep;
-            const color = c.close >= c.open ? GREEN : RED;
+            const color = c.close >= c.open ? bullCandleColor : bearCandleColor; // <--- changed
 
             const openY = priceToY(c.open);
             const closeY = priceToY(c.close);
@@ -2769,6 +2817,8 @@ export default function TradingGame() {
         stopLoss,
         showPositionControls, // <--- changed
         positionControlsOpacity, // <--- changed
+        bullCandleColor, // <--- changed
+        bearCandleColor, // <--- changed
     ]);
 
     return (
@@ -2822,19 +2872,111 @@ export default function TradingGame() {
                 </div>
 
                 <div style={styles.timeframes}>
-                    {["15m", "30m", "1h", "4h", "Daily"].map((tf) => (
-                        <button
-                            key={tf}
-                            onClick={() => setTimeframe(tf)}
-                            style={
-                                timeframe === tf
-                                    ? styles.tfActive
-                                    : styles.tfButton
-                            }
-                        >
-                            {tf}
-                        </button>
-                    ))}
+                    {["15m", "30m", "1h", "4h", "Daily"]
+                        .filter((tf) => visibleTimeframes[tf])
+                        .map((tf) => (
+                            <button
+                                key={tf}
+                                onClick={() => setTimeframe(tf)}
+                                style={
+                                    timeframe === tf
+                                        ? styles.tfActive
+                                        : styles.tfButton
+                                }
+                            >
+                                {tf}
+                            </button>
+                        ))}
+                </div>
+
+                <div style={styles.chartTools}> {/* <--- changed */}
+                    <button
+                        style={styles.settingsButton}
+                        onClick={() => setSettingsOpen((prev) => !prev)}
+                        aria-label="Chart settings"
+                    >
+                        <span style={styles.settingsIcon}>
+                            <span style={styles.settingsGearOuter}>⚙</span>
+                        </span>
+                    </button>
+
+                    {settingsOpen && (
+                        <div style={styles.settingsMenu}>
+                            <div style={styles.settingsHeader}>
+                                <div>
+                                    <div style={styles.settingsTitle}>Chart Settings</div>
+                                    <div style={styles.settingsSubtitle}>Customize your game view</div>
+                                </div>
+
+                                <button
+                                    style={styles.settingsClose}
+                                    onClick={() => setSettingsOpen(false)}
+                                >
+                                    ×
+                                </button>
+                            </div>
+
+                            <div style={styles.settingsSection}>
+                                <div style={styles.settingsSectionTitle}>Candles</div>
+
+                                <div style={styles.colorControlRow}>
+                                    <div>
+                                        <div style={styles.colorLabel}>Bullish</div>
+                                        <div style={styles.colorHint}>Up candle color</div>
+                                    </div>
+
+                                    <input
+                                        type="color"
+                                        value={bullCandleColor}
+                                        onChange={(event) => setBullCandleColor(event.target.value)}
+                                        style={styles.colorPicker}
+                                    />
+                                </div>
+
+                                <div style={styles.colorControlRow}>
+                                    <div>
+                                        <div style={styles.colorLabel}>Bearish</div>
+                                        <div style={styles.colorHint}>Down candle color</div>
+                                    </div>
+
+                                    <input
+                                        type="color"
+                                        value={bearCandleColor}
+                                        onChange={(event) => setBearCandleColor(event.target.value)}
+                                        style={styles.colorPicker}
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={styles.settingsSection}>
+                                <div style={styles.settingsSectionTitle}>Top Timeframes</div>
+
+                                <div style={styles.timeframeToggleGrid}>
+                                    {["15m", "30m", "1h", "4h", "Daily"].map((tf) => (
+                                        <button
+                                            key={tf}
+                                            style={{
+                                                ...styles.timeframeToggle,
+                                                ...(visibleTimeframes[tf]
+                                                    ? styles.timeframeToggleActive
+                                                    : {}),
+                                            }}
+                                            onClick={() => toggleTimeframeVisibility(tf)}
+                                        >
+                                            {tf}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <button
+                                style={styles.resetSettingsButton}
+                                onClick={resetVisualSettings}
+                            >
+                                RESET SETTINGS
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div style={styles.chartWrap}>
@@ -3030,7 +3172,7 @@ const styles: Record<string, CSSProperties> = {
         background: "#181818",
         padding: "12px 12px 14px",
         display: "grid",
-        gridTemplateColumns: "repeat(5, 1fr)",
+        gridTemplateColumns: "repeat(auto-fit, minmax(56px, 1fr))", // <--- changed
         gap: 8,
         borderBottom: "1px solid #1f1f1f",
     },
@@ -3053,6 +3195,169 @@ const styles: Record<string, CSSProperties> = {
         fontSize: 16,
         fontWeight: 700,
         cursor: "pointer",
+    },
+    chartTools: {
+        position: "relative", // <--- changed
+        background: "#050505", // <--- changed
+        minHeight: 42, // <--- changed
+        display: "flex", // <--- changed
+        justifyContent: "flex-end", // <--- changed
+        alignItems: "center", // <--- changed
+        padding: "8px 14px 2px", // <--- changed
+        zIndex: 5, // <--- changed
+    },
+    settingsButton: {
+        width: 34, // <--- changed
+        height: 34, // <--- changed
+        borderRadius: 12, // <--- changed
+        border: "1px solid rgba(255,255,255,0.16)", // <--- changed
+        background: "rgba(255,255,255,0.08)", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        cursor: "pointer", // <--- changed
+        boxShadow: "0 8px 20px rgba(0,0,0,0.38)", // <--- changed
+        padding: 0, // <--- changed
+    },
+    settingsIcon: {
+        width: 22, // <--- changed
+        height: 22, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "transparent", // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 16, // <--- changed
+        lineHeight: 1, // <--- changed
+    },
+    settingsGearOuter: {
+        display: "block", // <--- changed
+        transform: "translateY(-0.5px)", // <--- changed
+    },
+    settingsMenu: {
+        position: "absolute", // <--- changed
+        top: 48, // <--- changed
+        right: 14, // <--- changed
+        width: 292, // <--- changed
+        maxWidth: "calc(100vw - 28px)", // <--- changed
+        borderRadius: 22, // <--- changed
+        background: "linear-gradient(180deg, rgba(32,32,32,0.98), rgba(12,12,12,0.98))", // <--- changed
+        border: "1px solid rgba(255,255,255,0.12)", // <--- changed
+        boxShadow: "0 24px 55px rgba(0,0,0,0.72)", // <--- changed
+        padding: 16, // <--- changed
+        zIndex: 50, // <--- changed
+        backdropFilter: "blur(12px)", // <--- changed
+    },
+    settingsHeader: {
+        display: "flex", // <--- changed
+        justifyContent: "space-between", // <--- changed
+        alignItems: "flex-start", // <--- changed
+        gap: 12, // <--- changed
+        marginBottom: 16, // <--- changed
+    },
+    settingsTitle: {
+        fontSize: 18, // <--- changed
+        fontWeight: 900, // <--- changed
+        color: "#ffffff", // <--- changed
+        lineHeight: 1, // <--- changed
+    },
+    settingsSubtitle: {
+        marginTop: 5, // <--- changed
+        fontSize: 11, // <--- changed
+        color: "#8d8d8d", // <--- changed
+        fontWeight: 700, // <--- changed
+        textTransform: "uppercase", // <--- changed
+        letterSpacing: 0.4, // <--- changed
+    },
+    settingsClose: {
+        width: 28, // <--- changed
+        height: 28, // <--- changed
+        borderRadius: 10, // <--- changed
+        border: "none", // <--- changed
+        background: "rgba(255,255,255,0.1)", // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 20, // <--- changed
+        fontWeight: 900, // <--- changed
+        lineHeight: 1, // <--- changed
+        cursor: "pointer", // <--- changed
+    },
+    settingsSection: {
+        borderRadius: 16, // <--- changed
+        background: "rgba(255,255,255,0.055)", // <--- changed
+        border: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        padding: 12, // <--- changed
+        marginBottom: 12, // <--- changed
+    },
+    settingsSectionTitle: {
+        color: "#ffffff", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: 0.5, // <--- changed
+        textTransform: "uppercase", // <--- changed
+        marginBottom: 10, // <--- changed
+    },
+    colorControlRow: {
+        display: "flex", // <--- changed
+        justifyContent: "space-between", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 12, // <--- changed
+        padding: "9px 0", // <--- changed
+        borderTop: "1px solid rgba(255,255,255,0.06)", // <--- changed
+    },
+    colorLabel: {
+        color: "#ffffff", // <--- changed
+        fontSize: 13, // <--- changed
+        fontWeight: 900, // <--- changed
+        lineHeight: 1, // <--- changed
+    },
+    colorHint: {
+        marginTop: 5, // <--- changed
+        color: "#848484", // <--- changed
+        fontSize: 11, // <--- changed
+        fontWeight: 700, // <--- changed
+    },
+    colorPicker: {
+        width: 44, // <--- changed
+        height: 34, // <--- changed
+        border: "none", // <--- changed
+        borderRadius: 12, // <--- changed
+        background: "transparent", // <--- changed
+        cursor: "pointer", // <--- changed
+        padding: 0, // <--- changed
+    },
+    timeframeToggleGrid: {
+        display: "grid", // <--- changed
+        gridTemplateColumns: "repeat(5, 1fr)", // <--- changed
+        gap: 7, // <--- changed
+    },
+    timeframeToggle: {
+        height: 32, // <--- changed
+        borderRadius: 11, // <--- changed
+        border: "1px solid rgba(255,255,255,0.1)", // <--- changed
+        background: "rgba(255,255,255,0.07)", // <--- changed
+        color: "#808080", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 900, // <--- changed
+        cursor: "pointer", // <--- changed
+    },
+    timeframeToggleActive: {
+        background: "#ffffff", // <--- changed
+        color: "#050505", // <--- changed
+        border: "1px solid #ffffff", // <--- changed
+    },
+    resetSettingsButton: {
+        width: "100%", // <--- changed
+        height: 38, // <--- changed
+        borderRadius: 14, // <--- changed
+        border: "none", // <--- changed
+        background: "rgba(47,140,255,0.18)", // <--- changed
+        color: "#7db8ff", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 900, // <--- changed
+        cursor: "pointer", // <--- changed
+        letterSpacing: 0.4, // <--- changed
     },
     chartWrap: {
         flex: 1,
