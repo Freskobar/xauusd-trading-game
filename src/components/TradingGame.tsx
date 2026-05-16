@@ -138,8 +138,6 @@ const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel furth
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
 const HOME_APP_GRID_WIDTH = HOME_APP_GRID_COLUMNS * HOME_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_APP_GRID_GAP; // <--- changed: fixed app grid width so iPhone Safari cannot stretch gaps
-const HOME_SAFE_SIDE_PADDING = 12; // <--- changed: small side buffer so icons/shadows do not clip on iPhone
-const HOME_SAFE_WIDTH = `calc(100% - ${HOME_SAFE_SIDE_PADDING * 2}px)`; // <--- changed: available phone width without scaling
 const HOME_DOCK_CONTENT_WIDTH = HOME_APP_GRID_COLUMNS * HOME_DOCK_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_DOCK_APP_HORIZONTAL_GAP; // <--- changed: fixed dock content width
 
 
@@ -2381,6 +2379,8 @@ export default function TradingGame() {
         dragModeRef.current = null;
     }
 
+
+
     useEffect(() => {
         let cancelled = false;
 
@@ -4315,7 +4315,7 @@ const styles: Record<string, CSSProperties> = {
         width: "100%", // <--- changed: follows locked aspect-ratio wrapper
         height: "100%", // <--- changed: follows locked aspect-ratio wrapper
         pointerEvents: "auto", // <--- changed: only actual phone captures clicks
-        borderRadius: "14% / 7%", // <--- changed: scales with phone shape instead of fixed px distortion
+        borderRadius: "10.8% / 5%", // <--- changed: scales with phone shape instead of fixed px distortion
         border: "2px solid rgba(255,255,255,0.2)", // <--- changed
         background: "linear-gradient(180deg, #171717 0%, #050505 100%)", // <--- changed
         boxShadow: "0 28px 65px rgba(0,0,0,0.76)", // <--- changed
@@ -4418,29 +4418,28 @@ const styles: Record<string, CSSProperties> = {
         filter: "drop-shadow(0 0 1px rgba(0,0,0,0.18))", // <--- changed
     },
     phoneHomeScreen: {
-        height: "calc(100% - 44px)", // <--- changed: prevents apps from overlapping the top status region
-        display: "block", // <--- changed: fixed positioning keeps PC + iPhone spacing identical
+        height: "calc(100% - 44px)", // <--- changed: normal phone content area under status bar
+        display: "block", // <--- changed
         padding: 0, // <--- changed
         boxSizing: "border-box", // <--- changed
         position: "relative", // <--- changed
         zIndex: 1, // <--- changed
-        overflow: "hidden", // <--- changed: keeps apps/dock inside the phone screen
+        overflow: "hidden", // <--- changed
     },
     phoneAppGrid: {
-        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed grid width so Safari cannot stretch gaps
-        maxWidth: "calc(100% - 28px)", // <--- changed: prevents left/right clipping inside phone
+        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed app grid width
         display: "grid", // <--- changed
-        gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_APP_SIZE}px)`, // <--- changed: exact app columns
-        gridTemplateRows: `repeat(${HOME_APP_GRID_ROWS}, auto)`, // <--- changed: exact 5 rows
-        columnGap: HOME_APP_GRID_GAP, // <--- changed: exact horizontal gap on PC + iPhone
-        rowGap: HOME_APP_GRID_GAP, // <--- changed: exact vertical gap on PC + iPhone
+        gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_APP_SIZE}px)`, // <--- changed
+        gridTemplateRows: `repeat(${HOME_APP_GRID_ROWS}, auto)`, // <--- changed
+        columnGap: HOME_APP_GRID_GAP, // <--- changed
+        rowGap: HOME_APP_GRID_GAP, // <--- changed
         padding: 0, // <--- changed
         boxSizing: "border-box", // <--- changed
         position: "absolute", // <--- changed
-        top: HOME_APP_GRID_VERTICAL_OFFSET, // <--- changed: app grid vertical knob
+        top: HOME_APP_GRID_VERTICAL_OFFSET, // <--- changed
         left: "50%", // <--- changed
         transform: "translateX(-50%)", // <--- changed
-        overflow: "visible", // <--- changed: prevents icon shadows from looking clipped
+        overflow: "visible", // <--- changed
         minHeight: 0, // <--- changed
     },
     phoneAppSlot: {
@@ -4522,7 +4521,6 @@ const styles: Record<string, CSSProperties> = {
     },
     phoneDock: {
         width: HOME_DOCK_WIDTH, // <--- changed: dock width knob
-        maxWidth: HOME_SAFE_WIDTH, // <--- changed: prevents dock edge clipping on iPhone
         height: HOME_DOCK_HEIGHT, // <--- changed: dock height knob
         borderRadius: HOME_DOCK_RADIUS, // <--- changed
         position: "absolute", // <--- changed: fixed dock placement on PC + iPhone
