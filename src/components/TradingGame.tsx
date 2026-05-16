@@ -3108,7 +3108,7 @@ export default function TradingGame() {
                         ))}
                 </div>
 
-                <div style={styles.chartTools}> {/* <--- changed */}
+                <div style={styles.floatingSettingsWrap}> {/* <--- changed */}
                     <button
                         style={styles.settingsButton}
                         onClick={() => setSettingsOpen((prev) => !prev)}
@@ -3469,18 +3469,21 @@ const styles: Record<string, CSSProperties> = {
         cursor: "pointer",
     },
     marketTimeBlock: {
-        background: "#050505", // <--- changed
-        borderTop: "none", // <--- changed
-        borderBottom: "none", // <--- changed
-        padding: "0px 16px 2px", // <--- changed
-        marginTop: "-8px", // <--- changed
+        background: "transparent", // <--- changed
+        border: "none", // <--- changed
+        padding: "0 16px 6px", // <--- changed
+        marginTop: "-34px", // <--- changed
         display: "flex", // <--- changed
         flexDirection: "column", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        gap: 1, // <--- changed
+        gap: 3, // <--- changed
         textAlign: "center", // <--- changed
         lineHeight: 1, // <--- changed
+        overflow: "visible", // <--- changed
+        minHeight: "auto", // <--- changed
+        height: "auto", // <--- changed
+        flexShrink: 0, // <--- changed
     },
     marketTimeLabel: {
         display: "flex", // <--- changed
@@ -3493,7 +3496,7 @@ const styles: Record<string, CSSProperties> = {
         letterSpacing: 0.8, // <--- changed
         textTransform: "uppercase", // <--- changed
         whiteSpace: "nowrap", // <--- changed
-        lineHeight: 1, // <--- changed
+        lineHeight: 1.05, // <--- changed
         width: "100%", // <--- changed
     },
     liveDot: {
@@ -3510,7 +3513,7 @@ const styles: Record<string, CSSProperties> = {
         fontWeight: 900, // <--- changed
         letterSpacing: 0.2, // <--- changed
         whiteSpace: "nowrap", // <--- changed
-        lineHeight: 1.15, // <--- changed
+        lineHeight: 1.2, // <--- changed
         textAlign: "center", // <--- changed
         width: "100%", // <--- changed
     },
@@ -3520,20 +3523,18 @@ const styles: Record<string, CSSProperties> = {
         fontWeight: 900, // <--- changed
         letterSpacing: 0.3, // <--- changed
         whiteSpace: "nowrap", // <--- changed
-        lineHeight: 1.1, // <--- changed
+        lineHeight: 1.2, // <--- changed
         textAlign: "center", // <--- changed
         width: "100%", // <--- changed
     },
-    chartTools: {
-        position: "relative", // <--- changed
-        background: "#050505", // <--- changed
-        minHeight: 42, // <--- changed
-        borderBottom: "none", // <--- changed
+    floatingSettingsWrap: {
+        position: "absolute", // <--- changed
+        top: 58, // <--- changed
+        right: 14, // <--- changed
+        zIndex: 60, // <--- changed
         display: "flex", // <--- changed
-        justifyContent: "flex-end", // <--- changed
         alignItems: "center", // <--- changed
-        padding: "8px 14px 2px", // <--- changed
-        zIndex: 5, // <--- changed
+        justifyContent: "center", // <--- changed
     },
     settingsButton: {
         width: 34, // <--- changed
@@ -3603,7 +3604,7 @@ const styles: Record<string, CSSProperties> = {
     settingsMenu: {
         position: "absolute", // <--- changed
         top: 48, // <--- changed
-        right: 14, // <--- changed
+        right: 0, // <--- changed
         width: 292, // <--- changed
         maxWidth: "calc(100vw - 28px)", // <--- changed
         borderRadius: 22, // <--- changed
