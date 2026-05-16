@@ -2292,8 +2292,6 @@ export default function TradingGame() {
     const allCandles = useMemo(() => {
         return [...market.closedCandles, market.activeCandle];
     }, [market.closedCandles, market.activeCandle]);
-
-    const selectedGroupSize = getGroupSize(timeframe);
     const base15mMs = TIMEFRAME_SECONDS["15m"] * 1000;
     const currentPauseDuration =
         simulationPaused && pauseStartedAtRef.current !== null
