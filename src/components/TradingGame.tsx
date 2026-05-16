@@ -608,6 +608,7 @@ export default function TradingGame() {
     const [phoneClosing, setPhoneClosing] = useState(false); // <--- changed
     const [cellStrength, setCellStrength] = useState(4); // <--- changed
     const [wifiStrength, setWifiStrength] = useState(3); // <--- changed
+    const [locationServicesOn, setLocationServicesOn] = useState(true); // <--- changed
     const [batteryPercent, setBatteryPercent] = useState<number | null>(null); // <--- changed
     const [simulationPaused, setSimulationPaused] = useState(false); // <--- changed
     const simulationPausedRef = useRef(false); // <--- changed
@@ -2419,12 +2420,23 @@ export default function TradingGame() {
     }, []);
 
     useEffect(() => {
-        const statusInterval = window.setInterval(() => {
-            setCellStrength(Math.floor(Math.random() * 4) + 1); // <--- changed
-            setWifiStrength(Math.floor(Math.random() * 3) + 1); // <--- changed
-        }, 4500);
+        const cellInterval = window.setInterval(() => {
+            setCellStrength(Math.floor(Math.random() * 4) + 1); // <--- changed: service bars change on their own random rhythm
+        }, 3800 + Math.floor(Math.random() * 2400));
 
-        return () => window.clearInterval(statusInterval);
+        const wifiInterval = window.setInterval(() => {
+            setWifiStrength(Math.floor(Math.random() * 3) + 1); // <--- changed: Wi-Fi changes separately from service bars
+        }, 5200 + Math.floor(Math.random() * 3200));
+
+        const locationInterval = window.setInterval(() => {
+            setLocationServicesOn((prev) => (Math.random() > 0.45 ? !prev : prev)); // <--- changed: randomly toggles location services on/off
+        }, 7000 + Math.floor(Math.random() * 5000));
+
+        return () => {
+            window.clearInterval(cellInterval);
+            window.clearInterval(wifiInterval);
+            window.clearInterval(locationInterval);
+        };
     }, []);
 
     useEffect(() => {
@@ -3221,18 +3233,20 @@ export default function TradingGame() {
                                         <div style={styles.phoneStatusLeft}>
                                             <span>{phoneStatusTime}</span>
 
-                                            <svg
-                                                width="15"
-                                                height="15"
-                                                viewBox="0 0 24 24"
-                                                style={styles.phoneLocationSvg}
-                                                aria-label="Location services"
-                                            >
-                                                <path
-                                                    d="M4.4 3.5L21.2 10.3C22.1 10.7 22 12 21 12.2L13.8 13.8L12.2 21C12 22 10.7 22.1 10.3 21.2L3.5 4.4C3.2 3.8 3.8 3.2 4.4 3.5Z"
-                                                    fill="currentColor"
-                                                />
-                                            </svg>
+                                            {locationServicesOn && ( // <--- changed
+                                                <svg
+                                                    width="15"
+                                                    height="15"
+                                                    viewBox="0 0 24 24"
+                                                    style={styles.phoneLocationSvg}
+                                                    aria-label="Location services"
+                                                >
+                                                    <path
+                                                        d="M4.4 3.5L21.2 10.3C22.1 10.7 22 12 21 12.2L13.8 13.8L12.2 21C12 22 10.7 22.1 10.3 21.2L3.5 4.4C3.2 3.8 3.8 3.2 4.4 3.5Z"
+                                                        fill="currentColor"
+                                                    />
+                                                </svg>
+                                            )}
                                         </div>
 
                                         <div style={styles.phoneDynamicIsland}>
@@ -3259,7 +3273,7 @@ export default function TradingGame() {
                                                             y={y}
                                                             width="3.7"
                                                             height={heights[bar]}
-                                                            rx="0.9"
+                                                            rx="0.45"
                                                             fill="currentColor"
                                                             opacity={bar < cellStrength ? 1 : 0.28}
                                                         />
@@ -3275,47 +3289,38 @@ export default function TradingGame() {
                                                 aria-label="Wi-Fi"
                                             >
                                                 <path
-                                                    d="M2.5 5.15C7.55 1.35 15.45 1.35 20.5 5.15"
+                                                    d="M2.9 5.25C7.85 1.65 15.15 1.65 20.1 5.25"
                                                     fill="none"
                                                     stroke="currentColor"
-                                                    strokeWidth="2.75"
+                                                    strokeWidth="2.55"
                                                     strokeLinecap="butt"
-                                                    strokeLinejoin="round"
+                                                    strokeLinejoin="miter"
                                                     opacity={wifiStrength >= 3 ? 1 : 0.25}
                                                 />
                                                 <path
-                                                    d="M6.25 9.05C9.25 6.95 13.75 6.95 16.75 9.05"
+                                                    d="M6.35 9.05C9.25 7.05 13.75 7.05 16.65 9.05"
                                                     fill="none"
                                                     stroke="currentColor"
-                                                    strokeWidth="2.75"
+                                                    strokeWidth="2.55"
                                                     strokeLinecap="butt"
-                                                    strokeLinejoin="round"
+                                                    strokeLinejoin="miter"
                                                     opacity={wifiStrength >= 2 ? 1 : 0.25}
                                                 />
                                                 <path
-                                                    d="M9.9 12.65C10.85 12.05 12.15 12.05 13.1 12.65"
+                                                    d="M9.75 12.35C10.75 11.7 12.25 11.7 13.25 12.35"
                                                     fill="none"
                                                     stroke="currentColor"
-                                                    strokeWidth="2.75"
+                                                    strokeWidth="2.55"
                                                     strokeLinecap="butt"
-                                                    strokeLinejoin="round"
-                                                    opacity={wifiStrength >= 1 ? 1 : 0.25}
-                                                />
-                                                <rect
-                                                    x="10.3"
-                                                    y="14.1"
-                                                    width="2.4"
-                                                    height="2.4"
-                                                    rx="0.65"
-                                                    fill="currentColor"
+                                                    strokeLinejoin="miter"
                                                     opacity={wifiStrength >= 1 ? 1 : 0.25}
                                                 />
                                             </svg>
 
                                             <svg
-                                                width="38"
+                                                width="35"
                                                 height="20"
-                                                viewBox="0 0 38 20"
+                                                viewBox="0 0 35 20"
                                                 style={styles.statusSvg}
                                                 aria-label="Battery"
                                             >
@@ -3324,9 +3329,9 @@ export default function TradingGame() {
                                                         <rect
                                                             x="1"
                                                             y="3"
-                                                            width="31.5"
+                                                            width="28.5"
                                                             height="14"
-                                                            rx="4"
+                                                            rx="3.2"
                                                         />
                                                     </clipPath>
                                                 </defs>
@@ -3334,16 +3339,16 @@ export default function TradingGame() {
                                                 <rect
                                                     x="1"
                                                     y="3"
-                                                    width="31.5"
+                                                    width="28.5"
                                                     height="14"
-                                                    rx="4"
+                                                    rx="3.2"
                                                     fill="rgba(255,255,255,0.34)"
                                                 />
 
                                                 <rect
                                                     x="1"
                                                     y="3"
-                                                    width={`${Math.max(2, Math.min(31.5, ((batteryPercent ?? 67) / 100) * 31.5))}`}
+                                                    width={`${Math.max(2, Math.min(28.5, ((batteryPercent ?? 67) / 100) * 28.5))}`}
                                                     height="14"
                                                     rx="0"
                                                     fill="rgba(255,255,255,0.96)"
@@ -3351,19 +3356,19 @@ export default function TradingGame() {
                                                 />
 
                                                 <rect
-                                                    x="33.5"
-                                                    y="7.2"
-                                                    width="3"
-                                                    height="5.6"
-                                                    rx="0"
+                                                    x="30.7"
+                                                    y="7.15"
+                                                    width="2.8"
+                                                    height="5.7"
+                                                    rx="1.15"
                                                     fill="rgba(255,255,255,0.34)"
                                                 />
 
                                                 <text
-                                                    x="16.75"
-                                                    y="14.6"
+                                                    x="15.25"
+                                                    y="14.85"
                                                     textAnchor="middle"
-                                                    fontSize="11.8"
+                                                    fontSize="12.7"
                                                     fontWeight="900"
                                                     fill="#050505"
                                                     fontFamily="Arial, sans-serif"
