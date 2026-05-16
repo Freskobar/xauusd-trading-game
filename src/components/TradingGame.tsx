@@ -123,7 +123,7 @@ const HOME_SEARCH_HEIGHT = 25; // <--- changed: height of the search bar
 const HOME_SEARCH_RADIUS = 999; // <--- changed: roundness of the search bar corners
 const HOME_SEARCH_VERTICAL_OFFSET = 15; // <--- changed: moves the search bar up/down
 
-const HOME_DOCK_WIDTH = 280; // <--- changed: width of the dock/background bar; fits restored phone width
+const HOME_DOCK_WIDTH = 300; // <--- changed: width of the dock/background bar
 const HOME_DOCK_APP_SIZE = HOME_APP_SIZE; // <--- changed: size of dock apps/icons
 const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 20; // <--- changed: height of the dock
 const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
@@ -131,8 +131,8 @@ const HOME_DOCK_VERTICAL_OFFSET = 0; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
 
 const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel further down
-const PHONE_BASE_WIDTH = 330; // <--- changed: PC-perfect complete phone object width
-const PHONE_BASE_HEIGHT = 640; // <--- changed: PC-perfect complete phone object height
+const PHONE_BASE_WIDTH = 356; // <--- changed: PC-perfect full phone object width
+const PHONE_BASE_HEIGHT = 680; // <--- changed: PC-perfect full phone object height
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -769,7 +769,7 @@ export default function TradingGame() {
     const [quantity, setQuantity] = useState(1);
     const [now, setNow] = useState(Date.now());
     const [isLandscape, setIsLandscape] = useState(false); // <--- changed
-    const [mobilePhoneScale, setMobilePhoneScale] = useState(1); // <--- changed: mobile-only whole-phone scaling
+    const [mobilePhoneScale, setMobilePhoneScale] = useState(1); // <--- changed: whole-phone scale, mobile only
     const [isDesktopStatusRender, setIsDesktopStatusRender] = useState(false); // <--- changed: desktop-only fake phone status bar polish
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
@@ -2378,8 +2378,6 @@ export default function TradingGame() {
         dragModeRef.current = null;
     }
 
-
-
     useEffect(() => {
         let cancelled = false;
 
@@ -2546,16 +2544,16 @@ export default function TradingGame() {
             const isPhoneSizedScreen =
                 Math.min(window.innerWidth, window.innerHeight) <= 768; // <--- changed
 
-
             const nextPhoneScale = isPhoneSizedScreen
                 ? Math.min(
                     (window.innerWidth - 24) / PHONE_BASE_WIDTH,
                     (window.innerHeight - 24) / PHONE_BASE_HEIGHT,
                     1
                 )
-                : 1; // <--- changed: PC remains the original full-size phone object
+                : 1; // <--- changed: PC stays exactly the baseline size
 
             setMobilePhoneScale(nextPhoneScale); // <--- changed
+
             setIsLandscape(
                 isPhoneSizedScreen && window.innerWidth > window.innerHeight
             ); // <--- changed: desktop PC should never show rotate blocker
@@ -3441,100 +3439,98 @@ export default function TradingGame() {
                             <div
                                 style={{
                                     ...styles.phoneScaleFrame,
-                                    width: PHONE_BASE_WIDTH * mobilePhoneScale, // <--- changed: scaled frame width
-                                    height: PHONE_BASE_HEIGHT * mobilePhoneScale, // <--- changed: scaled frame height
+                                    width: PHONE_BASE_WIDTH * mobilePhoneScale, // <--- changed: reserves scaled phone width
+                                    height: PHONE_BASE_HEIGHT * mobilePhoneScale, // <--- changed: reserves scaled phone height
                                     marginTop: PHONE_VERTICAL_SHIFT, // <--- changed: placement stays outside scaling
+                                    ...(phoneClosing ? styles.phonePanelClosing : {}),
                                 }}
                                 onClick={(event) => event.stopPropagation()}
                             >
                                 <div
                                     style={{
-                                        ...styles.phonePanel,
-                                        marginTop: 0, // <--- changed: frame controls vertical placement
-                                        transform:
-                                            mobilePhoneScale !== 1
-                                                ? `scale(${mobilePhoneScale})`
-                                                : "none", // <--- changed: scales complete phone + every child as ONE object
-                                        ...(phoneClosing ? styles.phonePanelClosing : {}),
+                                        ...styles.phoneScaleObject,
+                                        transform: `scale(${mobilePhoneScale})`, // <--- changed: scales phone shell + every child as one object
                                     }}
                                 >
-                                    <div style={styles.phoneDevice}>
-                                        <div style={{ ...styles.phoneStatusBar, ...(isDesktopStatusRender ? styles.phoneStatusBarDesktop : {}) }}>
-                                            <div style={styles.phoneStatusLeft}>
-                                                <span>{phoneStatusTime}</span>
+                                    <div style={styles.phonePanel}>
+                                        <div style={styles.phoneDevice}>
+                                            <div style={{ ...styles.phoneStatusBar, ...(isDesktopStatusRender ? styles.phoneStatusBarDesktop : {}) }}>
+                                                <div style={styles.phoneStatusLeft}>
+                                                    <span>{phoneStatusTime}</span>
 
-                                                {locationServicesOn && ( // <--- changed
-                                                    <svg
-                                                        width="15"
-                                                        height="15"
-                                                        viewBox="0 0 24 24"
-                                                        style={styles.phoneLocationSvg}
-                                                        aria-label="Location services"
-                                                    >
-                                                        <path
-                                                            d="M4.4 3.5L21.2 10.3C22.1 10.7 22 12 21 12.2L13.8 13.8L12.2 21C12 22 10.7 22.1 10.3 21.2L3.5 4.4C3.2 3.8 3.8 3.2 4.4 3.5Z"
-                                                            fill="currentColor"
-                                                        />
-                                                    </svg>
-                                                )}
-                                            </div>
-
-                                            <div style={styles.phoneDynamicIsland}>
-                                                <span style={styles.phoneCameraDot} />
-                                            </div>
-
-                                            <div style={styles.phoneStatusRight}>
-                                                <PhoneServiceSvg strength={cellStrength} /> {/* <--- changed: crisp SVG status icon */}
-                                                <PhoneWifiSvg strength={wifiStrength} /> {/* <--- changed: crisp SVG status icon */}
-                                                <PhoneBatterySvg percent={batteryPercent} /> {/* <--- changed: crisp SVG status icon */}
-                                            </div>                                    </div>
-
-                                        <div style={styles.phoneHomeScreen}> {/* <--- changed */}
-                                            <div style={styles.phoneAppGrid}> {/* <--- changed */}
-                                                {phoneHomeApps.slice(0, HOME_APP_GRID_COLUMNS * HOME_APP_GRID_ROWS).map((app) => (
-                                                    <div key={app.name} style={styles.phoneAppSlot}>
-                                                        <div
-                                                            style={{
-                                                                ...styles.phoneHomeAppIcon,
-                                                                background: app.bg,
-                                                            }}
+                                                    {locationServicesOn && ( // <--- changed
+                                                        <svg
+                                                            width="15"
+                                                            height="15"
+                                                            viewBox="0 0 24 24"
+                                                            style={styles.phoneLocationSvg}
+                                                            aria-label="Location services"
                                                         >
-                                                            <span style={styles.phoneHomeAppGlyph}>
-                                                                {app.name.slice(0, 1)}
-                                                            </span>
+                                                            <path
+                                                                d="M4.4 3.5L21.2 10.3C22.1 10.7 22 12 21 12.2L13.8 13.8L12.2 21C12 22 10.7 22.1 10.3 21.2L3.5 4.4C3.2 3.8 3.8 3.2 4.4 3.5Z"
+                                                                fill="currentColor"
+                                                            />
+                                                        </svg>
+                                                    )}
+                                                </div>
+
+                                                <div style={styles.phoneDynamicIsland}>
+                                                    <span style={styles.phoneCameraDot} />
+                                                </div>
+
+                                                <div style={styles.phoneStatusRight}>
+                                                    <PhoneServiceSvg strength={cellStrength} /> {/* <--- changed: crisp SVG status icon */}
+                                                    <PhoneWifiSvg strength={wifiStrength} /> {/* <--- changed: crisp SVG status icon */}
+                                                    <PhoneBatterySvg percent={batteryPercent} /> {/* <--- changed: crisp SVG status icon */}
+                                                </div>                                    </div>
+
+                                            <div style={styles.phoneHomeScreen}> {/* <--- changed */}
+                                                <div style={styles.phoneAppGrid}> {/* <--- changed */}
+                                                    {phoneHomeApps.slice(0, HOME_APP_GRID_COLUMNS * HOME_APP_GRID_ROWS).map((app) => (
+                                                        <div key={app.name} style={styles.phoneAppSlot}>
+                                                            <div
+                                                                style={{
+                                                                    ...styles.phoneHomeAppIcon,
+                                                                    background: app.bg,
+                                                                }}
+                                                            >
+                                                                <span style={styles.phoneHomeAppGlyph}>
+                                                                    {app.name.slice(0, 1)}
+                                                                </span>
+                                                            </div>
+                                                            <div style={styles.phoneHomeAppName}>{app.name}</div>
                                                         </div>
-                                                        <div style={styles.phoneHomeAppName}>{app.name}</div>
-                                                    </div>
-                                                ))}
+                                                    ))}
+                                                </div>
+
+                                                <div style={styles.phoneSearchPill}> {/* <--- changed */}
+                                                    <span style={styles.phoneSearchIcon}>⌕</span>
+                                                    <span>Search</span>
+                                                </div>
+
+                                                <div style={styles.phoneDock}> {/* <--- changed */}
+                                                    {phoneDockApps.map((app) => (
+                                                        <div key={app.name} style={styles.phoneDockSlot}>
+                                                            <div
+                                                                style={{
+                                                                    ...styles.phoneDockAppIcon,
+                                                                    background: app.bg,
+                                                                }}
+                                                            >
+                                                                <span style={styles.phoneHomeAppGlyph}>
+                                                                    {app.name.slice(0, 1)}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
 
-                                            <div style={styles.phoneSearchPill}> {/* <--- changed */}
-                                                <span style={styles.phoneSearchIcon}>⌕</span>
-                                                <span>Search</span>
-                                            </div>
-
-                                            <div style={styles.phoneDock}> {/* <--- changed */}
-                                                {phoneDockApps.map((app) => (
-                                                    <div key={app.name} style={styles.phoneDockSlot}>
-                                                        <div
-                                                            style={{
-                                                                ...styles.phoneDockAppIcon,
-                                                                background: app.bg,
-                                                            }}
-                                                        >
-                                                            <span style={styles.phoneHomeAppGlyph}>
-                                                                {app.name.slice(0, 1)}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            <div style={styles.phoneHomeBar} />
                                         </div>
-
-                                        <div style={styles.phoneHomeBar} />
                                     </div>
                                 </div>
-                            </div> {/* <--- changed: closes scaled phone frame */}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -4321,26 +4317,31 @@ const styles: Record<string, CSSProperties> = {
         pointerEvents: "auto", // <--- changed
     },
     phonePanel: {
-        width: PHONE_BASE_WIDTH, // <--- changed: fixed PC-perfect phone object width
-        height: PHONE_BASE_HEIGHT, // <--- changed: fixed PC-perfect phone object height
+        width: PHONE_BASE_WIDTH, // <--- changed: fixed PC-perfect phone width
+        height: PHONE_BASE_HEIGHT, // <--- changed: fixed PC-perfect phone height
         position: "relative", // <--- changed
         pointerEvents: "auto", // <--- changed
-        animation: "phoneSlideBounceIn 420ms cubic-bezier(.2, .95, .2, 1) both", // <--- changed
-        marginTop: PHONE_VERTICAL_SHIFT, // <--- changed
-        transformOrigin: "top center", // <--- changed: whole phone object scales from top center
     },
     phoneScaleFrame: {
-        width: PHONE_BASE_WIDTH, // <--- changed: layout frame matches full phone object width
-        height: PHONE_BASE_HEIGHT, // <--- changed: layout frame matches full phone object height
         position: "relative", // <--- changed
-        pointerEvents: "none", // <--- changed: inner phone receives clicks
+        pointerEvents: "auto", // <--- changed
+        animation: "phoneSlideBounceIn 420ms cubic-bezier(.2, .95, .2, 1) both", // <--- changed: animation lives here only
+    },
+    phoneScaleObject: {
+        width: PHONE_BASE_WIDTH, // <--- changed
+        height: PHONE_BASE_HEIGHT, // <--- changed
+        position: "absolute", // <--- changed
+        left: 0, // <--- changed
+        top: 0, // <--- changed
+        transformOrigin: "top left", // <--- changed: scale applies to full phone object
+        pointerEvents: "auto", // <--- changed
     },
     phonePanelClosing: {
         animation: "phoneSlideDownOut 280ms ease-in both", // <--- changed
     },
     phoneDevice: {
-        width: "100%", // <--- changed: part of fixed full phone object
-        height: "100%", // <--- changed: part of fixed full phone object
+        width: "100%", // <--- changed: fills fixed full phone object
+        height: "100%", // <--- changed: fills fixed full phone object
         pointerEvents: "auto", // <--- changed
         borderRadius: "10.8% / 5%", // <--- changed
         border: "2px solid rgba(255,255,255,0.2)", // <--- changed
@@ -4445,28 +4446,29 @@ const styles: Record<string, CSSProperties> = {
         filter: "drop-shadow(0 0 1px rgba(0,0,0,0.18))", // <--- changed
     },
     phoneHomeScreen: {
-        height: "calc(100% - 44px)", // <--- changed: normal phone content area under status bar
-        display: "block", // <--- changed
+        height: "calc(100% - 44px)", // <--- changed: prevents apps from overlapping the top status region
+        display: "block", // <--- changed: fixed positioning keeps PC + iPhone spacing identical
         padding: 0, // <--- changed
         boxSizing: "border-box", // <--- changed
         position: "relative", // <--- changed
         zIndex: 1, // <--- changed
-        overflow: "hidden", // <--- changed
+        overflow: "hidden", // <--- changed: keeps apps/dock inside the phone screen
     },
     phoneAppGrid: {
-        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed app grid width
+        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed grid width so Safari cannot stretch gaps
+        maxWidth: "calc(100% - 28px)", // <--- changed: prevents left/right clipping inside phone
         display: "grid", // <--- changed
-        gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_APP_SIZE}px)`, // <--- changed
-        gridTemplateRows: `repeat(${HOME_APP_GRID_ROWS}, auto)`, // <--- changed
-        columnGap: HOME_APP_GRID_GAP, // <--- changed
-        rowGap: HOME_APP_GRID_GAP, // <--- changed
+        gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_APP_SIZE}px)`, // <--- changed: exact app columns
+        gridTemplateRows: `repeat(${HOME_APP_GRID_ROWS}, auto)`, // <--- changed: exact 5 rows
+        columnGap: HOME_APP_GRID_GAP, // <--- changed: exact horizontal gap on PC + iPhone
+        rowGap: HOME_APP_GRID_GAP, // <--- changed: exact vertical gap on PC + iPhone
         padding: 0, // <--- changed
         boxSizing: "border-box", // <--- changed
         position: "absolute", // <--- changed
-        top: HOME_APP_GRID_VERTICAL_OFFSET, // <--- changed
+        top: HOME_APP_GRID_VERTICAL_OFFSET, // <--- changed: app grid vertical knob
         left: "50%", // <--- changed
         transform: "translateX(-50%)", // <--- changed
-        overflow: "visible", // <--- changed
+        overflow: "visible", // <--- changed: prevents icon shadows from looking clipped
         minHeight: 0, // <--- changed
     },
     phoneAppSlot: {
