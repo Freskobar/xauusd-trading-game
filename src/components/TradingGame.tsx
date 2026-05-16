@@ -910,23 +910,13 @@ export default function TradingGame() {
                 ...prev,
                 quantity: Math.max(1, quantity || 1),
                 confirmed: true,
-                showControls: true,
-                controlsOpacity: 1,
+                showControls: false, // <--- changed: fade starts immediately
+                controlsOpacity: 0, // <--- changed: fade starts immediately
                 hideCheckWhenConfirmed: true, // <--- changed
+                reopenedTrashOnly: false, // <--- changed
+                armedForFill: false, // <--- changed
             };
         });
-
-        window.setTimeout(() => {
-            setPendingOrder((prev) =>
-                prev && prev.confirmed
-                    ? {
-                        ...prev,
-                        showControls: false,
-                        controlsOpacity: 0,
-                    }
-                    : prev
-            );
-        }, 450);
     }
 
     function deletePendingSetup() {
@@ -2452,12 +2442,6 @@ export default function TradingGame() {
                 h: buttonSize,
             };
 
-            const isInitialConfirmFadeOut =
-                pendingOrder.confirmed &&
-                pendingOrder.hideCheckWhenConfirmed &&
-                !pendingOrder.reopenedTrashOnly &&
-                pendingOrder.controlsOpacity > 0; // <--- changed
-
             const confirmedControlsFullyHidden =
                 pendingOrder.confirmed &&
                 pendingOrder.hideCheckWhenConfirmed &&
@@ -2475,14 +2459,12 @@ export default function TradingGame() {
                 h: buttonSize,
             };
 
-            pendingCheckHitBoxRef.current =
-                isInitialConfirmFadeOut || shouldHideCheck ? null : checkBox; // <--- changed
+            pendingCheckHitBoxRef.current = shouldHideCheck ? null : checkBox; // <--- changed
 
             pendingTrashHitBoxRef.current =
-                isInitialConfirmFadeOut ||
-                    (shouldHideCheck && !trashShouldMoveLeft && pendingOrder.controlsOpacity > 0)
+                shouldHideCheck && !trashShouldMoveLeft && pendingOrder.controlsOpacity > 0
                     ? null
-                    : trashBox; // <--- changed: no buttons can be tapped during the confirm fade
+                    : trashBox; // <--- changed
 
             if (!pendingOrder.confirmed) {
                 const stopLabel = pendingOrder.side === "long" ? "BUY STOP" : "SELL STOP";
