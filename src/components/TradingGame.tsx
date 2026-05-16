@@ -114,8 +114,8 @@ const TRIM_BASE_CANDLES = 96;
 
 // Home screen tweak knobs // <--- changed
 // Change these numbers to quickly tune the iPhone home screen layout. // <--- changed
-const HOME_APP_SIZE = 60; // <--- changed: size of the normal home screen apps/icons
-const HOME_APP_GRID_GAP = 20; // <--- changed: space between apps in the grid
+const HOME_APP_SIZE = 56; // <--- changed: size of the normal home screen apps/icons
+const HOME_APP_GRID_GAP = 16; // <--- changed: space between apps in the grid
 const HOME_APP_GRID_VERTICAL_OFFSET = 20; // <--- changed: moves the entire app grid up/down
 
 const HOME_SEARCH_WIDTH = 70; // <--- changed: width of the search bar
@@ -123,18 +123,22 @@ const HOME_SEARCH_HEIGHT = 25; // <--- changed: height of the search bar
 const HOME_SEARCH_RADIUS = 999; // <--- changed: roundness of the search bar corners
 const HOME_SEARCH_VERTICAL_OFFSET = 15; // <--- changed: moves the search bar up/down
 
-const HOME_DOCK_WIDTH = 330; // <--- changed: width of the dock/background bar
+const HOME_DOCK_WIDTH = 300; // <--- changed: width of the dock/background bar
 const HOME_DOCK_APP_SIZE = HOME_APP_SIZE; // <--- changed: size of dock apps/icons
 const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 20; // <--- changed: height of the dock
 const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
-const HOME_DOCK_VERTICAL_OFFSET = 50; // <--- changed: moves the dock up/down
-const HOME_DOCK_APP_HORIZONTAL_GAP = HOME_APP_GRID_GAP; // <--- changed: space between dock apps
+const HOME_DOCK_VERTICAL_OFFSET = 42; // <--- changed: moves the dock up/down
+const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
 const HOME_APP_GRID_WIDTH = HOME_APP_GRID_COLUMNS * HOME_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_APP_GRID_GAP; // <--- changed: fixed app grid width so iPhone Safari cannot stretch gaps
-const HOME_SAFE_SIDE_PADDING = 14; // <--- changed: keeps layout away from phone edges without scaling everything
-const HOME_SAFE_WIDTH = `calc(100% - ${HOME_SAFE_SIDE_PADDING * 2}px)`; // <--- changed: available phone width
+const HOME_SAFE_SIDE_PADDING = 12; // <--- changed: small side buffer so icons/shadows do not clip on iPhone
+const HOME_SAFE_WIDTH = `calc(100% - ${HOME_SAFE_SIDE_PADDING * 2}px)`; // <--- changed: available phone width without scaling
+const HOME_DOCK_CONTENT_WIDTH = HOME_APP_GRID_COLUMNS * HOME_DOCK_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_DOCK_APP_HORIZONTAL_GAP; // <--- changed: fixed dock content width
+
+
+
 
 function formatCountdown(seconds: number) {
     const safeSeconds = Math.max(0, seconds);
@@ -4366,8 +4370,8 @@ const styles: Record<string, CSSProperties> = {
         overflow: "hidden", // <--- changed
     },
     phoneAppGrid: {
-        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed grid width on PC
-        maxWidth: HOME_SAFE_WIDTH, // <--- changed: prevents iPhone side clipping
+        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed grid width so iPhone cannot stretch gaps
+        maxWidth: HOME_SAFE_WIDTH, // <--- changed: prevents side clipping on real iPhones
         display: "grid", // <--- changed
         gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_APP_SIZE}px)`, // <--- changed: exact app columns
         gridTemplateRows: `repeat(${HOME_APP_GRID_ROWS}, auto)`, // <--- changed: exact 5 rows
@@ -4379,7 +4383,7 @@ const styles: Record<string, CSSProperties> = {
         top: HOME_APP_GRID_VERTICAL_OFFSET, // <--- changed: app grid vertical knob
         left: "50%", // <--- changed
         transform: "translateX(-50%)", // <--- changed
-        overflow: "visible", // <--- changed
+        overflow: "visible", // <--- changed: prevents icon shadows from looking clipped
         minHeight: 0, // <--- changed
     },
     phoneAppSlot: {
@@ -4460,7 +4464,8 @@ const styles: Record<string, CSSProperties> = {
         transform: "translateY(-0.5px)", // <--- changed
     },
     phoneDock: {
-        width: `min(${HOME_DOCK_WIDTH}px, calc(100% - ${HOME_SAFE_SIDE_PADDING * 2}px))`, // <--- changed: dock width knob capped to phone safe width
+        width: HOME_DOCK_WIDTH, // <--- changed: dock width knob
+        maxWidth: HOME_SAFE_WIDTH, // <--- changed: prevents dock edge clipping on iPhone
         height: HOME_DOCK_HEIGHT, // <--- changed: dock height knob
         borderRadius: HOME_DOCK_RADIUS, // <--- changed
         position: "absolute", // <--- changed: fixed dock placement on PC + iPhone
@@ -4472,10 +4477,13 @@ const styles: Record<string, CSSProperties> = {
         backdropFilter: "blur(18px)", // <--- changed
         WebkitBackdropFilter: "blur(18px)", // <--- changed
         boxShadow: "inset 0 1px 1px rgba(255,255,255,0.14), 0 14px 34px rgba(0,0,0,0.34)", // <--- changed
-        display: "flex", // <--- changed: flex prevents dock overflow on narrow iPhones
-        gap: HOME_DOCK_APP_HORIZONTAL_GAP, // <--- changed: dock horizontal gap knob
+        display: "grid", // <--- changed
+        gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_DOCK_APP_SIZE}px)`, // <--- changed: exact dock app sizing
+        columnGap: HOME_DOCK_APP_HORIZONTAL_GAP, // <--- changed: dock horizontal gap knob
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
+        justifyItems: "center", // <--- changed: keeps dock apps centered on iPhone
+        minWidth: HOME_DOCK_CONTENT_WIDTH, // <--- changed: fixed dock content width
         padding: "9px 9px", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
