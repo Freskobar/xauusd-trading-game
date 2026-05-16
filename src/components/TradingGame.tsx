@@ -130,6 +130,11 @@ const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
 const HOME_DOCK_VERTICAL_OFFSET = 50; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = HOME_APP_GRID_GAP; // <--- changed: space between dock apps
 
+const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
+const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
+const HOME_APP_GRID_WIDTH = HOME_APP_GRID_COLUMNS * HOME_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_APP_GRID_GAP; // <--- changed: fixed app grid width so iPhone Safari cannot stretch gaps
+const HOME_DOCK_CONTENT_WIDTH = HOME_APP_GRID_COLUMNS * HOME_DOCK_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_DOCK_APP_HORIZONTAL_GAP; // <--- changed: fixed dock content width
+
 
 
 
@@ -3420,7 +3425,7 @@ export default function TradingGame() {
 
                                     <div style={styles.phoneHomeScreen}> {/* <--- changed */}
                                         <div style={styles.phoneAppGrid}> {/* <--- changed */}
-                                            {phoneHomeApps.slice(0, 20).map((app) => (
+                                            {phoneHomeApps.slice(0, HOME_APP_GRID_COLUMNS * HOME_APP_GRID_ROWS).map((app) => (
                                                 <div key={app.name} style={styles.phoneAppSlot}>
                                                     <div
                                                         style={{
@@ -4355,26 +4360,26 @@ const styles: Record<string, CSSProperties> = {
     },
     phoneHomeScreen: {
         height: "100%", // <--- changed
-        display: "flex", // <--- changed
-        flexDirection: "column", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "flex-start", // <--- changed
-        padding: `${HOME_APP_GRID_VERTICAL_OFFSET}px 24px ${HOME_DOCK_VERTICAL_OFFSET}px`, // <--- changed: tweak knob controls app grid top + dock bottom spacing
+        display: "block", // <--- changed: fixed positioning keeps PC + iPhone spacing identical
+        padding: 0, // <--- changed: remove mobile flex padding differences
         boxSizing: "border-box", // <--- changed
         position: "relative", // <--- changed
         zIndex: 1, // <--- changed
+        overflow: "hidden", // <--- changed
     },
     phoneAppGrid: {
-        width: "100%", // <--- changed
-        maxWidth: 314, // <--- changed: keeps iPhone-like icon grid ratio inside the phone
+        width: HOME_APP_GRID_WIDTH, // <--- changed: fixed grid width so iPhone cannot stretch gaps
         display: "grid", // <--- changed
-        gridTemplateColumns: "repeat(4, minmax(0, 1fr))", // <--- changed
-        gridTemplateRows: "repeat(5, auto)", // <--- changed
-        columnGap: HOME_APP_GRID_GAP, // <--- changed: shared app-grid gap knob
-        rowGap: HOME_APP_GRID_GAP, // <--- changed: shared app-grid gap knob
-        padding: "0 0 0", // <--- changed
+        gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_APP_SIZE}px)`, // <--- changed: exact app columns
+        gridTemplateRows: `repeat(${HOME_APP_GRID_ROWS}, auto)`, // <--- changed: exact 5 rows
+        columnGap: HOME_APP_GRID_GAP, // <--- changed: exact horizontal gap on PC + iPhone
+        rowGap: HOME_APP_GRID_GAP, // <--- changed: exact vertical gap on PC + iPhone
+        padding: 0, // <--- changed
         boxSizing: "border-box", // <--- changed
-        flex: "0 0 auto", // <--- changed
+        position: "absolute", // <--- changed
+        top: HOME_APP_GRID_VERTICAL_OFFSET, // <--- changed: app grid vertical knob
+        left: "50%", // <--- changed
+        transform: "translateX(-50%)", // <--- changed
         minHeight: 0, // <--- changed
     },
     phoneAppSlot: {
@@ -4431,8 +4436,12 @@ const styles: Record<string, CSSProperties> = {
     },
     phoneSearchPill: {
         width: HOME_SEARCH_WIDTH, // <--- changed
-        height: 25, // <--- changed
-        borderRadius: 999, // <--- changed
+        height: HOME_SEARCH_HEIGHT, // <--- changed
+        borderRadius: HOME_SEARCH_RADIUS, // <--- changed
+        position: "absolute", // <--- changed: prevents iPhone Safari flex spacing drift
+        left: "50%", // <--- changed
+        bottom: HOME_DOCK_VERTICAL_OFFSET + HOME_DOCK_HEIGHT + HOME_SEARCH_VERTICAL_OFFSET, // <--- changed: search vertical offset knob
+        transform: "translateX(-50%)", // <--- changed
         background: "rgba(255,255,255,0.22)", // <--- changed
         color: "rgba(255,255,255,0.86)", // <--- changed
         backdropFilter: "blur(12px)", // <--- changed
@@ -4443,7 +4452,6 @@ const styles: Record<string, CSSProperties> = {
         gap: 4, // <--- changed
         fontSize: 11, // <--- changed
         fontWeight: 800, // <--- changed
-        margin: `auto 0 ${HOME_SEARCH_VERTICAL_OFFSET}px`, // <--- changed: search vertical placement knob
         boxShadow: "inset 0 1px 1px rgba(255,255,255,0.16), 0 8px 18px rgba(0,0,0,0.22)", // <--- changed
     },
     phoneSearchIcon: {
@@ -4455,17 +4463,22 @@ const styles: Record<string, CSSProperties> = {
         width: HOME_DOCK_WIDTH, // <--- changed: dock width knob
         height: HOME_DOCK_HEIGHT, // <--- changed: dock height knob
         borderRadius: HOME_DOCK_RADIUS, // <--- changed
+        position: "absolute", // <--- changed: fixed dock placement on PC + iPhone
+        left: "50%", // <--- changed
+        bottom: HOME_DOCK_VERTICAL_OFFSET, // <--- changed: dock vertical knob
+        transform: "translateX(-50%)", // <--- changed
         background: "rgba(255,255,255,0.18)", // <--- changed
         border: "1px solid rgba(255,255,255,0.14)", // <--- changed
         backdropFilter: "blur(18px)", // <--- changed
         WebkitBackdropFilter: "blur(18px)", // <--- changed
         boxShadow: "inset 0 1px 1px rgba(255,255,255,0.14), 0 14px 34px rgba(0,0,0,0.34)", // <--- changed
         display: "grid", // <--- changed
-        gridTemplateColumns: `repeat(4, ${HOME_DOCK_APP_SIZE}px)`, // <--- changed: exact dock app sizing
+        gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_DOCK_APP_SIZE}px)`, // <--- changed: exact dock app sizing
         columnGap: HOME_DOCK_APP_HORIZONTAL_GAP, // <--- changed: dock horizontal gap knob
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        justifyItems: "center", // <--- changed
+        justifyItems: "center", // <--- changed: keeps dock apps centered on iPhone
+        minWidth: HOME_DOCK_CONTENT_WIDTH, // <--- changed: fixed dock content width
         padding: "9px 9px", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
