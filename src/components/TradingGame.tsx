@@ -3289,30 +3289,18 @@ export default function TradingGame() {
                                                 aria-label="Wi-Fi"
                                             >
                                                 <path
-                                                    d="M3.05 5.45C7.85 1.75 15.15 1.75 19.95 5.45"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2.45"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
+                                                    d="M2.35 5.55C7.3 1.35 15.7 1.35 20.65 5.55L18.25 7.95C14.65 5.15 8.35 5.15 4.75 7.95Z"
+                                                    fill="currentColor"
                                                     opacity={wifiStrength >= 3 ? 1 : 0.25}
                                                 />
                                                 <path
-                                                    d="M6.45 8.95C9.2 6.85 13.8 6.85 16.55 8.95"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2.45"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
+                                                    d="M6.3 9.35C8.9 7.35 14.1 7.35 16.7 9.35L14.35 11.7C12.75 10.55 10.25 10.55 8.65 11.7Z"
+                                                    fill="currentColor"
                                                     opacity={wifiStrength >= 2 ? 1 : 0.25}
                                                 />
                                                 <path
-                                                    d="M9.85 12.45C10.8 11.75 12.2 11.75 13.15 12.45"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2.45"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
+                                                    d="M9.15 13.0C10.45 11.95 12.55 11.95 13.85 13.0L11.5 15.45Z"
+                                                    fill="currentColor"
                                                     opacity={wifiStrength >= 1 ? 1 : 0.25}
                                                 />
                                             </svg>
@@ -3356,7 +3344,7 @@ export default function TradingGame() {
                                                 />
 
                                                 <path
-                                                    d="M29.55 7.1H31.25C32.45 7.1 33.25 8.15 33.25 10C33.25 11.85 32.45 12.9 31.25 12.9H29.55Z"
+                                                    d="M29.45 7.35H30.1C30.95 7.35 31.45 8.45 31.45 10C31.45 11.55 30.95 12.65 30.1 12.65H29.45Z"
                                                     fill="rgba(255,255,255,0.34)"
                                                 />
 
