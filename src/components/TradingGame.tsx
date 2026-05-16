@@ -157,10 +157,7 @@ function formatMarketDateTime(timestamp: number) {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
-    })
-        .format(date)
-        .replace(" AM", "")
-        .replace(" PM", "");
+    }).format(date);
 
     return `${day} ${time} ET • ${getMarketSessionName(timestamp)}`; // <--- changed
 }
@@ -176,6 +173,68 @@ function getSimulatedMarketProgressMs(elapsedInside15mMs: number) {
     );
 
     return progress * realMarketCandleDurationMs; // <--- changed
+}
+
+function getTimeframeMarketMinutes(tf: string) {
+    if (tf === "30m") return 30;
+    if (tf === "1h") return 60;
+    if (tf === "4h") return 240;
+    if (tf === "Daily") return 1440;
+
+    return 15;
+}
+
+function getAlignedMarketDisplayTimestamp(
+    active15mTimestamp: number,
+    elapsedInside15mMs: number
+) {
+    return active15mTimestamp + getSimulatedMarketProgressMs(elapsedInside15mMs); // <--- changed: market time stays true to CSV candle time
+}
+
+function getEasternParts(timestamp: number) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        weekday: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+    }).formatToParts(new Date(timestamp));
+
+    const getPart = (type: string) =>
+        parts.find((part) => part.type === type)?.value ?? "0";
+
+    return {
+        weekday: getPart("weekday"),
+        hour: Number(getPart("hour")),
+        minute: Number(getPart("minute")),
+        second: Number(getPart("second")),
+    };
+}
+
+function getRealSecondsUntilTimeframeClose(timestamp: number, tf: string) {
+    const { weekday, hour, minute, second } = getEasternParts(timestamp);
+    const secondsIntoDay = hour * 3600 + minute * 60 + second;
+
+    if (tf === "Daily") {
+        const isFriday = weekday === "Friday";
+        const marketCloseSeconds = isFriday ? 17 * 3600 : 24 * 3600;
+        return Math.max(0, marketCloseSeconds - secondsIntoDay); // <--- changed
+    }
+
+    const tfMinutes = getTimeframeMarketMinutes(tf);
+    const tfSeconds = tfMinutes * 60;
+    const secondsIntoBlock = secondsIntoDay % tfSeconds;
+    const remaining = tfSeconds - secondsIntoBlock;
+
+    return remaining === tfSeconds ? tfSeconds : remaining; // <--- changed
+}
+
+function convertRealMarketSecondsToSimMs(realSeconds: number) {
+    const real15mSeconds = 15 * 60;
+    const simulated15mMs = TIMEFRAME_SECONDS["15m"] * 1000;
+
+    return (realSeconds / real15mSeconds) * simulated15mMs; // <--- changed
 }
 
 function formatMoney(value: number) {
@@ -2233,11 +2292,7 @@ export default function TradingGame() {
     const allCandles = useMemo(() => {
         return [...market.closedCandles, market.activeCandle];
     }, [market.closedCandles, market.activeCandle]);
-
-    const selectedGroupSize = getGroupSize(timeframe);
     const base15mMs = TIMEFRAME_SECONDS["15m"] * 1000;
-    const completedInSelectedCandle = market.active15mIndex % selectedGroupSize;
-    const remainingBaseCandles = selectedGroupSize - completedInSelectedCandle;
     const currentPauseDuration =
         simulationPaused && pauseStartedAtRef.current !== null
             ? now - pauseStartedAtRef.current
@@ -2248,17 +2303,25 @@ export default function TradingGame() {
         now - appStartRef.current - totalPausedMsRef.current - currentPauseDuration
     ); // <--- changed
 
-    const remainingMs =
-        remainingBaseCandles * base15mMs - elapsedInsideCurrent15m;
+    const currentMarketTimestamp = getAlignedMarketDisplayTimestamp(
+        market.activeCandleTimeMs ?? fallbackMarketSessionStartRef.current,
+        Math.max(0, elapsedInsideCurrent15m)
+    ); // <--- changed: always uses the CSV candle time plus live candle progress
+
+    const remainingRealMarketSeconds = getRealSecondsUntilTimeframeClose(
+        currentMarketTimestamp,
+        timeframe
+    ); // <--- changed
+
+    const remainingMs = convertRealMarketSecondsToSimMs(
+        remainingRealMarketSeconds
+    ); // <--- changed: countdown aligns to actual CSV market-time boundary
 
     const countdownText = formatCountdown(
         Math.ceil(Math.max(0, remainingMs) / 1000)
     );
 
-    const marketDateTimeText = formatMarketDateTime(
-        (market.activeCandleTimeMs ?? fallbackMarketSessionStartRef.current) +
-        getSimulatedMarketProgressMs(Math.max(0, elapsedInsideCurrent15m))
-    ); // <--- changed: updates live during the candle
+    const marketDateTimeText = formatMarketDateTime(currentMarketTimestamp); // <--- changed
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -3044,17 +3107,6 @@ export default function TradingGame() {
                         ))}
                 </div>
 
-                <div style={styles.marketTimeBar}> {/* <--- changed */}
-                    <div style={styles.marketTimeLeft}>
-                        <span style={styles.liveDot} />
-                        MARKET TIME
-                    </div>
-
-                    <div style={styles.marketTimeValue}>
-                        {marketDateTimeText}
-                    </div>
-                </div>
-
                 <div style={styles.chartTools}> {/* <--- changed */}
                     <button
                         style={styles.settingsButton}
@@ -3151,6 +3203,17 @@ export default function TradingGame() {
                             </button>
                         </div>
                     )}
+                </div>
+
+                <div style={styles.marketTimeBar}> {/* <--- changed */}
+                    <div style={styles.marketTimeLeft}>
+                        <span style={styles.liveDot} />
+                        MARKET TIME
+                    </div>
+
+                    <div style={styles.marketTimeValue}>
+                        {marketDateTimeText}
+                    </div>
                 </div>
 
                 <div style={styles.chartWrap}>
@@ -3403,7 +3466,8 @@ const styles: Record<string, CSSProperties> = {
     marketTimeBar: {
         height: 38, // <--- changed
         background: "linear-gradient(180deg, #101010 0%, #070707 100%)", // <--- changed
-        borderBottom: "1px solid rgba(255,255,255,0.06)", // <--- changed
+        borderTop: "1px solid rgba(255,255,255,0.06)", // <--- changed
+        borderBottom: "none", // <--- changed
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "space-between", // <--- changed
@@ -3441,6 +3505,7 @@ const styles: Record<string, CSSProperties> = {
         position: "relative", // <--- changed
         background: "#050505", // <--- changed
         minHeight: 42, // <--- changed
+        borderBottom: "none", // <--- changed
         display: "flex", // <--- changed
         justifyContent: "flex-end", // <--- changed
         alignItems: "center", // <--- changed
