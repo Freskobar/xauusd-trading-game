@@ -606,6 +606,9 @@ export default function TradingGame() {
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
     const [phoneClosing, setPhoneClosing] = useState(false); // <--- changed
+    const [cellStrength, setCellStrength] = useState(4); // <--- changed
+    const [wifiStrength, setWifiStrength] = useState(3); // <--- changed
+    const [batteryPercent, setBatteryPercent] = useState<number | null>(null); // <--- changed
     const [simulationPaused, setSimulationPaused] = useState(false); // <--- changed
     const simulationPausedRef = useRef(false); // <--- changed
     const [bullCandleColor, setBullCandleColor] = useState(GREEN); // <--- changed
@@ -2416,6 +2419,66 @@ export default function TradingGame() {
     }, []);
 
     useEffect(() => {
+        const statusInterval = window.setInterval(() => {
+            setCellStrength(Math.floor(Math.random() * 4) + 1); // <--- changed
+            setWifiStrength(Math.floor(Math.random() * 3) + 1); // <--- changed
+        }, 4500);
+
+        return () => window.clearInterval(statusInterval);
+    }, []);
+
+    useEffect(() => {
+        const maybeNavigator = navigator as Navigator & {
+            getBattery?: () => Promise<{
+                level: number;
+                charging: boolean;
+                addEventListener: (type: string, listener: () => void) => void;
+                removeEventListener: (type: string, listener: () => void) => void;
+            }>;
+        };
+
+        if (!maybeNavigator.getBattery) {
+            setBatteryPercent(87); // <--- changed: fallback when browser blocks real battery info
+            return;
+        }
+
+        let batteryRef:
+            | {
+                level: number;
+                charging: boolean;
+                addEventListener: (type: string, listener: () => void) => void;
+                removeEventListener: (type: string, listener: () => void) => void;
+            }
+            | null = null;
+
+        const updateBattery = () => {
+            if (!batteryRef) return;
+
+            setBatteryPercent(Math.round(batteryRef.level * 100));
+        };
+
+        maybeNavigator
+            .getBattery()
+            .then((battery) => {
+                batteryRef = battery;
+                updateBattery();
+
+                battery.addEventListener("levelchange", updateBattery);
+                battery.addEventListener("chargingchange", updateBattery);
+            })
+            .catch(() => {
+                setBatteryPercent(87); // <--- changed
+            });
+
+        return () => {
+            if (!batteryRef) return;
+
+            batteryRef.removeEventListener("levelchange", updateBattery);
+            batteryRef.removeEventListener("chargingchange", updateBattery);
+        };
+    }, []);
+
+    useEffect(() => {
         const tickInterval = setInterval(() => {
             if (simulationPausedRef.current) return; // <--- changed
 
@@ -3145,13 +3208,57 @@ export default function TradingGame() {
                                         </div>
 
                                         <div style={styles.phoneStatusRight}>
-                                            <button
-                                                style={styles.phoneCloseButton}
-                                                onClick={closePhonePanel}
-                                                aria-label="Close phone"
-                                            >
-                                                ×
-                                            </button>
+                                            <div style={styles.cellBars} aria-label="Cellular signal">
+                                                {[1, 2, 3, 4].map((bar) => (
+                                                    <span
+                                                        key={bar}
+                                                        style={{
+                                                            ...styles.cellBar,
+                                                            height: 4 + bar * 3,
+                                                            opacity:
+                                                                bar <= cellStrength
+                                                                    ? 1
+                                                                    : 0.28,
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+
+                                            <div style={styles.wifiIcon} aria-label="Wi-Fi">
+                                                <span
+                                                    style={{
+                                                        ...styles.wifiArcLarge,
+                                                        opacity: wifiStrength >= 3 ? 1 : 0.25,
+                                                    }}
+                                                />
+                                                <span
+                                                    style={{
+                                                        ...styles.wifiArcMedium,
+                                                        opacity: wifiStrength >= 2 ? 1 : 0.25,
+                                                    }}
+                                                />
+                                                <span
+                                                    style={{
+                                                        ...styles.wifiArcSmall,
+                                                        opacity: wifiStrength >= 1 ? 1 : 0.25,
+                                                    }}
+                                                />
+                                            </div>
+
+                                            <div style={styles.batteryIcon} aria-label="Battery">
+                                                <div
+                                                    style={{
+                                                        ...styles.batteryFill,
+                                                        width: `${Math.max(
+                                                            5,
+                                                            Math.min(100, batteryPercent ?? 87)
+                                                        )}%`,
+                                                    }}
+                                                />
+                                                <span style={styles.batteryText}>
+                                                    {batteryPercent ?? 87}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -4028,24 +4135,89 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         justifyContent: "flex-end", // <--- changed
         alignItems: "center", // <--- changed
+        gap: 5, // <--- changed
         paddingRight: 1, // <--- changed
     },
-    phoneCloseButton: {
-        width: 24, // <--- changed
-        height: 24, // <--- changed
-        borderRadius: 999, // <--- changed
-        border: "1px solid rgba(255,255,255,0.12)", // <--- changed
-        background: "rgba(255,255,255,0.08)", // <--- changed
-        color: "#ffffff", // <--- changed
-        fontSize: 17, // <--- changed
-        fontWeight: 900, // <--- changed
-        lineHeight: 1, // <--- changed
+    cellBars: {
+        height: 18, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "flex-end", // <--- changed
+        gap: 2, // <--- changed
+    },
+    cellBar: {
+        width: 3, // <--- changed
+        borderRadius: 2, // <--- changed
+        background: "#ffffff", // <--- changed
+        display: "block", // <--- changed
+        transition: "opacity 260ms ease", // <--- changed
+    },
+    wifiIcon: {
+        position: "relative", // <--- changed
+        width: 18, // <--- changed
+        height: 15, // <--- changed
+        display: "block", // <--- changed
+    },
+    wifiArcLarge: {
+        position: "absolute", // <--- changed
+        left: 1, // <--- changed
+        top: 1, // <--- changed
+        width: 16, // <--- changed
+        height: 16, // <--- changed
+        borderTop: "2px solid #ffffff", // <--- changed
+        borderRadius: "50%", // <--- changed
+        display: "block", // <--- changed
+        transition: "opacity 260ms ease", // <--- changed
+    },
+    wifiArcMedium: {
+        position: "absolute", // <--- changed
+        left: 5, // <--- changed
+        top: 6, // <--- changed
+        width: 8, // <--- changed
+        height: 8, // <--- changed
+        borderTop: "2px solid #ffffff", // <--- changed
+        borderRadius: "50%", // <--- changed
+        display: "block", // <--- changed
+        transition: "opacity 260ms ease", // <--- changed
+    },
+    wifiArcSmall: {
+        position: "absolute", // <--- changed
+        left: 8, // <--- changed
+        bottom: 1, // <--- changed
+        width: 4, // <--- changed
+        height: 4, // <--- changed
+        borderRadius: "50%", // <--- changed
+        background: "#ffffff", // <--- changed
+        display: "block", // <--- changed
+        transition: "opacity 260ms ease", // <--- changed
+    },
+    batteryIcon: {
+        position: "relative", // <--- changed
+        width: 30, // <--- changed
+        height: 14, // <--- changed
+        border: "1.6px solid rgba(255,255,255,0.95)", // <--- changed
+        borderRadius: 4, // <--- changed
+        boxSizing: "border-box", // <--- changed
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        cursor: "pointer", // <--- changed
-        padding: 0, // <--- changed
-        WebkitTapHighlightColor: "transparent", // <--- changed
+        overflow: "visible", // <--- changed
+    },
+    batteryFill: {
+        position: "absolute", // <--- changed
+        left: 2, // <--- changed
+        top: 2, // <--- changed
+        bottom: 2, // <--- changed
+        borderRadius: 2, // <--- changed
+        background: "rgba(255,255,255,0.88)", // <--- changed
+        transition: "width 300ms ease", // <--- changed
+    },
+    batteryText: {
+        position: "relative", // <--- changed
+        zIndex: 1, // <--- changed
+        color: "#050505", // <--- changed
+        fontSize: 8, // <--- changed
+        fontWeight: 900, // <--- changed
+        lineHeight: 1, // <--- changed
     },
     phoneBlankContent: {
         height: "100%", // <--- changed
