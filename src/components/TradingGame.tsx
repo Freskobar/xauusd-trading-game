@@ -121,14 +121,14 @@ const HOME_APP_GRID_VERTICAL_OFFSET = 20; // <--- changed: moves the entire app 
 const HOME_SEARCH_WIDTH = 70; // <--- changed: width of the search bar
 const HOME_SEARCH_HEIGHT = 25; // <--- changed: height of the search bar
 const HOME_SEARCH_RADIUS = 999; // <--- changed: roundness of the search bar corners
-const HOME_SEARCH_VERTICAL_OFFSET = 15; // <--- changed: moves the search bar up/down
+const HOME_SEARCH_VERTICAL_OFFSET = 30; // <--- changed: moves the search bar up/down
 
-const HOME_DOCK_WIDTH = 300; // <--- changed: width of the dock/background bar
+const HOME_DOCK_WIDTH =  800; // <--- changed: width of the dock/background bar
 const HOME_DOCK_APP_SIZE = HOME_APP_SIZE; // <--- changed: size of dock apps/icons
-const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 20; // <--- changed: height of the dock
+const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 30; // <--- changed: height of the dock
 const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
-const HOME_DOCK_VERTICAL_OFFSET = 42; // <--- changed: moves the dock up/down
-const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
+const HOME_DOCK_VERTICAL_OFFSET = 50; // <--- changed: moves the dock up/down
+const HOME_DOCK_APP_HORIZONTAL_GAP = HOME_APP_GRID_GAP; // <--- changed: space between dock apps
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
