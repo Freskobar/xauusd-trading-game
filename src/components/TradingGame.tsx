@@ -3287,25 +3287,20 @@ export default function TradingGame() {
                                                 viewBox="0 0 21 18"
                                                 style={styles.statusSvg}
                                                 aria-label="Wi-Fi"
+                                                preserveAspectRatio="xMidYMid meet"
                                             >
                                                 <path
-                                                    d="M2.7 5.1C6.95 1.45 14.05 1.45 18.3 5.1"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2.8"
-                                                    strokeLinecap="butt"
+                                                    d="M2.65 5.25C6.9 1.45 14.1 1.45 18.35 5.25L16.3 7.25C12.95 4.45 8.05 4.45 4.7 7.25Z"
+                                                    fill="currentColor"
                                                     opacity={wifiStrength >= 3 ? 1 : 0.25}
                                                 />
                                                 <path
-                                                    d="M5.95 8.45C8.55 6.3 12.45 6.3 15.05 8.45"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2.8"
-                                                    strokeLinecap="butt"
+                                                    d="M5.8 8.95C8.45 6.7 12.55 6.7 15.2 8.95L13.15 10.95C11.55 9.65 9.45 9.65 7.85 10.95Z"
+                                                    fill="currentColor"
                                                     opacity={wifiStrength >= 2 ? 1 : 0.25}
                                                 />
                                                 <path
-                                                    d="M8.75 11.8C9.65 11.15 11.35 11.15 12.25 11.8L10.5 13.65Z"
+                                                    d="M8.65 12.55C9.65 11.65 11.35 11.65 12.35 12.55L10.5 14.45Z"
                                                     fill="currentColor"
                                                     opacity={wifiStrength >= 1 ? 1 : 0.25}
                                                 />
@@ -4266,6 +4261,8 @@ const styles: Record<string, CSSProperties> = {
         flexShrink: 0, // <--- changed
         height: 18, // <--- changed: normalizes status icon height
         overflow: "visible", // <--- changed
+        shapeRendering: "geometricPrecision", // <--- changed: keeps Wi-Fi spacing consistent on PC and iPhone
+        transform: "translateZ(0)", // <--- changed: reduces browser scaling differences
         filter: "drop-shadow(0 0 1px rgba(0,0,0,0.18))", // <--- changed
     },
     phoneBlankContent: {
