@@ -39,6 +39,7 @@ type MarketState = {
     // This means: how many 15m candles have closed since the game started.
     // At app load it starts at 0 so 30m/1h/4h/Daily timers begin fresh.
     active15mIndex: number;
+    activeCandleTimeMs: number | null; // <--- changed
 };
 
 type Position = {
@@ -186,6 +187,25 @@ function getGroupSize(timeframe: string) {
 function parseNumber(value: string | undefined) {
     if (!value) return NaN;
     return Number(value.replace(/"/g, "").trim());
+}
+
+function parseCsvTimestamp(value: string | undefined) {
+    if (!value) return null;
+
+    const cleaned = value.replace(/"/g, "").trim();
+    if (!cleaned) return null;
+
+    const direct = Date.parse(cleaned);
+    if (Number.isFinite(direct)) return direct;
+
+    const normalized = cleaned.includes("T")
+        ? cleaned
+        : cleaned.replace(" ", "T");
+
+    const withEasternOffset = Date.parse(`${normalized}-04:00`);
+    if (Number.isFinite(withEasternOffset)) return withEasternOffset;
+
+    return null;
 }
 
 function parseCsvCandles(csvText: string): CsvCandle[] {
@@ -460,7 +480,7 @@ function fallbackCandles(): CsvCandle[] {
 export default function TradingGame() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const appStartRef = useRef(Date.now());
-    const marketSessionStartRef = useRef(new Date("2026-05-18T08:30:00-04:00").getTime()); // <--- changed
+    const fallbackMarketSessionStartRef = useRef(new Date("2026-05-18T08:30:00-04:00").getTime()); // <--- changed
     const csvCandlesRef = useRef<CsvCandle[]>([]);
     const pauseStartedAtRef = useRef<number | null>(null); // <--- changed
     const totalPausedMsRef = useRef(0); // <--- changed
@@ -511,6 +531,7 @@ export default function TradingGame() {
         plannedCandle: null,
         dataIndex: 0,
         active15mIndex: 0,
+        activeCandleTimeMs: null, // <--- changed
     }));
 
     const [price, setPrice] = useState(25);
@@ -2105,6 +2126,9 @@ export default function TradingGame() {
                 const closedCandles = history.candles;
                 const open = history.lastClose;
                 const rawNext = parsed[history.nextIndex];
+                const activeCandleTimeMs =
+                    parseCsvTimestamp(rawNext.time) ??
+                    fallbackMarketSessionStartRef.current; // <--- changed
 
                 const planned = createActivePlan(
                     applyRealCandleShape(rawNext, open)
@@ -2128,6 +2152,7 @@ export default function TradingGame() {
                     plannedCandle: planned,
                     dataIndex: history.nextIndex,
                     active15mIndex: 0,
+                    activeCandleTimeMs, // <--- changed
                 });
             } catch (error) {
                 console.error(error);
@@ -2143,6 +2168,9 @@ export default function TradingGame() {
 
                 const closedCandles = history.candles;
                 const open = history.lastClose;
+                const activeCandleTimeMs =
+                    parseCsvTimestamp(parsed[history.nextIndex].time) ??
+                    fallbackMarketSessionStartRef.current; // <--- changed
 
                 const planned = createActivePlan(
                     applyRealCandleShape(parsed[history.nextIndex], open)
@@ -2166,6 +2194,7 @@ export default function TradingGame() {
                     plannedCandle: planned,
                     dataIndex: history.nextIndex,
                     active15mIndex: 0,
+                    activeCandleTimeMs, // <--- changed
                 });
             }
         }
@@ -2203,8 +2232,7 @@ export default function TradingGame() {
     );
 
     const marketDateTimeText = formatMarketDateTime(
-        marketSessionStartRef.current +
-        market.active15mIndex * 15 * 60 * 1000 +
+        (market.activeCandleTimeMs ?? fallbackMarketSessionStartRef.current) +
         Math.max(0, elapsedInsideCurrent15m)
     ); // <--- changed
 
@@ -2334,6 +2362,11 @@ export default function TradingGame() {
                 }
 
                 const nextRaw = data[nextIndex];
+                const nextCandleTimeMs =
+                    parseCsvTimestamp(nextRaw.time) ??
+                    ((prev.activeCandleTimeMs ?? fallbackMarketSessionStartRef.current) +
+                        15 * 60 * 1000); // <--- changed
+
                 const nextPlan = createActivePlan(
                     applyRealCandleShape(nextRaw, finished.close)
                 );
@@ -2359,6 +2392,7 @@ export default function TradingGame() {
                     plannedCandle: nextPlan,
                     dataIndex: nextIndex,
                     active15mIndex: prev.active15mIndex + 1,
+                    activeCandleTimeMs: nextCandleTimeMs, // <--- changed
                 };
             });
         }, 120); // <--- changed
