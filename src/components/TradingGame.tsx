@@ -55,6 +55,7 @@ type PendingOrder = {
     showControls: boolean;
     controlsOpacity: number; // <--- added
     hideCheckWhenConfirmed?: boolean; // <--- changed
+    reopenedTrashOnly?: boolean; // <--- changed
     armedForFill?: boolean; // <--- changed
 };
 
@@ -473,6 +474,7 @@ export default function TradingGame() {
     const isDraggingExitLineRef = useRef(false); // <--- changed
     const trailingStopModeRef = useRef(false); // <--- changed
     const pendingSideSwipeTimerRef = useRef<number | null>(null); // <--- changed
+    const lastTouchActionTimeRef = useRef(0); // <--- changed: prevents mobile touch from firing a second mouse click
 
 
     const openPnl = useMemo(() => {
@@ -893,6 +895,7 @@ export default function TradingGame() {
             showControls: true,
             controlsOpacity: 1, // <--- added
             hideCheckWhenConfirmed: false, // <--- changed
+            reopenedTrashOnly: false, // <--- changed
             armedForFill: false, // <--- changed
         });
     }
@@ -909,7 +912,7 @@ export default function TradingGame() {
                 confirmed: true,
                 showControls: true,
                 controlsOpacity: 1,
-                hideCheckWhenConfirmed: true, // <--- changed
+            hideCheckWhenConfirmed: true, // <--- changed
             };
         });
 
@@ -1020,7 +1023,13 @@ export default function TradingGame() {
         );
     }
 
+    function shouldIgnoreMouseAfterTouch() {
+        return Date.now() - lastTouchActionTimeRef.current < 650; // <--- changed
+    }
+
     function handleChartMouseDown(event: ReactMouseEvent<HTMLCanvasElement>) {
+        if (shouldIgnoreMouseAfterTouch()) return; // <--- changed
+
         const point = getCanvasPoint(event);
         if (!point) return;
 
@@ -1278,6 +1287,8 @@ export default function TradingGame() {
     }
 
     function handleChartMouseMove(event: ReactMouseEvent<HTMLCanvasElement>) {
+        if (shouldIgnoreMouseAfterTouch()) return; // <--- changed
+
         const point = getCanvasPoint(event);
         if (!point) return;
 
@@ -1423,6 +1434,8 @@ export default function TradingGame() {
     }
 
     function handleChartMouseUp() {
+        if (shouldIgnoreMouseAfterTouch()) return; // <--- changed
+
         stopPendingSideSwipe(); // <--- changed
 
         if (dragModeRef.current === "create-exit" && !createExitMovedRef.current) {
@@ -1432,6 +1445,7 @@ export default function TradingGame() {
                         ...prev,
                         showControls: true, // <--- changed: only a click on blue line shows controls
                         controlsOpacity: 1,
+                        reopenedTrashOnly: true, // <--- changed
                     }
                     : prev
             );
@@ -1507,6 +1521,7 @@ export default function TradingGame() {
 
     function handleChartTouchStart(event: ReactTouchEvent<HTMLCanvasElement>) {
         event.preventDefault();
+        lastTouchActionTimeRef.current = Date.now(); // <--- changed
 
         const point = getCanvasTouchPoint(event);
         if (!point) return;
@@ -1766,6 +1781,7 @@ export default function TradingGame() {
 
     function handleChartTouchMove(event: ReactTouchEvent<HTMLCanvasElement>) {
         event.preventDefault();
+        lastTouchActionTimeRef.current = Date.now(); // <--- changed
 
         const point = getCanvasTouchPoint(event);
         if (!point) return;
@@ -1912,6 +1928,7 @@ export default function TradingGame() {
     }
 
     function handleChartTouchEnd() {
+        lastTouchActionTimeRef.current = Date.now(); // <--- changed
         stopPendingSideSwipe(); // <--- changed
 
         if (dragModeRef.current === "create-exit" && !createExitMovedRef.current) {
@@ -1921,6 +1938,7 @@ export default function TradingGame() {
                         ...prev,
                         showControls: true, // <--- changed: only a tap on blue line shows controls
                         controlsOpacity: 1,
+                        reopenedTrashOnly: true, // <--- changed
                     }
                     : prev
             );
@@ -2432,15 +2450,28 @@ export default function TradingGame() {
                 h: buttonSize,
             };
 
+            const confirmedControlsFullyHidden =
+                pendingOrder.confirmed &&
+                pendingOrder.hideCheckWhenConfirmed &&
+                !pendingOrder.showControls &&
+                pendingOrder.controlsOpacity <= 0; // <--- changed
+
+            const trashShouldMoveLeft =
+                shouldHideCheck &&
+                (confirmedControlsFullyHidden || pendingOrder.reopenedTrashOnly); // <--- changed
+
             const trashBox: HitBox = {
-                x: shouldHideCheck ? buttonX : buttonX + buttonSize + buttonGap, // <--- changed
+                x: trashShouldMoveLeft ? buttonX : buttonX + buttonSize + buttonGap, // <--- changed
                 y: buttonY,
                 w: buttonSize,
                 h: buttonSize,
             };
 
             pendingCheckHitBoxRef.current = shouldHideCheck ? null : checkBox; // <--- changed
-            pendingTrashHitBoxRef.current = trashBox;
+            pendingTrashHitBoxRef.current =
+                shouldHideCheck && !trashShouldMoveLeft && pendingOrder.controlsOpacity > 0
+                    ? null
+                    : trashBox; // <--- changed: trash cannot be tapped during the check-button fade
 
             if (!pendingOrder.confirmed) {
                 const stopLabel = pendingOrder.side === "long" ? "BUY STOP" : "SELL STOP";
@@ -2678,7 +2709,8 @@ export default function TradingGame() {
                             }}
                         >
                             {position
-                                ? `${position.quantity.toLocaleString()} ${position.quantity === 1 ? "contract" : "contracts"
+                                ? `${position.quantity.toLocaleString()} ${
+                                    position.quantity === 1 ? "contract" : "contracts"
                                 }`
                                 : "contracts"}
                         </div>
@@ -2968,7 +3000,7 @@ const styles: Record<string, CSSProperties> = {
     closePosition: {
         gridColumn: "2 / 4",
         gridRow: "1",
-        background: "#ff2f3a", // <--- changed
+                background: "#ff2f3a", // <--- changed
         color: "#ffffff", // <--- changed,
         border: "none",
         borderRadius: 14,
