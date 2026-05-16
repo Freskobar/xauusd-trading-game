@@ -133,6 +133,7 @@ const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock app
 const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel further down
 const PHONE_BASE_WIDTH = 330; // <--- changed: restored PC phone width baseline
 const PHONE_BASE_HEIGHT = 640; // <--- changed: shorter restored PC phone height baseline
+const PHONE_MOBILE_BOTTOM_BREATHING_ROOM = 54; // <--- changed: keeps dock/search from hugging bottom on mobile Safari
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -769,6 +770,7 @@ export default function TradingGame() {
     const [quantity, setQuantity] = useState(1);
     const [now, setNow] = useState(Date.now());
     const [isLandscape, setIsLandscape] = useState(false); // <--- changed
+    const [isPhoneSizedScreenState, setIsPhoneSizedScreenState] = useState(false); // <--- changed: mobile-only phone layout flag
     const [mobilePhoneScale, setMobilePhoneScale] = useState(1); // <--- changed: mobile-only whole-phone scaling
     const [isDesktopStatusRender, setIsDesktopStatusRender] = useState(false); // <--- changed: desktop-only fake phone status bar polish
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
@@ -2550,12 +2552,14 @@ export default function TradingGame() {
             const nextPhoneScale = isPhoneSizedScreen
                 ? Math.min(
                     (window.innerWidth - 24) / PHONE_BASE_WIDTH,
-                    (window.innerHeight - 24) / PHONE_BASE_HEIGHT,
+                    (window.innerHeight - 24 - PHONE_MOBILE_BOTTOM_BREATHING_ROOM) / PHONE_BASE_HEIGHT,
                     1
                 )
                 : 1; // <--- changed: PC remains untouched
 
             setMobilePhoneScale(nextPhoneScale); // <--- changed
+
+            setIsPhoneSizedScreenState(isPhoneSizedScreen); // <--- changed
 
             setIsLandscape(
                 isPhoneSizedScreen && window.innerWidth > window.innerHeight
@@ -3501,12 +3505,12 @@ export default function TradingGame() {
                                             ))}
                                         </div>
 
-                                        <div style={styles.phoneSearchPill}> {/* <--- changed */}
+                                        <div style={{ ...styles.phoneSearchPill, ...(isPhoneSizedScreenState ? styles.phoneSearchPillMobile : {}) }}> {/* <--- changed */}
                                             <span style={styles.phoneSearchIcon}>⌕</span>
                                             <span>Search</span>
                                         </div>
 
-                                        <div style={styles.phoneDock}> {/* <--- changed */}
+                                        <div style={{ ...styles.phoneDock, ...(isPhoneSizedScreenState ? styles.phoneDockMobile : {}) }}> {/* <--- changed */}
                                             {phoneDockApps.map((app) => (
                                                 <div key={app.name} style={styles.phoneDockSlot}>
                                                     <div
