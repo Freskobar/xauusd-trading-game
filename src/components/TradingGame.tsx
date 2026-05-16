@@ -3471,8 +3471,8 @@ const styles: Record<string, CSSProperties> = {
     marketTimeBlock: {
         background: "transparent", // <--- changed
         border: "none", // <--- changed
-        padding: "0 16px 6px", // <--- changed
-        marginTop: "-34px", // <--- changed
+        padding: "4px 62px 8px 16px", // <--- changed: leaves room for settings button
+        marginTop: "0px", // <--- changed: anchored below timeframe row
         display: "flex", // <--- changed
         flexDirection: "column", // <--- changed
         alignItems: "center", // <--- changed
@@ -3529,7 +3529,7 @@ const styles: Record<string, CSSProperties> = {
     },
     floatingSettingsWrap: {
         position: "absolute", // <--- changed
-        top: 58, // <--- changed
+        top: "172px", // <--- changed: anchored below timeframe row
         right: 14, // <--- changed
         zIndex: 60, // <--- changed
         display: "flex", // <--- changed
