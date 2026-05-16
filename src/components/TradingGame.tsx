@@ -3471,13 +3471,13 @@ const styles: Record<string, CSSProperties> = {
     marketTimeBlock: {
         background: "transparent", // <--- changed
         border: "none", // <--- changed
-        padding: "18px 72px 8px 72px", // <--- changed: centered horizontally with balanced spacing
+        padding: "10px 72px 6px 72px", // <--- changed: moved upward and aligned with settings button
         marginTop: "0px", // <--- changed
         display: "flex", // <--- changed
         flexDirection: "column", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        gap: 4, // <--- changed
+        gap: 2, // <--- changed
         textAlign: "center", // <--- changed
         lineHeight: 1, // <--- changed
         overflow: "visible", // <--- changed
@@ -3531,7 +3531,7 @@ const styles: Record<string, CSSProperties> = {
     },
     floatingSettingsWrap: {
         position: "absolute", // <--- changed
-        top: "146px", // <--- changed: balanced position below timeframe row
+        top: "132px", // <--- changed: aligned with market time vertically
         right: 14, // <--- changed
         zIndex: 60, // <--- changed
         display: "flex", // <--- changed
