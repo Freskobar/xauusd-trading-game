@@ -112,6 +112,25 @@ const HISTORY_BASE_CANDLES = 9000;
 const MAX_BASE_CANDLES = 10000;
 const TRIM_BASE_CANDLES = 96;
 
+// Home screen tweak knobs // <--- changed
+// Change these numbers to quickly tune the iPhone home screen layout. // <--- changed
+const HOME_APP_SIZE = 60; // <--- changed: size of the normal home screen apps/icons
+const HOME_APP_GRID_GAP = 20; // <--- changed: space between apps in the grid
+const HOME_APP_GRID_VERTICAL_OFFSET = 20; // <--- changed: moves the entire app grid up/down
+
+const HOME_SEARCH_WIDTH = 70; // <--- changed: width of the search bar
+const HOME_SEARCH_HEIGHT = 25; // <--- changed: height of the search bar
+const HOME_SEARCH_RADIUS = 999; // <--- changed: roundness of the search bar corners
+const HOME_SEARCH_VERTICAL_OFFSET = 15; // <--- changed: moves the search bar up/down
+
+const HOME_DOCK_WIDTH = 330; // <--- changed: width of the dock/background bar
+const HOME_DOCK_APP_SIZE = HOME_APP_SIZE; // <--- changed: size of dock apps/icons
+const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 20; // <--- changed: height of the dock
+const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
+const HOME_DOCK_VERTICAL_OFFSET = 50; // <--- changed: moves the dock up/down
+const HOME_DOCK_APP_HORIZONTAL_GAP = HOME_APP_GRID_GAP; // <--- changed: space between dock apps
+
+
 
 
 function formatCountdown(seconds: number) {
@@ -2425,7 +2444,7 @@ export default function TradingGame() {
         }, 3800 + Math.floor(Math.random() * 2400));
 
         const wifiInterval = window.setInterval(() => {
-            setWifiStrength(Math.floor(Math.random() * 3) + 1); // <--- changed: Wi-Fi changes separately from service bars
+            setWifiStrength(Math.floor(Math.random() * 2) + 2); // <--- changed: Wi-Fi changes separately and never drops below 2 bars
         }, 5200 + Math.floor(Math.random() * 3200));
 
         const locationInterval = window.setInterval(() => {
@@ -3172,6 +3191,41 @@ export default function TradingGame() {
         bearCandleColor, // <--- changed
     ]);
 
+
+    const phoneHomeApps = [ // <--- changed: static iPhone-style home screen apps
+        { name: "Music", bg: "linear-gradient(145deg, #ff5a75, #f51646)" },
+        { name: "Sounds", bg: "linear-gradient(145deg, #ff5a75, #f51646)" },
+        { name: "Calendar", bg: "linear-gradient(180deg, #ffffff, #f2f2f2)" },
+        { name: "Contacts", bg: "linear-gradient(145deg, #eeeae0, #c9c4ba)" },
+        { name: "Photos", bg: "conic-gradient(from 0deg, #ff3b30, #ff9500, #ffcc00, #34c759, #00c7be, #007aff, #af52de, #ff2d55, #ff3b30)" },
+        { name: "Maps", bg: "linear-gradient(145deg, #ffffff, #eef4ff)" },
+        { name: "Home", bg: "linear-gradient(145deg, #38e6ff, #00a7d8)" },
+        { name: "Weather", bg: "linear-gradient(145deg, #67e8f9, #0ea5e9)" },
+        { name: "Files", bg: "linear-gradient(145deg, #ffffff, #d9dde7)" },
+        { name: "Phone", bg: "linear-gradient(145deg, #58f073, #0fbf42)" },
+        { name: "Garage", bg: "linear-gradient(145deg, #073d68, #031b31)" },
+        { name: "News", bg: "linear-gradient(145deg, #ffffff, #f7f7f7)" },
+        { name: "Calc", bg: "linear-gradient(145deg, #eeeeee, #c8c8c8)" },
+        { name: "Cloud", bg: "linear-gradient(145deg, #ffffff, #f7f7f7)" },
+        { name: "Ring", bg: "linear-gradient(145deg, #22d3ee, #0096c7)" },
+        { name: "Find", bg: "radial-gradient(circle at center, #ffffff 0 18%, #34c759 19% 68%, #f2f2f2 69%)" },
+        { name: "Fitness", bg: "radial-gradient(circle at center, #090909 0 23%, #39ff14 24% 40%, #ffe600 41% 55%, #ff2d55 56%)" },
+        { name: "Stocks", bg: "linear-gradient(145deg, #151515, #050505)" },
+        { name: "Ride", bg: "linear-gradient(145deg, #ff321f, #d90b00)" },
+        { name: "Cards", bg: "linear-gradient(145deg, #1f3d5d, #0b1c32)" },
+        { name: "Shazam", bg: "linear-gradient(145deg, #2bb7ff, #007aff)" },
+        { name: "Messages", bg: "linear-gradient(145deg, #58f073, #0fbf42)" },
+        { name: "Radio", bg: "linear-gradient(145deg, #e40046, #9b002f)" },
+        { name: "Settings", bg: "linear-gradient(145deg, #f5f5f5, #a8a8a8)" },
+    ];
+
+    const phoneDockApps = [ // <--- changed: static bottom dock apps
+        { name: "Safari", bg: "linear-gradient(145deg, #7dd3fc, #2563eb)" },
+        { name: "Notes", bg: "linear-gradient(180deg, #ffd84d 0 26%, #ffffff 27% 100%)" },
+        { name: "Mail", bg: "linear-gradient(145deg, #38bdf8, #0b7cff)" },
+        { name: "Camera", bg: "linear-gradient(145deg, #e5e7eb, #9ca3af)" },
+    ];
+
     return (
         <div style={styles.app}>
             <style>
@@ -3364,11 +3418,45 @@ export default function TradingGame() {
                                         </div>
                                     </div>
 
-                                    <div style={styles.phoneBlankContent}>
-                                        <div style={styles.phoneAppIcon} />
-                                        <div style={styles.phoneBlankTitle}>Phone Hub</div>
-                                        <div style={styles.phoneBlankSubtitle}>
-                                            Blank starting point
+                                    <div style={styles.phoneHomeScreen}> {/* <--- changed */}
+                                        <div style={styles.phoneAppGrid}> {/* <--- changed */}
+                                            {phoneHomeApps.slice(0, 20).map((app) => (
+                                                <div key={app.name} style={styles.phoneAppSlot}>
+                                                    <div
+                                                        style={{
+                                                            ...styles.phoneHomeAppIcon,
+                                                            background: app.bg,
+                                                        }}
+                                                    >
+                                                        <span style={styles.phoneHomeAppGlyph}>
+                                                            {app.name.slice(0, 1)}
+                                                        </span>
+                                                    </div>
+                                                    <div style={styles.phoneHomeAppName}>{app.name}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div style={styles.phoneSearchPill}> {/* <--- changed */}
+                                            <span style={styles.phoneSearchIcon}>⌕</span>
+                                            <span>Search</span>
+                                        </div>
+
+                                        <div style={styles.phoneDock}> {/* <--- changed */}
+                                            {phoneDockApps.map((app) => (
+                                                <div key={app.name} style={styles.phoneDockSlot}>
+                                                    <div
+                                                        style={{
+                                                            ...styles.phoneDockAppIcon,
+                                                            background: app.bg,
+                                                        }}
+                                                    >
+                                                        <span style={styles.phoneHomeAppGlyph}>
+                                                            {app.name.slice(0, 1)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
 
@@ -3759,7 +3847,7 @@ const styles: Record<string, CSSProperties> = {
     },
     label: {
         color: "#7b7b7b",
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 500,
         letterSpacing: 0.6,
         textTransform: "uppercase",
@@ -3855,7 +3943,7 @@ const styles: Record<string, CSSProperties> = {
     liveDot: {
         width: 7, // <--- changed
         height: 7, // <--- changed
-        borderRadius: 999, // <--- changed
+        borderRadius: HOME_SEARCH_RADIUS, // <--- changed
         background: "#14c78a", // <--- changed
         boxShadow: "0 0 12px rgba(20,199,138,0.85)", // <--- changed
         display: "inline-block", // <--- changed
@@ -4002,7 +4090,7 @@ const styles: Record<string, CSSProperties> = {
     },
     settingsClose: {
         width: 28, // <--- changed
-        height: 28, // <--- changed
+        height: HOME_SEARCH_HEIGHT, // <--- changed
         borderRadius: 10, // <--- changed
         border: "none", // <--- changed
         background: "rgba(255,255,255,0.1)", // <--- changed
@@ -4013,7 +4101,7 @@ const styles: Record<string, CSSProperties> = {
         cursor: "pointer", // <--- changed
     },
     settingsSection: {
-        borderRadius: 16, // <--- changed
+        borderRadius: 13, // <--- changed
         background: "rgba(255,255,255,0.055)", // <--- changed
         border: "1px solid rgba(255,255,255,0.08)", // <--- changed
         padding: 12, // <--- changed
@@ -4021,7 +4109,7 @@ const styles: Record<string, CSSProperties> = {
     },
     settingsSectionTitle: {
         color: "#ffffff", // <--- changed
-        fontSize: 12, // <--- changed
+        fontSize: 11, // <--- changed
         fontWeight: 900, // <--- changed
         letterSpacing: 0.5, // <--- changed
         textTransform: "uppercase", // <--- changed
@@ -4067,7 +4155,7 @@ const styles: Record<string, CSSProperties> = {
         border: "1px solid rgba(255,255,255,0.1)", // <--- changed
         background: "rgba(255,255,255,0.07)", // <--- changed
         color: "#808080", // <--- changed
-        fontSize: 12, // <--- changed
+        fontSize: 11, // <--- changed
         fontWeight: 900, // <--- changed
         cursor: "pointer", // <--- changed
     },
@@ -4083,7 +4171,7 @@ const styles: Record<string, CSSProperties> = {
         border: "none", // <--- changed
         background: "rgba(47,140,255,0.18)", // <--- changed
         color: "#7db8ff", // <--- changed
-        fontSize: 12, // <--- changed
+        fontSize: 11, // <--- changed
         fontWeight: 900, // <--- changed
         cursor: "pointer", // <--- changed
         letterSpacing: 0.4, // <--- changed
@@ -4098,7 +4186,7 @@ const styles: Record<string, CSSProperties> = {
         position: "relative", // <--- changed
         width: 44, // <--- changed
         height: 44, // <--- changed
-        borderRadius: 16, // <--- changed
+        borderRadius: 13, // <--- changed
         border: "1px solid rgba(255,255,255,0.14)", // <--- changed
         background: "rgba(18,18,18,0.82)", // <--- changed
         boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
@@ -4220,14 +4308,14 @@ const styles: Record<string, CSSProperties> = {
     },
     phoneLocationSvg: {
         color: "#ffffff", // <--- changed
-        transform: "translateY(-1px) rotate(2deg)", // <--- changed
+        transform: "translateY(-1px) scaleX(-1) rotate(2deg)", // <--- changed: flipped horizontally
         display: "block", // <--- changed
         filter: "drop-shadow(0 0 1px rgba(0,0,0,0.25))", // <--- changed
     },
     phoneDynamicIsland: {
         width: 88, // <--- changed
-        height: 25, // <--- changed
-        borderRadius: 999, // <--- changed
+        height: HOME_SEARCH_HEIGHT, // <--- changed
+        borderRadius: HOME_SEARCH_RADIUS, // <--- changed
         background: "#000000", // <--- changed
         boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)", // <--- changed
         justifySelf: "center", // <--- changed
@@ -4265,46 +4353,133 @@ const styles: Record<string, CSSProperties> = {
         transform: "translateZ(0)", // <--- changed: reduces browser scaling differences
         filter: "drop-shadow(0 0 1px rgba(0,0,0,0.18))", // <--- changed
     },
-    phoneBlankContent: {
+    phoneHomeScreen: {
         height: "100%", // <--- changed
         display: "flex", // <--- changed
         flexDirection: "column", // <--- changed
         alignItems: "center", // <--- changed
+        justifyContent: "flex-start", // <--- changed
+        padding: `${HOME_APP_GRID_VERTICAL_OFFSET}px 24px ${HOME_DOCK_VERTICAL_OFFSET}px`, // <--- changed: tweak knob controls app grid top + dock bottom spacing
+        boxSizing: "border-box", // <--- changed
+        position: "relative", // <--- changed
+        zIndex: 1, // <--- changed
+    },
+    phoneAppGrid: {
+        width: "100%", // <--- changed
+        maxWidth: 314, // <--- changed: keeps iPhone-like icon grid ratio inside the phone
+        display: "grid", // <--- changed
+        gridTemplateColumns: "repeat(4, minmax(0, 1fr))", // <--- changed
+        gridTemplateRows: "repeat(5, auto)", // <--- changed
+        columnGap: HOME_APP_GRID_GAP, // <--- changed: shared app-grid gap knob
+        rowGap: HOME_APP_GRID_GAP, // <--- changed: shared app-grid gap knob
+        padding: "0 0 0", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        flex: "0 0 auto", // <--- changed
+        minHeight: 0, // <--- changed
+    },
+    phoneAppSlot: {
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "flex-start", // <--- changed
+        minWidth: 0, // <--- changed
+    },
+    phoneHomeAppIcon: {
+        width: HOME_APP_SIZE, // <--- changed: app size knob
+        height: HOME_APP_SIZE, // <--- changed: app size knob
+        maxWidth: HOME_APP_SIZE, // <--- changed
+        maxHeight: HOME_APP_SIZE, // <--- changed
+        borderRadius: 13, // <--- changed
+        boxShadow: "0 8px 18px rgba(0,0,0,0.32), inset 0 1px 1px rgba(255,255,255,0.32)", // <--- changed
+        border: "1px solid rgba(255,255,255,0.14)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        textAlign: "center", // <--- changed
-        paddingBottom: 42, // <--- changed
-        paddingTop: 8, // <--- changed
+        overflow: "hidden", // <--- changed
+    },
+    phoneDockAppIcon: {
+        width: HOME_DOCK_APP_SIZE, // <--- changed: dock app size tied to app size knob
+        height: HOME_DOCK_APP_SIZE, // <--- changed: dock app size tied to app size knob
+        maxWidth: HOME_DOCK_APP_SIZE, // <--- changed
+        maxHeight: HOME_DOCK_APP_SIZE, // <--- changed
+        borderRadius: 15, // <--- changed
+        boxShadow: "0 8px 18px rgba(0,0,0,0.36), inset 0 1px 1px rgba(255,255,255,0.34)", // <--- changed
+        border: "1px solid rgba(255,255,255,0.16)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        overflow: "hidden", // <--- changed
+    },
+    phoneHomeAppGlyph: {
+        color: "rgba(255,255,255,0.96)", // <--- changed
+        fontSize: 19, // <--- changed
+        fontWeight: 950, // <--- changed
+        lineHeight: 1, // <--- changed
+        textShadow: "0 1px 4px rgba(0,0,0,0.3)", // <--- changed
+    },
+    phoneHomeAppName: {
+        color: "rgba(255,255,255,0.94)", // <--- changed
+        fontSize: 9.5, // <--- changed
+        fontWeight: 700, // <--- changed
+        lineHeight: "11px", // <--- changed
+        marginTop: 3, // <--- changed
+        maxWidth: "100%", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        textShadow: "0 1px 2px rgba(0,0,0,0.5)", // <--- changed
+    },
+    phoneSearchPill: {
+        width: HOME_SEARCH_WIDTH, // <--- changed
+        height: 25, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "rgba(255,255,255,0.22)", // <--- changed
+        color: "rgba(255,255,255,0.86)", // <--- changed
+        backdropFilter: "blur(12px)", // <--- changed
+        WebkitBackdropFilter: "blur(12px)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        gap: 4, // <--- changed
+        fontSize: 11, // <--- changed
+        fontWeight: 800, // <--- changed
+        margin: `auto 0 ${HOME_SEARCH_VERTICAL_OFFSET}px`, // <--- changed: search vertical placement knob
+        boxShadow: "inset 0 1px 1px rgba(255,255,255,0.16), 0 8px 18px rgba(0,0,0,0.22)", // <--- changed
+    },
+    phoneSearchIcon: {
+        fontSize: 13, // <--- changed
+        lineHeight: 1, // <--- changed
+        transform: "translateY(-0.5px)", // <--- changed
+    },
+    phoneDock: {
+        width: HOME_DOCK_WIDTH, // <--- changed: dock width knob
+        height: HOME_DOCK_HEIGHT, // <--- changed: dock height knob
+        borderRadius: HOME_DOCK_RADIUS, // <--- changed
+        background: "rgba(255,255,255,0.18)", // <--- changed
+        border: "1px solid rgba(255,255,255,0.14)", // <--- changed
+        backdropFilter: "blur(18px)", // <--- changed
+        WebkitBackdropFilter: "blur(18px)", // <--- changed
+        boxShadow: "inset 0 1px 1px rgba(255,255,255,0.14), 0 14px 34px rgba(0,0,0,0.34)", // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: `repeat(4, ${HOME_DOCK_APP_SIZE}px)`, // <--- changed: exact dock app sizing
+        columnGap: HOME_DOCK_APP_HORIZONTAL_GAP, // <--- changed: dock horizontal gap knob
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        justifyItems: "center", // <--- changed
+        padding: "9px 9px", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
-    phoneAppIcon: {
-        width: 76, // <--- changed
-        height: 76, // <--- changed
-        borderRadius: 18, // <--- changed
-        background: "linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04))", // <--- changed
-        border: "1px solid rgba(255,255,255,0.12)", // <--- changed
-        boxShadow: "0 12px 24px rgba(0,0,0,0.35)", // <--- changed
-        marginBottom: 14, // <--- changed
-    },
-    phoneBlankTitle: {
-        color: "#ffffff", // <--- changed
-        fontSize: 18, // <--- changed
-        fontWeight: 900, // <--- changed
-        lineHeight: 1, // <--- changed
-        marginBottom: 8, // <--- changed
-    },
-    phoneBlankSubtitle: {
-        color: "#777777", // <--- changed
-        fontSize: 12, // <--- changed
-        fontWeight: 800, // <--- changed
-        textTransform: "uppercase", // <--- changed
-        letterSpacing: 0.5, // <--- changed
+    phoneDockSlot: {
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
     },
     phoneHomeBar: {
         position: "absolute", // <--- changed
         left: "50%", // <--- changed
         bottom: 8, // <--- changed
         transform: "translateX(-50%)", // <--- changed
-        width: 92, // <--- changed
+        width: 84, // <--- changed
         height: 4, // <--- changed
         borderRadius: 999, // <--- changed
         background: "rgba(255,255,255,0.78)", // <--- changed
@@ -4315,7 +4490,7 @@ const styles: Record<string, CSSProperties> = {
         bottom: 18, // <--- changed
         width: 44, // <--- changed
         height: 44, // <--- changed
-        borderRadius: 16, // <--- changed
+        borderRadius: 13, // <--- changed
         border: "1px solid rgba(255,255,255,0.14)", // <--- changed
         background: "rgba(18,18,18,0.82)", // <--- changed
         boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
