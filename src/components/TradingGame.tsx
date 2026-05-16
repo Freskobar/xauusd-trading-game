@@ -434,6 +434,21 @@ export default function TradingGame() {
     const pauseStartedAtRef = useRef<number | null>(null); // <--- changed
     const totalPausedMsRef = useRef(0); // <--- changed
 
+    function getSimElapsedMs() {
+        const currentPauseDuration =
+            simulationPaused && pauseStartedAtRef.current !== null
+                ? Date.now() - pauseStartedAtRef.current
+                : 0;
+
+        return Math.max(
+            0,
+            Date.now() -
+            appStartRef.current -
+            totalPausedMsRef.current -
+            currentPauseDuration
+        ); // <--- changed
+    }
+
     const [balance, setBalance] = useState(10000);
     const [timeframe, setTimeframe] = useState("15m");
     const [quantity, setQuantity] = useState(1);
@@ -627,6 +642,7 @@ export default function TradingGame() {
             } else if (pauseStartedAtRef.current !== null) {
                 totalPausedMsRef.current += Date.now() - pauseStartedAtRef.current; // <--- changed
                 pauseStartedAtRef.current = null; // <--- changed
+                setNow(Date.now()); // <--- changed
             }
 
             return nextPaused;
@@ -2137,8 +2153,10 @@ export default function TradingGame() {
             ? now - pauseStartedAtRef.current
             : 0; // <--- changed
 
-    const elapsedInsideCurrent15m =
-        now - appStartRef.current - totalPausedMsRef.current - currentPauseDuration; // <--- changed
+    const elapsedInsideCurrent15m = Math.max(
+        0,
+        now - appStartRef.current - totalPausedMsRef.current - currentPauseDuration
+    ); // <--- changed
 
     const remainingMs =
         remainingBaseCandles * base15mMs - elapsedInsideCurrent15m;
@@ -2207,8 +2225,7 @@ export default function TradingGame() {
             setMarket((prev) => {
                 if (!prev.loaded || !prev.plannedCandle) return prev;
 
-                const elapsed =
-                    Date.now() - appStartRef.current - totalPausedMsRef.current; // <--- changed
+                const elapsed = getSimElapsedMs(); // <--- changed
                 const progress = clamp(elapsed / base15mMs, 0, 1);
 
                 const calculated = candleFromPlanAtProgress(
@@ -2233,11 +2250,14 @@ export default function TradingGame() {
         }, 120);
 
         return () => clearInterval(tickInterval);
-    }, [base15mMs, simulationPaused]);
+    }, [base15mMs]);
 
     useEffect(() => {
         const closeInterval = setInterval(() => {
             if (simulationPaused) return; // <--- changed
+
+            const elapsed = getSimElapsedMs(); // <--- changed
+            if (elapsed < TIMEFRAME_SECONDS["15m"] * 1000) return; // <--- changed
 
             setMarket((prev) => {
                 if (!prev.loaded || !prev.plannedCandle) return prev;
@@ -2284,6 +2304,10 @@ export default function TradingGame() {
 
                 setPrice(newActive.close);
 
+                appStartRef.current = Date.now(); // <--- changed
+                totalPausedMsRef.current = 0; // <--- changed
+                pauseStartedAtRef.current = null; // <--- changed
+
                 return {
                     loaded: true,
                     status: prev.status,
@@ -2294,11 +2318,7 @@ export default function TradingGame() {
                     active15mIndex: prev.active15mIndex + 1,
                 };
             });
-
-            appStartRef.current = Date.now();
-            totalPausedMsRef.current = 0; // <--- changed
-            pauseStartedAtRef.current = simulationPaused ? Date.now() : null; // <--- changed
-        }, TIMEFRAME_SECONDS["15m"] * 1000);
+        }, 120); // <--- changed
 
         return () => clearInterval(closeInterval);
     }, [simulationPaused]);
