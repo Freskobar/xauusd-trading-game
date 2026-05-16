@@ -912,7 +912,7 @@ export default function TradingGame() {
                 confirmed: true,
                 showControls: true,
                 controlsOpacity: 1,
-            hideCheckWhenConfirmed: true, // <--- changed
+                hideCheckWhenConfirmed: true, // <--- changed
             };
         });
 
@@ -2441,7 +2441,9 @@ export default function TradingGame() {
             const buttonY = pendingY - buttonSize / 2;
 
             const shouldHideCheck =
-                pendingOrder.confirmed && pendingOrder.hideCheckWhenConfirmed; // <--- changed
+                pendingOrder.confirmed &&
+                pendingOrder.hideCheckWhenConfirmed &&
+                pendingOrder.reopenedTrashOnly; // <--- changed: hide check only when trash is reopened later
 
             const checkBox: HitBox = {
                 x: buttonX,
@@ -2449,6 +2451,12 @@ export default function TradingGame() {
                 w: buttonSize,
                 h: buttonSize,
             };
+
+            const isInitialConfirmFadeOut =
+                pendingOrder.confirmed &&
+                pendingOrder.hideCheckWhenConfirmed &&
+                !pendingOrder.reopenedTrashOnly &&
+                pendingOrder.controlsOpacity > 0; // <--- changed
 
             const confirmedControlsFullyHidden =
                 pendingOrder.confirmed &&
@@ -2467,11 +2475,14 @@ export default function TradingGame() {
                 h: buttonSize,
             };
 
-            pendingCheckHitBoxRef.current = shouldHideCheck ? null : checkBox; // <--- changed
+            pendingCheckHitBoxRef.current =
+                isInitialConfirmFadeOut || shouldHideCheck ? null : checkBox; // <--- changed
+
             pendingTrashHitBoxRef.current =
-                shouldHideCheck && !trashShouldMoveLeft && pendingOrder.controlsOpacity > 0
+                isInitialConfirmFadeOut ||
+                    (shouldHideCheck && !trashShouldMoveLeft && pendingOrder.controlsOpacity > 0)
                     ? null
-                    : trashBox; // <--- changed: trash cannot be tapped during the check-button fade
+                    : trashBox; // <--- changed: no buttons can be tapped during the confirm fade
 
             if (!pendingOrder.confirmed) {
                 const stopLabel = pendingOrder.side === "long" ? "BUY STOP" : "SELL STOP";
@@ -2709,8 +2720,7 @@ export default function TradingGame() {
                             }}
                         >
                             {position
-                                ? `${position.quantity.toLocaleString()} ${
-                                    position.quantity === 1 ? "contract" : "contracts"
+                                ? `${position.quantity.toLocaleString()} ${position.quantity === 1 ? "contract" : "contracts"
                                 }`
                                 : "contracts"}
                         </div>
@@ -3000,7 +3010,7 @@ const styles: Record<string, CSSProperties> = {
     closePosition: {
         gridColumn: "2 / 4",
         gridRow: "1",
-                background: "#ff2f3a", // <--- changed
+        background: "#ff2f3a", // <--- changed
         color: "#ffffff", // <--- changed,
         border: "none",
         borderRadius: 14,
