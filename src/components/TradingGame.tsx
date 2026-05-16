@@ -88,7 +88,10 @@ const DIM_GREEN_LINE = "rgba(20, 199, 138, 0.42)"; // <--- changed
 const DIM_RED_LINE = "rgba(255, 64, 72, 0.42)"; // <--- changed
 const DIM_BLUE_LINE = "rgba(47, 140, 255, 0.42)"; // <--- changed
 const DIM_ENTRY_LINE = "rgba(255, 255, 255, 0.42)"; // <--- changed
-const ALT_DASH_WHITE = "rgba(255, 255, 255, 0.62)"; // <--- changed
+const LIGHT_GREEN_LINE = "rgba(20, 199, 138, 0.72)"; // <--- changed
+const LIGHT_RED_LINE = "rgba(255, 64, 72, 0.72)"; // <--- changed
+const LIGHT_BLUE_LINE = "rgba(47, 140, 255, 0.72)"; // <--- changed
+const LIGHT_ENTRY_LINE = "rgba(255, 255, 255, 0.72)"; // <--- changed
 const RAW_DISPLAY_BASE = 49.90;
 const GOLD_DISPLAY_BASE = 4990.00;
 const GOLD_TICK_SIZE = 0.10;
@@ -610,6 +613,8 @@ export default function TradingGame() {
             quantity: Math.max(1, quantity || 1),
         });
 
+        setPendingOrder(null); // <--- changed: market order cancels pending setup
+        setPendingOrder(null); // <--- changed: market order cancels pending setup
         setTakeProfit(null); // <--- changed
         setStopLoss(null); // <--- changed
         isDraggingExitLineRef.current = false; // <--- changed
@@ -2078,6 +2083,37 @@ export default function TradingGame() {
     }, []);
 
     useEffect(() => {
+        const preventContextMenu = (event: Event) => event.preventDefault();
+
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+        document.body.style.userSelect = "none";
+        document.body.style.webkitUserSelect = "none";
+        document.body.style.setProperty("-webkit-tap-highlight-color", "transparent"); // <--- changed
+
+        window.addEventListener("contextmenu", preventContextMenu);
+
+        if (
+            screen.orientation &&
+            typeof screen.orientation.lock === "function"
+        ) {
+            screen.orientation.lock("portrait").catch(() => {
+                // Some mobile browsers only allow orientation lock after fullscreen.
+            });
+        }
+
+        return () => {
+            document.documentElement.style.overflow = "";
+            document.body.style.overflow = "";
+            document.body.style.userSelect = "";
+            document.body.style.webkitUserSelect = "";
+            document.body.style.removeProperty("-webkit-tap-highlight-color"); // <--- changed
+            window.removeEventListener("contextmenu", preventContextMenu);
+        };
+    }, []);
+
+
+    useEffect(() => {
         return () => stopPendingSideSwipe(); // <--- changed
     }, []);
 
@@ -2289,7 +2325,11 @@ export default function TradingGame() {
         tpTrashHitBoxRef.current = null;
         slTrashHitBoxRef.current = null;
 
-        function drawAlternatingDashedHorizontalLine(lineY: number, color: string) {
+        function drawAlternatingDashedHorizontalLine(
+            lineY: number,
+            color: string,
+            lightColor: string
+        ) {
             const dashLength = 10;
             const gapLength = 6;
             let x = 0;
@@ -2301,7 +2341,7 @@ export default function TradingGame() {
             while (x < width) {
                 const dashEnd = Math.min(x + dashLength, width);
 
-                ctx.strokeStyle = dashIndex % 2 === 0 ? color : ALT_DASH_WHITE; // <--- changed
+                ctx.strokeStyle = dashIndex % 2 === 0 ? color : lightColor; // <--- changed
                 ctx.beginPath();
                 ctx.moveTo(x, lineY);
                 ctx.lineTo(dashEnd, lineY);
@@ -2315,13 +2355,13 @@ export default function TradingGame() {
         if (position) {
             const entryY = priceToY(position.entry);
 
-            drawAlternatingDashedHorizontalLine(entryY, DIM_ENTRY_LINE); // <--- changed
+            drawAlternatingDashedHorizontalLine(entryY, DIM_ENTRY_LINE, LIGHT_ENTRY_LINE); // <--- changed
         }
 
         if (pendingOrder) {
             const pendingY = priceToY(pendingOrder.price);
 
-            drawAlternatingDashedHorizontalLine(pendingY, DIM_BLUE_LINE); // <--- changed
+            drawAlternatingDashedHorizontalLine(pendingY, DIM_BLUE_LINE, LIGHT_BLUE_LINE); // <--- changed
         }
 
         function drawExitLine(line: ExitLine) {
@@ -2333,8 +2373,9 @@ export default function TradingGame() {
             const projectedPnl = calculateProjectedPnl(line.price, entryPrice, qty, side);
             const color = isTp || projectedPnl >= 0 ? GREEN : RED; // <--- changed
             const lineColor = isTp ? DIM_GREEN_LINE : DIM_RED_LINE; // <--- changed
+            const lightLineColor = isTp ? LIGHT_GREEN_LINE : LIGHT_RED_LINE; // <--- changed
 
-            drawAlternatingDashedHorizontalLine(lineY, lineColor); // <--- changed
+            drawAlternatingDashedHorizontalLine(lineY, lineColor, lightLineColor); // <--- changed
 
             const pnlText = formatMoney(projectedPnl);
             const entryY = priceToY(entryPrice); // <--- changed
@@ -2769,7 +2810,12 @@ export default function TradingGame() {
                         onTouchStart={handleChartTouchStart}
                         onTouchMove={handleChartTouchMove}
                         onTouchEnd={handleChartTouchEnd}
-                        style={{ touchAction: "none" }}
+                        style={{
+                            touchAction: "none",
+                            userSelect: "none",
+                            WebkitUserSelect: "none",
+                            WebkitTapHighlightColor: "transparent",
+                        }}
                     />
                 </div>
 
@@ -2846,16 +2892,22 @@ export default function TradingGame() {
 const styles: Record<string, CSSProperties> = {
     app: {
         width: "100%",
-        height: "100vh",
+        height: "100dvh", // <--- changed
+        minHeight: "100dvh", // <--- changed
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         background: "#050505",
         overflow: "hidden",
+        userSelect: "none", // <--- changed
+        WebkitUserSelect: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+        touchAction: "none", // <--- changed
     },
     gameFrame: {
         width: "min(480px, 100vw)",
-        height: "min(980px, 100vh)",
+        height: "min(980px, 100dvh)",
+        maxHeight: "100dvh", // <--- changed
         aspectRatio: "9 / 19.5",
         background: "#050505",
         display: "flex",
@@ -2864,6 +2916,10 @@ const styles: Record<string, CSSProperties> = {
         borderRadius: 26,
         color: "white",
         fontFamily: "Arial, sans-serif",
+        userSelect: "none", // <--- changed
+        WebkitUserSelect: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+        touchAction: "none", // <--- changed
     },
     topPanel: {
         background: "#181818",
