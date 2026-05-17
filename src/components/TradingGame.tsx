@@ -747,6 +747,158 @@ function PhoneBatterySvg({ percent }: { percent: number | null }) {
     );
 }
 
+function IPhonePhoneIconSvg() { // <--- changed
+    return (
+        <svg
+            width="48"
+            height="48"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="Phone"
+            style={{ display: "block" }}
+        >
+            <g transform="translate(32 32) rotate(-8) translate(-32 -32)"> {/* <--- changed: centers the phone glyph inside the green app square */}
+                <path
+                    d="M46.2 43.6c-1.35 1.35-3.35 2.05-5.75 2.05-6.25 0-15.25-4.9-22.7-12.35C10.3 25.85 5.4 16.85 5.4 10.6c0-2.4.7-4.4 2.05-5.75l4.2-4.2c.95-.95 2.5-.95 3.45 0l8.15 8.15c.95.95.95 2.5 0 3.45l-4.8 4.8c-.6.6-.7 1.45-.35 2.15 1.3 2.9 3.5 5.9 6.25 8.65s5.75 4.95 8.65 6.25c.7.35 1.55.25 2.15-.35l4.8-4.8c.95-.95 2.5-.95 3.45 0l8.15 8.15c.95.95.95 2.5 0 3.45l-5.3 3.05Z"
+                    fill="white"
+                    transform="translate(4.6 9.1)"
+                />
+            </g>
+        </svg>
+    );
+}
+
+function IPhoneMessagesIconSvg() { // <--- changed
+    return (
+        <svg
+            width="48"
+            height="48"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="Messages"
+            style={{ display: "block" }}
+        >
+            <g transform="translate(64 0) scale(-1 1)"> {/* <--- changed: centered bubble while keeping the horizontal flip */}
+                <path
+                    d="M32 10.6C18.25 10.6 7.1 19.4 7.1 30.25C7.1 41.1 18.25 49.9 32 49.9C34.95 49.9 37.75 49.5 40.35 48.75C44.25 51.25 48.55 52.65 53.1 52.95C54 53 54.55 52 54.05 51.3C52.25 48.75 51 46.15 50.5 43.7C54.45 40.25 56.9 35.55 56.9 30.25C56.9 19.4 45.75 10.6 32 10.6Z"
+                    fill="white"
+                />
+            </g>
+        </svg>
+    );
+}
+
+function IPhoneMusicIconSvg() { // <--- changed
+    return (
+        <svg
+            width="48"
+            height="48"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="Music"
+            style={{ display: "block" }}
+        >
+            <g transform="translate(3 2)"> {/* <--- changed: nudged music glyph to true visual center inside dock app */}
+                <path
+                    d="M45.8 6.8C47.95 6.42 50 8.08 50 10.28V38.65C50 45.15 45.45 49.95 39.05 49.95C34.45 49.95 31.05 47.15 31.05 43.45C31.05 39.25 34.95 36.05 39.95 36.05C41.45 36.05 42.7 36.32 43.65 36.75V21.15L23.1 24.82V45.9C23.1 52.4 18.55 57.2 12.15 57.2C7.55 57.2 4.15 54.4 4.15 50.7C4.15 46.5 8.05 43.3 13.05 43.3C14.55 43.3 15.8 43.57 16.75 44V17.2C16.75 15.52 17.98 14.08 19.62 13.78L45.8 6.8Z"
+                    fill="white"
+                />
+                <path
+                    d="M23.1 19.15L43.65 15.48V10.85L23.1 14.55V19.15Z"
+                    fill="white"
+                />
+            </g>
+        </svg>
+    );
+}
+
+
+function IPhoneSafariIconSvg() { // <--- changed
+    const tickMarks = Array.from({ length: 48 }, (_, index) => { // <--- changed
+        const angle = index * 7.5; // <--- changed
+        const isMajor = index % 4 === 0; // <--- changed
+        const y1 = isMajor ? 5.85 : 6.9; // <--- changed: larger Safari compass tick ring
+        const y2 = isMajor ? 10.75 : 10.15; // <--- changed: larger Safari compass tick ring
+
+        return (
+            <line
+                key={index}
+                x1="32"
+                y1={y1}
+                x2="32"
+                y2={y2}
+                stroke="white"
+                strokeWidth={isMajor ? 1.05 : 0.72}
+                strokeLinecap="round"
+                opacity={isMajor ? 0.9 : 0.72}
+                transform={`rotate(${angle} 32 32)`}
+            />
+        );
+    });
+
+    return (
+        <svg
+            width="54" // <--- changed: larger Safari symbol to match the other dock symbols
+            height="54" // <--- changed: larger Safari symbol to match the other dock symbols
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="Safari"
+            style={{ display: "block" }}
+        >
+            <defs>
+                <radialGradient id="safariCompassBlue" cx="34%" cy="24%" r="78%">
+                    <stop offset="0%" stopColor="#75f5ff" />
+                    <stop offset="44%" stopColor="#32c8f0" />
+                    <stop offset="100%" stopColor="#0b78ee" />
+                </radialGradient>
+                <linearGradient id="safariRedNeedle" x1="20" y1="44" x2="44" y2="20" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#f5f5f5" />
+                    <stop offset="48%" stopColor="#f5f5f5" />
+                    <stop offset="49%" stopColor="#f04444" />
+                    <stop offset="100%" stopColor="#df1d35" />
+                </linearGradient>
+            </defs>
+
+            <circle
+                cx="32"
+                cy="32"
+                r="26.15" // <--- changed: larger compass, no white outer border
+                fill="url(#safariCompassBlue)"
+            />
+
+            {tickMarks}
+
+            <circle
+                cx="32"
+                cy="32"
+                r="20.7" // <--- changed
+                stroke="rgba(255,255,255,0.42)"
+                strokeWidth="0.55"
+            />
+            <circle
+                cx="32"
+                cy="32"
+                r="15.75" // <--- changed
+                stroke="rgba(255,255,255,0.22)"
+                strokeWidth="0.45"
+            />
+
+            <path
+                d="M44.2 19.8L35.55 35.55L19.8 44.2L28.45 28.45L44.2 19.8Z" // <--- changed: larger needle to match larger compass
+                fill="url(#safariRedNeedle)"
+                stroke="rgba(255,255,255,0.8)"
+                strokeWidth="0.35"
+                strokeLinejoin="round"
+            />
+            <circle cx="32" cy="32" r="2.25" fill="white" />
+            <circle cx="32" cy="32" r="1.25" fill="#0e83ee" />
+        </svg>
+    );
+}
 
 
 
@@ -3421,10 +3573,10 @@ export default function TradingGame() {
     ];
 
     const phoneDockApps = [ // <--- changed: static bottom dock apps
-        { name: "Safari", bg: "linear-gradient(145deg, #7dd3fc, #2563eb)" },
-        { name: "Notes", bg: "linear-gradient(180deg, #ffd84d 0 26%, #ffffff 27% 100%)" },
-        { name: "Mail", bg: "linear-gradient(145deg, #38bdf8, #0b7cff)" },
-        { name: "Camera", bg: "linear-gradient(145deg, #e5e7eb, #9ca3af)" },
+        { name: "Phone", bg: "linear-gradient(180deg, #67f36f 0%, #11c43a 100%)", icon: "phone" }, // <--- changed
+        { name: "Safari", bg: "linear-gradient(145deg, #ffffff 0%, #f3f3f3 55%, #e8e8e8 100%)", icon: "safari" }, // <--- changed
+        { name: "Music", bg: "linear-gradient(180deg, #fb1f78 0%, #ff2f54 52%, #ff6a24 100%)", icon: "music" }, // <--- changed
+        { name: "Messages", bg: "linear-gradient(180deg, #67f36f 0%, #11c43a 100%)", icon: "messages" }, // <--- changed
     ];
 
     return (
@@ -3576,9 +3728,19 @@ export default function TradingGame() {
                                                                             background: app.bg,
                                                                         }}
                                                                     >
-                                                                        <span style={styles.phoneHomeAppGlyph}>
-                                                                            {app.name.slice(0, 1)}
-                                                                        </span>
+                                                                        {app.icon === "phone" ? ( // <--- changed
+                                                                            <IPhonePhoneIconSvg />
+                                                                        ) : app.icon === "safari" ? ( // <--- changed
+                                                                            <IPhoneSafariIconSvg />
+                                                                        ) : app.icon === "music" ? ( // <--- changed
+                                                                            <IPhoneMusicIconSvg />
+                                                                        ) : app.icon === "messages" ? ( // <--- changed
+                                                                            <IPhoneMessagesIconSvg />
+                                                                        ) : (
+                                                                            <span style={styles.phoneHomeAppGlyph}>
+                                                                                {app.name.slice(0, 1)}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -4112,7 +4274,7 @@ const styles: Record<string, CSSProperties> = {
     phoneInlineAnchor: {
         position: "absolute", // <--- changed
         left: 14, // <--- changed
-        top: "50%", // <--- changed
+        top: 28.5, // <--- changed: centers phone button with the middle market time line, like Wednesday 10:09 ET
         transform: "translateY(-50%)", // <--- changed
         zIndex: 60, // <--- changed
         display: "flex", // <--- changed
@@ -4572,18 +4734,16 @@ const styles: Record<string, CSSProperties> = {
         overflow: "hidden", // <--- changed
     },
     phoneDockAppIcon: {
-        width: HOME_DOCK_APP_SIZE, // <--- changed: dock app size tied to app size knob
-        height: HOME_DOCK_APP_SIZE, // <--- changed: dock app size tied to app size knob
-        maxWidth: HOME_DOCK_APP_SIZE, // <--- changed
-        maxHeight: HOME_DOCK_APP_SIZE, // <--- changed
-        borderRadius: 15, // <--- changed
-        boxShadow: "0 8px 18px rgba(0,0,0,0.36), inset 0 1px 1px rgba(255,255,255,0.34)", // <--- changed
-        border: "1px solid rgba(255,255,255,0.16)", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        overflow: "hidden", // <--- changed
+        width: HOME_DOCK_APP_SIZE,
+        height: HOME_DOCK_APP_SIZE,
+        borderRadius: 14,
+        display: "grid",
+        placeItems: "center",
+        overflow: "hidden",
+        boxShadow: "0 8px 18px rgba(0,0,0,0.22)",
+        flexShrink: 0,
     },
+
     phoneHomeAppGlyph: {
         color: "rgba(255,255,255,0.96)", // <--- changed
         fontSize: 19, // <--- changed
