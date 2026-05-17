@@ -221,66 +221,12 @@ function getSimulatedMarketProgressMs(elapsedInside15mMs: number) {
     return progress * realMarketCandleDurationMs; // <--- changed
 }
 
-function getTimeframeMarketMinutes(tf: string) {
-    if (tf === "30m") return 30;
-    if (tf === "1h") return 60;
-    if (tf === "4h") return 240;
-    if (tf === "Daily") return 1440;
-
-    return 15;
-}
 
 function getAlignedMarketDisplayTimestamp(
     active15mTimestamp: number,
     elapsedInside15mMs: number
 ) {
     return active15mTimestamp + getSimulatedMarketProgressMs(elapsedInside15mMs); // <--- changed: market time stays true to CSV candle time
-}
-
-function getEasternParts(timestamp: number) {
-    const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
-        weekday: "long",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-    }).formatToParts(new Date(timestamp));
-
-    const getPart = (type: string) =>
-        parts.find((part) => part.type === type)?.value ?? "0";
-
-    return {
-        weekday: getPart("weekday"),
-        hour: Number(getPart("hour")),
-        minute: Number(getPart("minute")),
-        second: Number(getPart("second")),
-    };
-}
-
-function getRealSecondsUntilTimeframeClose(timestamp: number, tf: string) {
-    const { weekday, hour, minute, second } = getEasternParts(timestamp);
-    const secondsIntoDay = hour * 3600 + minute * 60 + second;
-
-    if (tf === "Daily") {
-        const isFriday = weekday === "Friday";
-        const marketCloseSeconds = isFriday ? 17 * 3600 : 24 * 3600;
-        return Math.max(0, marketCloseSeconds - secondsIntoDay); // <--- changed
-    }
-
-    const tfMinutes = getTimeframeMarketMinutes(tf);
-    const tfSeconds = tfMinutes * 60;
-    const secondsIntoBlock = secondsIntoDay % tfSeconds;
-    const remaining = tfSeconds - secondsIntoBlock;
-
-    return remaining === tfSeconds ? tfSeconds : remaining; // <--- changed
-}
-
-function convertRealMarketSecondsToSimMs(realSeconds: number) {
-    const real15mSeconds = 15 * 60;
-    const simulated15mMs = TIMEFRAME_SECONDS["15m"] * 1000;
-
-    return (realSeconds / real15mSeconds) * simulated15mMs; // <--- changed
 }
 
 function formatMoney(value: number) {
@@ -1559,16 +1505,26 @@ export default function TradingGame() {
         dragModeRef.current = null; // <--- changed
     }
 
-    function getCanvasPoint(event: ReactMouseEvent<HTMLCanvasElement>) {
+    function getCanvasLocalPoint(clientX: number, clientY: number) { // <--- changed: fixes click/drag hit detection when the full app is CSS-scaled
         const canvas = canvasRef.current;
         if (!canvas) return null;
 
         const rect = canvas.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return null;
+
+        const canvasCssWidth = canvas.offsetWidth || rect.width;
+        const canvasCssHeight = canvas.offsetHeight || rect.height;
+        const scaleX = canvasCssWidth / rect.width;
+        const scaleY = canvasCssHeight / rect.height;
 
         return {
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top,
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY,
         };
+    }
+
+    function getCanvasPoint(event: ReactMouseEvent<HTMLCanvasElement>) {
+        return getCanvasLocalPoint(event.clientX, event.clientY); // <--- changed
     }
 
     function confirmExitLines() {
@@ -1614,18 +1570,10 @@ export default function TradingGame() {
     }
 
     function getCanvasTouchPoint(event: ReactTouchEvent<HTMLCanvasElement>) {
-        const canvas = canvasRef.current;
-        if (!canvas) return null;
-
         const touch = event.touches[0] || event.changedTouches[0];
         if (!touch) return null;
 
-        const rect = canvas.getBoundingClientRect();
-
-        return {
-            x: touch.clientX - rect.left,
-            y: touch.clientY - rect.top,
-        };
+        return getCanvasLocalPoint(touch.clientX, touch.clientY); // <--- changed
     }
 
     function isInsideHitBox(point: { x: number; y: number }, box: HitBox | null) {
@@ -2705,14 +2653,14 @@ export default function TradingGame() {
         Math.max(0, elapsedInsideCurrent15m)
     ); // <--- changed: always uses the CSV candle time plus live candle progress
 
-    const remainingRealMarketSeconds = getRealSecondsUntilTimeframeClose(
-        currentMarketTimestamp,
-        timeframe
-    ); // <--- changed
-
-    const remainingMs = convertRealMarketSecondsToSimMs(
-        remainingRealMarketSeconds
-    ); // <--- changed: countdown aligns to actual CSV market-time boundary
+    const displayedTimeframeGroupSize = getGroupSize(timeframe); // <--- changed: countdown now follows the candle that is actually displayed
+    const completedInsideDisplayedCandle = market.active15mIndex % displayedTimeframeGroupSize; // <--- changed
+    const displayedCandleDurationMs = displayedTimeframeGroupSize * base15mMs; // <--- changed
+    const displayedCandleElapsedMs = completedInsideDisplayedCandle * base15mMs + elapsedInsideCurrent15m; // <--- changed
+    const remainingMs = Math.max(
+        0,
+        displayedCandleDurationMs - displayedCandleElapsedMs
+    ); // <--- changed: fixes 1h/4h countdown resetting before the visible candle closes
 
     const countdownText = formatCountdown(
         Math.ceil(Math.max(0, remainingMs) / 1000)
