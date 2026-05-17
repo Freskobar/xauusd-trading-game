@@ -135,6 +135,9 @@ const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel furth
 const PHONE_BASE_WIDTH = 340; // <--- changed: PC-perfect full phone object width
 const PHONE_BASE_HEIGHT = 680; // <--- changed: PC-perfect full phone object height
 
+const GAME_BASE_WIDTH = 480; // <--- changed: fixed professional design-stage width
+const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage height
+
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
 const HOME_APP_GRID_WIDTH = HOME_APP_GRID_COLUMNS * HOME_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_APP_GRID_GAP; // <--- changed: fixed app grid width so iPhone Safari cannot stretch gaps
@@ -770,7 +773,8 @@ export default function TradingGame() {
     const [quantity, setQuantity] = useState(1);
     const [now, setNow] = useState(Date.now());
     const [isLandscape, setIsLandscape] = useState(false); // <--- changed
-    const [mobilePhoneScale, setMobilePhoneScale] = useState(1); // <--- changed: whole-phone scale, mobile only
+    const [mobilePhoneScale, setMobilePhoneScale] = useState(1); // <--- changed: phone stays fixed inside the full app stage
+    const [appScale, setAppScale] = useState(1); // <--- changed: scales the entire app as one proportional object
     const [isDesktopStatusRender, setIsDesktopStatusRender] = useState(false); // <--- changed: desktop-only fake phone status bar polish
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
@@ -2545,21 +2549,20 @@ export default function TradingGame() {
             const isPhoneSizedScreen =
                 Math.min(window.innerWidth, window.innerHeight) <= 768; // <--- changed
 
-            const nextPhoneScale = isPhoneSizedScreen
-                ? Math.min(
-                    (window.innerWidth - 24) / PHONE_BASE_WIDTH,
-                    (window.innerHeight - 24) / PHONE_BASE_HEIGHT,
-                    1
-                )
-                : 1; // <--- changed: PC stays exactly the baseline size
+            const nextAppScale = Math.min(
+                window.innerWidth / GAME_BASE_WIDTH,
+                window.innerHeight / GAME_BASE_HEIGHT,
+                1
+            ); // <--- changed: scale the whole app stage, not just the phone
 
-            setMobilePhoneScale(nextPhoneScale); // <--- changed
+            setAppScale(nextAppScale); // <--- changed
+            setMobilePhoneScale(1); // <--- changed: phone remains PC-perfect inside the scaled app stage
 
             setIsLandscape(
                 isPhoneSizedScreen && window.innerWidth > window.innerHeight
             ); // <--- changed: desktop PC should never show rotate blocker
 
-            setIsDesktopStatusRender(true); // <--- changed: keep PC-perfect status bar styling on mobile too; the whole phone scales as one object
+            setIsDesktopStatusRender(true); // <--- changed: keep PC-perfect status bar styling; the full app now scales as one object
         };
 
         document.documentElement.style.overflow = "hidden";
@@ -3424,423 +3427,438 @@ export default function TradingGame() {
                 </div>
             )}
 
-            <div style={styles.gameFrame}>
-                {phoneOpen && ( // <--- changed
-                    <div
-                        style={{
-                            ...styles.phoneFocusLayer,
-                            ...(phoneClosing ? styles.phoneFocusLayerClosing : {}),
-                        }}
-                        onClick={closePhonePanel}
-                    >
-                        <div
-                            style={styles.phoneOutsideClickLayer}
-                            onClick={closePhonePanel}
-                        >
+            <div
+                style={{
+                    ...styles.appScaleFrame,
+                    width: GAME_BASE_WIDTH * appScale, // <--- changed: reserves the scaled full-app footprint
+                    height: GAME_BASE_HEIGHT * appScale, // <--- changed: reserves the scaled full-app footprint
+                }}
+            >
+                <div
+                    style={{
+                        ...styles.appScaleObject,
+                        transform: `scale(${appScale})`, // <--- changed: scales chart, buttons, phone, and overlays together
+                    }}
+                >
+                    <div style={styles.gameFrame}>
+                        {phoneOpen && ( // <--- changed
                             <div
                                 style={{
-                                    ...styles.phoneScaleFrame,
-                                    width: PHONE_BASE_WIDTH * mobilePhoneScale, // <--- changed: reserves scaled phone width
-                                    height: PHONE_BASE_HEIGHT * mobilePhoneScale, // <--- changed: reserves scaled phone height
-                                    marginTop: PHONE_VERTICAL_SHIFT, // <--- changed: placement stays outside scaling
-                                    ...(phoneClosing ? styles.phonePanelClosing : {}),
+                                    ...styles.phoneFocusLayer,
+                                    ...(phoneClosing ? styles.phoneFocusLayerClosing : {}),
                                 }}
-                                onClick={(event) => event.stopPropagation()}
+                                onClick={closePhonePanel}
                             >
                                 <div
-                                    style={{
-                                        ...styles.phoneScaleObject,
-                                        transform: `scale(${mobilePhoneScale})`, // <--- changed: scales phone shell + every child as one object
-                                    }}
+                                    style={styles.phoneOutsideClickLayer}
+                                    onClick={closePhonePanel}
                                 >
-                                    <div style={styles.phonePanel}>
-                                        <div style={styles.phoneDevice}>
-                                            <div style={{ ...styles.phoneStatusBar, ...(isDesktopStatusRender ? styles.phoneStatusBarDesktop : {}) }}>
-                                                <div style={styles.phoneStatusLeft}>
-                                                    <span>{phoneStatusTime}</span>
+                                    <div
+                                        style={{
+                                            ...styles.phoneScaleFrame,
+                                            width: PHONE_BASE_WIDTH * mobilePhoneScale, // <--- changed: reserves scaled phone width
+                                            height: PHONE_BASE_HEIGHT * mobilePhoneScale, // <--- changed: reserves scaled phone height
+                                            marginTop: PHONE_VERTICAL_SHIFT, // <--- changed: placement stays outside scaling
+                                            ...(phoneClosing ? styles.phonePanelClosing : {}),
+                                        }}
+                                        onClick={(event) => event.stopPropagation()}
+                                    >
+                                        <div
+                                            style={{
+                                                ...styles.phoneScaleObject,
+                                                transform: `scale(${mobilePhoneScale})`, // <--- changed: scales phone shell + every child as one object
+                                            }}
+                                        >
+                                            <div style={styles.phonePanel}>
+                                                <div style={styles.phoneDevice}>
+                                                    <div style={{ ...styles.phoneStatusBar, ...(isDesktopStatusRender ? styles.phoneStatusBarDesktop : {}) }}>
+                                                        <div style={styles.phoneStatusLeft}>
+                                                            <span>{phoneStatusTime}</span>
 
-                                                    <span
-                                                        style={{
-                                                            ...styles.phoneLocationSlot,
-                                                            opacity: locationServicesOn ? 1 : 0, // <--- changed: reserves space so time never shifts
-                                                        }}
-                                                        aria-hidden={!locationServicesOn}
-                                                    >
-                                                        <svg
-                                                            width="15"
-                                                            height="15"
-                                                            viewBox="0 0 24 24"
-                                                            style={styles.phoneLocationSvg}
-                                                            aria-label="Location services"
-                                                        >
-                                                            <path
-                                                                d="M4.4 3.5L21.2 10.3C22.1 10.7 22 12 21 12.2L13.8 13.8L12.2 21C12 22 10.7 22.1 10.3 21.2L3.5 4.4C3.2 3.8 3.8 3.2 4.4 3.5Z"
-                                                                fill="currentColor"
-                                                            />
-                                                        </svg>
-                                                    </span>
-                                                </div>
-
-                                                <div style={styles.phoneDynamicIsland}>
-                                                    <span style={styles.phoneCameraDot} />
-                                                </div>
-
-                                                <div style={styles.phoneStatusRight}>
-                                                    <PhoneServiceSvg strength={cellStrength} /> {/* <--- changed: crisp SVG status icon */}
-                                                    <PhoneWifiSvg strength={wifiStrength} /> {/* <--- changed: crisp SVG status icon */}
-                                                    <PhoneBatterySvg percent={batteryPercent} /> {/* <--- changed: crisp SVG status icon */}
-                                                </div>                                    </div>
-
-                                            <div style={styles.phoneHomeScreen}> {/* <--- changed */}
-                                                <div style={styles.phoneAppGrid}> {/* <--- changed */}
-                                                    {phoneHomeApps.slice(0, HOME_APP_GRID_COLUMNS * HOME_APP_GRID_ROWS).map((app) => (
-                                                        <div key={app.name} style={styles.phoneAppSlot}>
-                                                            <div
+                                                            <span
                                                                 style={{
-                                                                    ...styles.phoneHomeAppIcon,
-                                                                    background: app.bg,
+                                                                    ...styles.phoneLocationSlot,
+                                                                    opacity: locationServicesOn ? 1 : 0, // <--- changed: reserves space so time never shifts
                                                                 }}
+                                                                aria-hidden={!locationServicesOn}
                                                             >
-                                                                <span style={styles.phoneHomeAppGlyph}>
-                                                                    {app.name.slice(0, 1)}
-                                                                </span>
-                                                            </div>
-                                                            <div style={styles.phoneHomeAppName}>{app.name}</div>
+                                                                <svg
+                                                                    width="15"
+                                                                    height="15"
+                                                                    viewBox="0 0 24 24"
+                                                                    style={styles.phoneLocationSvg}
+                                                                    aria-label="Location services"
+                                                                >
+                                                                    <path
+                                                                        d="M4.4 3.5L21.2 10.3C22.1 10.7 22 12 21 12.2L13.8 13.8L12.2 21C12 22 10.7 22.1 10.3 21.2L3.5 4.4C3.2 3.8 3.8 3.2 4.4 3.5Z"
+                                                                        fill="currentColor"
+                                                                    />
+                                                                </svg>
+                                                            </span>
                                                         </div>
-                                                    ))}
-                                                </div>
 
-                                                <div style={styles.phoneSearchPill}> {/* <--- changed */}
-                                                    <span style={styles.phoneSearchIcon}>⌕</span>
-                                                    <span>Search</span>
-                                                </div>
-
-                                                <div style={styles.phoneDock}> {/* <--- changed */}
-                                                    {phoneDockApps.map((app) => (
-                                                        <div key={app.name} style={styles.phoneDockSlot}>
-                                                            <div
-                                                                style={{
-                                                                    ...styles.phoneDockAppIcon,
-                                                                    background: app.bg,
-                                                                }}
-                                                            >
-                                                                <span style={styles.phoneHomeAppGlyph}>
-                                                                    {app.name.slice(0, 1)}
-                                                                </span>
-                                                            </div>
+                                                        <div style={styles.phoneDynamicIsland}>
+                                                            <span style={styles.phoneCameraDot} />
                                                         </div>
-                                                    ))}
+
+                                                        <div style={styles.phoneStatusRight}>
+                                                            <PhoneServiceSvg strength={cellStrength} /> {/* <--- changed: crisp SVG status icon */}
+                                                            <PhoneWifiSvg strength={wifiStrength} /> {/* <--- changed: crisp SVG status icon */}
+                                                            <PhoneBatterySvg percent={batteryPercent} /> {/* <--- changed: crisp SVG status icon */}
+                                                        </div>                                    </div>
+
+                                                    <div style={styles.phoneHomeScreen}> {/* <--- changed */}
+                                                        <div style={styles.phoneAppGrid}> {/* <--- changed */}
+                                                            {phoneHomeApps.slice(0, HOME_APP_GRID_COLUMNS * HOME_APP_GRID_ROWS).map((app) => (
+                                                                <div key={app.name} style={styles.phoneAppSlot}>
+                                                                    <div
+                                                                        style={{
+                                                                            ...styles.phoneHomeAppIcon,
+                                                                            background: app.bg,
+                                                                        }}
+                                                                    >
+                                                                        <span style={styles.phoneHomeAppGlyph}>
+                                                                            {app.name.slice(0, 1)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div style={styles.phoneHomeAppName}>{app.name}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        <div style={styles.phoneSearchPill}> {/* <--- changed */}
+                                                            <span style={styles.phoneSearchIcon}>⌕</span>
+                                                            <span>Search</span>
+                                                        </div>
+
+                                                        <div style={styles.phoneDock}> {/* <--- changed */}
+                                                            {phoneDockApps.map((app) => (
+                                                                <div key={app.name} style={styles.phoneDockSlot}>
+                                                                    <div
+                                                                        style={{
+                                                                            ...styles.phoneDockAppIcon,
+                                                                            background: app.bg,
+                                                                        }}
+                                                                    >
+                                                                        <span style={styles.phoneHomeAppGlyph}>
+                                                                            {app.name.slice(0, 1)}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    <div style={styles.phoneHomeBar} />
                                                 </div>
                                             </div>
-
-                                            <div style={styles.phoneHomeBar} />
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                )}
+                        )}
 
-                <div style={styles.topPanel}>
-                    <div style={styles.topMetric}> {/* <--- changed */}
-                        <div style={styles.label}>BALANCE</div>
-                        <div style={styles.value}>
-                            ${balance.toLocaleString()}
-                        </div>
-                    </div>
+                        <div style={styles.topPanel}>
+                            <div style={styles.topMetric}> {/* <--- changed */}
+                                <div style={styles.label}>BALANCE</div>
+                                <div style={styles.value}>
+                                    ${balance.toLocaleString()}
+                                </div>
+                            </div>
 
-                    <div style={{ ...styles.topMetric, textAlign: "center", justifySelf: "center", alignItems: "center" }}> {/* <--- changed */}
-                        <div style={styles.label}>OPEN P/L</div>
-                        <div
-                            style={{
-                                ...styles.value,
-                                color: !position ? "#ffffff" : openPnl >= 0 ? GREEN : RED,
-                            }}
-                        >
-                            {position ? formatMoney(openPnl) : "$0"}
-                        </div>
+                            <div style={{ ...styles.topMetric, textAlign: "center", justifySelf: "center", alignItems: "center" }}> {/* <--- changed */}
+                                <div style={styles.label}>OPEN P/L</div>
+                                <div
+                                    style={{
+                                        ...styles.value,
+                                        color: !position ? "#ffffff" : openPnl >= 0 ? GREEN : RED,
+                                    }}
+                                >
+                                    {position ? formatMoney(openPnl) : "$0"}
+                                </div>
 
-                        <div
-                            style={{
-                                ...styles.contractCount,
-                                visibility: position ? "visible" : "hidden", // <--- changed: keeps space reserved
-                            }}
-                        >
-                            {position
-                                ? `${position.quantity.toLocaleString()} ${position.quantity === 1 ? "contract" : "contracts"
-                                }`
-                                : "contracts"}
-                        </div>
-                    </div>
+                                <div
+                                    style={{
+                                        ...styles.contractCount,
+                                        visibility: position ? "visible" : "hidden", // <--- changed: keeps space reserved
+                                    }}
+                                >
+                                    {position
+                                        ? `${position.quantity.toLocaleString()} ${position.quantity === 1 ? "contract" : "contracts"
+                                        }`
+                                        : "contracts"}
+                                </div>
+                            </div>
 
-                    <div style={{ ...styles.topMetric, textAlign: "right", justifySelf: "end", alignItems: "flex-end" }}> {/* <--- changed */}
-                        <div style={styles.label}>TICKER</div>
-                        <div style={styles.value}>GOLD</div>
-                    </div>
-                </div>
-
-                <div style={styles.timeframes}>
-                    {["15m", "30m", "1h", "4h", "Daily"]
-                        .filter((tf) => visibleTimeframes[tf])
-                        .map((tf) => (
-                            <button
-                                key={tf}
-                                onClick={() => setTimeframe(tf)}
-                                style={
-                                    timeframe === tf
-                                        ? styles.tfActive
-                                        : styles.tfButton
-                                }
-                            >
-                                {tf}
-                            </button>
-                        ))}
-                </div>
-
-                <div style={styles.marketTimeBlock}> {/* <--- changed */}
-                    <div style={styles.phoneInlineAnchor}> {/* <--- changed */}
-                        <button
-                            style={styles.phoneButton}
-                            onClick={openPhonePanel}
-                            aria-label="Open phone"
-                        >
-                            <span style={styles.phoneButtonScreen}>
-                                <span style={styles.phoneButtonNotch} />
-                                <span style={styles.phoneButtonLine} />
-                            </span>
-                        </button>
-
-                    </div>
-
-                    <div style={styles.marketTimeCenterColumn}> {/* <--- changed */}
-                        <div style={styles.marketTimeLabel}>
-                            <span style={styles.liveDot} />
-                            MARKET TIME
+                            <div style={{ ...styles.topMetric, textAlign: "right", justifySelf: "end", alignItems: "flex-end" }}> {/* <--- changed */}
+                                <div style={styles.label}>TICKER</div>
+                                <div style={styles.value}>GOLD</div>
+                            </div>
                         </div>
 
-                        <div style={styles.marketTimeValue}>
-                            {marketDateTimeText}
+                        <div style={styles.timeframes}>
+                            {["15m", "30m", "1h", "4h", "Daily"]
+                                .filter((tf) => visibleTimeframes[tf])
+                                .map((tf) => (
+                                    <button
+                                        key={tf}
+                                        onClick={() => setTimeframe(tf)}
+                                        style={
+                                            timeframe === tf
+                                                ? styles.tfActive
+                                                : styles.tfButton
+                                        }
+                                    >
+                                        {tf}
+                                    </button>
+                                ))}
                         </div>
 
-                        <div style={styles.marketSessionValue}>
-                            {marketSessionText}
-                        </div>
-                    </div>
+                        <div style={styles.marketTimeBlock}> {/* <--- changed */}
+                            <div style={styles.phoneInlineAnchor}> {/* <--- changed */}
+                                <button
+                                    style={styles.phoneButton}
+                                    onClick={openPhonePanel}
+                                    aria-label="Open phone"
+                                >
+                                    <span style={styles.phoneButtonScreen}>
+                                        <span style={styles.phoneButtonNotch} />
+                                        <span style={styles.phoneButtonLine} />
+                                    </span>
+                                </button>
 
-                    <div style={styles.settingsInlineAnchor}> {/* <--- changed */}
-                        <button
-                            style={styles.settingsButton}
-                            onClick={() => setSettingsOpen((prev) => !prev)}
-                            aria-label="Chart settings"
-                        >
-                            <span style={styles.settingsIcon}>
-                                <span style={styles.sliderIconLine}>
-                                    <span style={styles.sliderIconKnobLeft} />
-                                </span>
-                                <span style={styles.sliderIconLine}>
-                                    <span style={styles.sliderIconKnobRight} />
-                                </span>
-                                <span style={styles.sliderIconLine}>
-                                    <span style={styles.sliderIconKnobCenter} />
-                                </span>
-                            </span>
-                        </button>
+                            </div>
 
-                        {settingsOpen && (
-                            <div style={styles.settingsMenu}>
-                                <div style={styles.settingsHeader}>
-                                    <div>
-                                        <div style={styles.settingsTitle}>Chart Settings</div>
-                                        <div style={styles.settingsSubtitle}>Customize your game view</div>
+                            <div style={styles.marketTimeCenterColumn}> {/* <--- changed */}
+                                <div style={styles.marketTimeLabel}>
+                                    <span style={styles.liveDot} />
+                                    MARKET TIME
+                                </div>
+
+                                <div style={styles.marketTimeValue}>
+                                    {marketDateTimeText}
+                                </div>
+
+                                <div style={styles.marketSessionValue}>
+                                    {marketSessionText}
+                                </div>
+                            </div>
+
+                            <div style={styles.settingsInlineAnchor}> {/* <--- changed */}
+                                <button
+                                    style={styles.settingsButton}
+                                    onClick={() => setSettingsOpen((prev) => !prev)}
+                                    aria-label="Chart settings"
+                                >
+                                    <span style={styles.settingsIcon}>
+                                        <span style={styles.sliderIconLine}>
+                                            <span style={styles.sliderIconKnobLeft} />
+                                        </span>
+                                        <span style={styles.sliderIconLine}>
+                                            <span style={styles.sliderIconKnobRight} />
+                                        </span>
+                                        <span style={styles.sliderIconLine}>
+                                            <span style={styles.sliderIconKnobCenter} />
+                                        </span>
+                                    </span>
+                                </button>
+
+                                {settingsOpen && (
+                                    <div style={styles.settingsMenu}>
+                                        <div style={styles.settingsHeader}>
+                                            <div>
+                                                <div style={styles.settingsTitle}>Chart Settings</div>
+                                                <div style={styles.settingsSubtitle}>Customize your game view</div>
+                                            </div>
+
+                                            <button
+                                                style={styles.settingsClose}
+                                                onClick={() => setSettingsOpen(false)}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+
+                                        <div style={styles.settingsSection}>
+                                            <div style={styles.settingsSectionTitle}>Candles</div>
+
+                                            <div style={styles.colorControlRow}>
+                                                <div>
+                                                    <div style={styles.colorLabel}>Bullish</div>
+                                                    <div style={styles.colorHint}>Up candle color</div>
+                                                </div>
+
+                                                <input
+                                                    type="color"
+                                                    value={bullCandleColor}
+                                                    onChange={(event) => setBullCandleColor(event.target.value)}
+                                                    style={styles.colorPicker}
+                                                />
+                                            </div>
+
+                                            <div style={styles.colorControlRow}>
+                                                <div>
+                                                    <div style={styles.colorLabel}>Bearish</div>
+                                                    <div style={styles.colorHint}>Down candle color</div>
+                                                </div>
+
+                                                <input
+                                                    type="color"
+                                                    value={bearCandleColor}
+                                                    onChange={(event) => setBearCandleColor(event.target.value)}
+                                                    style={styles.colorPicker}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div style={styles.settingsSection}>
+                                            <div style={styles.settingsSectionTitle}>Top Timeframes</div>
+
+                                            <div style={styles.timeframeToggleGrid}>
+                                                {["15m", "30m", "1h", "4h", "Daily"].map((tf) => (
+                                                    <button
+                                                        key={tf}
+                                                        style={{
+                                                            ...styles.timeframeToggle,
+                                                            ...(visibleTimeframes[tf]
+                                                                ? styles.timeframeToggleActive
+                                                                : {}),
+                                                        }}
+                                                        onClick={() => toggleTimeframeVisibility(tf)}
+                                                    >
+                                                        {tf}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            style={styles.resetSettingsButton}
+                                            onClick={resetVisualSettings}
+                                        >
+                                            RESET SETTINGS
+                                        </button>
                                     </div>
+                                )}
+
+                            </div>
+                        </div>
+
+                        <div style={styles.chartWrap}>
+                            <button
+                                style={styles.pauseButton}
+                                onClick={handleToggleSimulationPause}
+                                aria-label={simulationPaused ? "Resume simulation" : "Pause simulation"}
+                            >
+                                {simulationPaused ? (
+                                    <span style={styles.playIcon} />
+                                ) : (
+                                    <span style={styles.pauseIcon}>
+                                        <span style={styles.pauseBar} />
+                                        <span style={styles.pauseBar} />
+                                    </span>
+                                )}
+                            </button>
+
+                            <canvas
+                                ref={canvasRef}
+                                onMouseDown={handleChartMouseDown}
+                                onMouseMove={handleChartMouseMove}
+                                onMouseUp={handleChartMouseUp}
+                                onMouseLeave={handleChartMouseLeave}
+                                onTouchStart={handleChartTouchStart}
+                                onTouchMove={handleChartTouchMove}
+                                onTouchEnd={handleChartTouchEnd}
+                                style={{
+                                    touchAction: "none",
+                                    userSelect: "none",
+                                    WebkitUserSelect: "none",
+                                    WebkitTapHighlightColor: "transparent",
+                                }}
+                            />
+                        </div>
+
+                        <div style={styles.tradePanel}>
+                            <input
+                                style={styles.input}
+                                value={quantity}
+                                type="number"
+                                min="1"
+                                onChange={(e) => {
+                                    const value = Number(e.target.value);
+                                    setQuantity(
+                                        Number.isFinite(value)
+                                            ? Math.max(1, Math.min(value, 100))
+                                            : 1
+                                    );
+                                }}
+                            />
+
+                            {position ? (
+                                <>
+                                    <button style={styles.closePosition} onClick={handleClosePosition}>
+                                        CLOSE POSITION
+                                    </button>
 
                                     <button
-                                        style={styles.settingsClose}
-                                        onClick={() => setSettingsOpen(false)}
+                                        style={styles.closePartials}
+                                        onClick={handleClosePartials}
                                     >
-                                        ×
+                                        CLOSE PARTIALS
                                     </button>
-                                </div>
 
-                                <div style={styles.settingsSection}>
-                                    <div style={styles.settingsSectionTitle}>Candles</div>
+                                    <button
+                                        style={styles.breakeven}
+                                        onClick={handleMoveStopToBreakeven}
+                                    >
+                                        BREAKEVEN
+                                    </button>
 
-                                    <div style={styles.colorControlRow}>
-                                        <div>
-                                            <div style={styles.colorLabel}>Bullish</div>
-                                            <div style={styles.colorHint}>Up candle color</div>
-                                        </div>
+                                    <button
+                                        style={{
+                                            ...styles.trailingStop,
+                                            opacity: position && isPositionInProfit(position) ? 1 : 0.45, // <--- changed
+                                        }}
+                                        onClick={handleTrailingStopMode}
+                                    >
+                                        TRAILING STOP
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        style={{
+                                            ...styles.buy,
+                                            opacity: balance > 0 ? 1 : 0.35, // <--- changed
+                                        }}
+                                        onClick={handleBuy}
+                                    >
+                                        BUY
+                                    </button>
 
-                                        <input
-                                            type="color"
-                                            value={bullCandleColor}
-                                            onChange={(event) => setBullCandleColor(event.target.value)}
-                                            style={styles.colorPicker}
-                                        />
-                                    </div>
+                                    <button
+                                        style={{
+                                            ...styles.sell,
+                                            opacity: balance > 0 ? 1 : 0.35, // <--- changed
+                                        }}
+                                        onClick={handleSell}
+                                    >
+                                        SELL
+                                    </button>
 
-                                    <div style={styles.colorControlRow}>
-                                        <div>
-                                            <div style={styles.colorLabel}>Bearish</div>
-                                            <div style={styles.colorHint}>Down candle color</div>
-                                        </div>
-
-                                        <input
-                                            type="color"
-                                            value={bearCandleColor}
-                                            onChange={(event) => setBearCandleColor(event.target.value)}
-                                            style={styles.colorPicker}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div style={styles.settingsSection}>
-                                    <div style={styles.settingsSectionTitle}>Top Timeframes</div>
-
-                                    <div style={styles.timeframeToggleGrid}>
-                                        {["15m", "30m", "1h", "4h", "Daily"].map((tf) => (
-                                            <button
-                                                key={tf}
-                                                style={{
-                                                    ...styles.timeframeToggle,
-                                                    ...(visibleTimeframes[tf]
-                                                        ? styles.timeframeToggleActive
-                                                        : {}),
-                                                }}
-                                                onClick={() => toggleTimeframeVisibility(tf)}
-                                            >
-                                                {tf}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <button
-                                    style={styles.resetSettingsButton}
-                                    onClick={resetVisualSettings}
-                                >
-                                    RESET SETTINGS
-                                </button>
-                            </div>
-                        )}
-
+                                    <button
+                                        style={{
+                                            ...styles.pendingOrder,
+                                            opacity: balance > 0 ? 1 : 0.35, // <--- changed
+                                        }}
+                                        onClick={handlePendingOrderButton}
+                                    >
+                                        PENDING ORDER
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
-                </div>
-
-                <div style={styles.chartWrap}>
-                    <button
-                        style={styles.pauseButton}
-                        onClick={handleToggleSimulationPause}
-                        aria-label={simulationPaused ? "Resume simulation" : "Pause simulation"}
-                    >
-                        {simulationPaused ? (
-                            <span style={styles.playIcon} />
-                        ) : (
-                            <span style={styles.pauseIcon}>
-                                <span style={styles.pauseBar} />
-                                <span style={styles.pauseBar} />
-                            </span>
-                        )}
-                    </button>
-
-                    <canvas
-                        ref={canvasRef}
-                        onMouseDown={handleChartMouseDown}
-                        onMouseMove={handleChartMouseMove}
-                        onMouseUp={handleChartMouseUp}
-                        onMouseLeave={handleChartMouseLeave}
-                        onTouchStart={handleChartTouchStart}
-                        onTouchMove={handleChartTouchMove}
-                        onTouchEnd={handleChartTouchEnd}
-                        style={{
-                            touchAction: "none",
-                            userSelect: "none",
-                            WebkitUserSelect: "none",
-                            WebkitTapHighlightColor: "transparent",
-                        }}
-                    />
-                </div>
-
-                <div style={styles.tradePanel}>
-                    <input
-                        style={styles.input}
-                        value={quantity}
-                        type="number"
-                        min="1"
-                        onChange={(e) => {
-                            const value = Number(e.target.value);
-                            setQuantity(
-                                Number.isFinite(value)
-                                    ? Math.max(1, Math.min(value, 100))
-                                    : 1
-                            );
-                        }}
-                    />
-
-                    {position ? (
-                        <>
-                            <button style={styles.closePosition} onClick={handleClosePosition}>
-                                CLOSE POSITION
-                            </button>
-
-                            <button
-                                style={styles.closePartials}
-                                onClick={handleClosePartials}
-                            >
-                                CLOSE PARTIALS
-                            </button>
-
-                            <button
-                                style={styles.breakeven}
-                                onClick={handleMoveStopToBreakeven}
-                            >
-                                BREAKEVEN
-                            </button>
-
-                            <button
-                                style={{
-                                    ...styles.trailingStop,
-                                    opacity: position && isPositionInProfit(position) ? 1 : 0.45, // <--- changed
-                                }}
-                                onClick={handleTrailingStopMode}
-                            >
-                                TRAILING STOP
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <button
-                                style={{
-                                    ...styles.buy,
-                                    opacity: balance > 0 ? 1 : 0.35, // <--- changed
-                                }}
-                                onClick={handleBuy}
-                            >
-                                BUY
-                            </button>
-
-                            <button
-                                style={{
-                                    ...styles.sell,
-                                    opacity: balance > 0 ? 1 : 0.35, // <--- changed
-                                }}
-                                onClick={handleSell}
-                            >
-                                SELL
-                            </button>
-
-                            <button
-                                style={{
-                                    ...styles.pendingOrder,
-                                    opacity: balance > 0 ? 1 : 0.35, // <--- changed
-                                }}
-                                onClick={handlePendingOrderButton}
-                            >
-                                PENDING ORDER
-                            </button>
-                        </>
-                    )}
                 </div>
             </div>
         </div>
@@ -3888,11 +3906,23 @@ const styles: Record<string, CSSProperties> = {
         fontWeight: 700, // <--- changed
         color: "#a0a0a0", // <--- changed
     },
+    appScaleFrame: {
+        width: GAME_BASE_WIDTH, // <--- changed
+        height: GAME_BASE_HEIGHT, // <--- changed
+        position: "relative", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    appScaleObject: {
+        width: GAME_BASE_WIDTH, // <--- changed
+        height: GAME_BASE_HEIGHT, // <--- changed
+        position: "absolute", // <--- changed
+        left: 0, // <--- changed
+        top: 0, // <--- changed
+        transformOrigin: "top left", // <--- changed: full app scales from one fixed design stage
+    },
     gameFrame: {
-        width: "min(480px, 100vw)",
-        height: "min(980px, 100dvh)",
-        maxHeight: "100dvh", // <--- changed
-        aspectRatio: "9 / 19.5",
+        width: GAME_BASE_WIDTH, // <--- changed: fixed professional design-stage width
+        height: GAME_BASE_HEIGHT, // <--- changed: fixed professional design-stage height
         background: "#050505",
         display: "flex",
         flexDirection: "column",
