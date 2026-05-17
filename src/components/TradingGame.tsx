@@ -135,6 +135,9 @@ const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel furth
 const PHONE_BASE_WIDTH = 340; // <--- changed: PC-perfect full phone object width
 const PHONE_BASE_HEIGHT = 680; // <--- changed: PC-perfect full phone object height
 
+const PHONE_UNLOCK_SOUND_PATH = "/sounds/phone unlock.wav"; // <--- changed: put this file in public/sounds/
+const PHONE_LOCK_SOUND_PATH = "/sounds/phone lock.wav"; // <--- changed: put this file in public/sounds/
+
 const GAME_BASE_WIDTH = 480; // <--- changed: fixed professional design-stage width
 const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage height
 
@@ -745,8 +748,22 @@ function PhoneBatterySvg({ percent }: { percent: number | null }) {
 }
 
 
+
+function playPhoneSound(audioRef: React.RefObject<HTMLAudioElement | null>) { // <--- changed
+    const sound = audioRef.current; // <--- changed
+    if (!sound) return; // <--- changed
+
+    sound.pause(); // <--- changed
+    sound.currentTime = 0; // <--- changed
+    sound.play().catch(() => { // <--- changed
+        // Browser may block audio until the user interacts with the page. // <--- changed
+    }); // <--- changed
+}
+
 export default function TradingGame() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const phoneUnlockSoundRef = useRef<HTMLAudioElement | null>(null); // <--- changed
+    const phoneLockSoundRef = useRef<HTMLAudioElement | null>(null); // <--- changed
     const appStartRef = useRef(Date.now());
     const fallbackMarketSessionStartRef = useRef(new Date("2026-05-18T08:30:00-04:00").getTime()); // <--- changed
     const csvCandlesRef = useRef<CsvCandle[]>([]);
@@ -767,6 +784,21 @@ export default function TradingGame() {
             currentPauseDuration
         ); // <--- changed
     }
+
+    useEffect(() => { // <--- changed
+        phoneUnlockSoundRef.current = new Audio(PHONE_UNLOCK_SOUND_PATH); // <--- changed
+        phoneLockSoundRef.current = new Audio(PHONE_LOCK_SOUND_PATH); // <--- changed
+
+        if (phoneUnlockSoundRef.current) { // <--- changed
+            phoneUnlockSoundRef.current.preload = "auto"; // <--- changed
+            phoneUnlockSoundRef.current.load(); // <--- changed
+        }
+
+        if (phoneLockSoundRef.current) { // <--- changed
+            phoneLockSoundRef.current.preload = "auto"; // <--- changed
+            phoneLockSoundRef.current.load(); // <--- changed
+        }
+    }, []); // <--- changed
 
     const [balance, setBalance] = useState(5000); // <--- changed
     const [timeframe, setTimeframe] = useState("15m");
@@ -966,6 +998,7 @@ export default function TradingGame() {
     function openPhonePanel() {
         if (phoneOpen) return; // <--- changed
 
+        playPhoneSound(phoneUnlockSoundRef); // <--- changed
         setPhoneClosing(false); // <--- changed
         setPhoneOpen(true); // <--- changed
     }
@@ -973,6 +1006,7 @@ export default function TradingGame() {
     function closePhonePanel() {
         if (!phoneOpen || phoneClosing) return; // <--- changed
 
+        playPhoneSound(phoneLockSoundRef); // <--- changed
         setPhoneClosing(true); // <--- changed
 
         window.setTimeout(() => {
