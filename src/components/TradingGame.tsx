@@ -756,6 +756,7 @@ function playPhoneSound(audioRef: React.RefObject<HTMLAudioElement | null>) { //
 
     sound.pause(); // <--- changed
     sound.currentTime = 0; // <--- changed
+    sound.volume = 0.45
     sound.play().catch(() => { // <--- changed
         // Browser may block audio until the user interacts with the page. // <--- changed
     }); // <--- changed
