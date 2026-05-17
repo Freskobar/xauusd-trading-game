@@ -132,8 +132,8 @@ const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock app
 const PHONE_HOME_BAR_BOTTOM_OFFSET = 8; // <--- changed: moves home bar down/up without pushing dock outside phone
 
 const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel further down
-const PHONE_BASE_WIDTH = 370; // <--- changed: PC-perfect full phone object width
-const PHONE_BASE_HEIGHT = 740; // <--- changed: PC-perfect full phone object height
+const PHONE_BASE_WIDTH = 340; // <--- changed: PC-perfect full phone object width
+const PHONE_BASE_HEIGHT = 680; // <--- changed: PC-perfect full phone object height
 
 const GAME_BASE_WIDTH = 480; // <--- changed: fixed professional design-stage width
 const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage height
@@ -2556,7 +2556,7 @@ export default function TradingGame() {
             ); // <--- changed: scale the whole app stage, not just the phone
 
             setAppScale(nextAppScale); // <--- changed
-            setMobilePhoneScale(1); // <--- changed: phone remains PC-perfect inside the scaled app stage
+            setMobilePhoneScale(1.15); // <--- changed: phone remains PC-perfect inside the scaled app stage
 
             setIsLandscape(
                 isPhoneSizedScreen && window.innerWidth > window.innerHeight
