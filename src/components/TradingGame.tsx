@@ -131,12 +131,12 @@ const HOME_DOCK_VERTICAL_OFFSET = 5; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
 const PHONE_HOME_BAR_BOTTOM_OFFSET = 8; // <--- changed: moves home bar down/up without pushing dock outside phone
 
-const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel further down
+const PHONE_VERTICAL_SHIFT = 150; // <--- changed: moves whole phone panel further down
 const PHONE_BASE_WIDTH = 340; // <--- changed: PC-perfect full phone object width
 const PHONE_BASE_HEIGHT = 680; // <--- changed: PC-perfect full phone object height
 
-const PHONE_UNLOCK_SOUND_PATH = "/sounds/phone unlock.mp3"; // <--- changed: put this file in public/sounds/
-const PHONE_LOCK_SOUND_PATH = "/sounds/phone lock.mp3"; // <--- changed: put this file in public/sounds/
+const PHONE_UNLOCK_SOUND_PATH = "/sounds/phone unlock.m4a"; // <--- changed: put this file in public/sounds/
+const PHONE_LOCK_SOUND_PATH = "/sounds/phone lock.m4a"; // <--- changed: put this file in public/sounds/
 const PHONE_SOUND_START_OFFSET_SECONDS = 0; // <--- changed: do not cut into the audio
 
 const GAME_BASE_WIDTH = 480; // <--- changed: fixed professional design-stage width
