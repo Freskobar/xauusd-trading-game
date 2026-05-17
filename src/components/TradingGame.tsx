@@ -131,7 +131,7 @@ const HOME_DOCK_VERTICAL_OFFSET = 0; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
 
 const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel further down
-const PHONE_BASE_WIDTH = 356; // <--- changed: PC-perfect full phone object width
+const PHONE_BASE_WIDTH = 340; // <--- changed: PC-perfect full phone object width
 const PHONE_BASE_HEIGHT = 680; // <--- changed: PC-perfect full phone object height
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
