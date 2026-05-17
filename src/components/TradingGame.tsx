@@ -131,13 +131,12 @@ const HOME_DOCK_VERTICAL_OFFSET = 5; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
 const PHONE_HOME_BAR_BOTTOM_OFFSET = 8; // <--- changed: moves home bar down/up without pushing dock outside phone
 
-const PHONE_VERTICAL_SHIFT = 150; // <--- changed: moves whole phone panel further down
+const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel further down
 const PHONE_BASE_WIDTH = 340; // <--- changed: PC-perfect full phone object width
 const PHONE_BASE_HEIGHT = 680; // <--- changed: PC-perfect full phone object height
 
 const PHONE_UNLOCK_SOUND_PATH = "/sounds/phone unlock.m4a"; // <--- changed: put this file in public/sounds/
 const PHONE_LOCK_SOUND_PATH = "/sounds/phone lock.m4a"; // <--- changed: put this file in public/sounds/
-const PHONE_SOUND_START_OFFSET_SECONDS = 0; // <--- changed: do not cut into the audio
 
 const GAME_BASE_WIDTH = 480; // <--- changed: fixed professional design-stage width
 const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage height
@@ -750,11 +749,22 @@ function PhoneBatterySvg({ percent }: { percent: number | null }) {
 
 
 
+
+function playPhoneSound(audioRef: React.RefObject<HTMLAudioElement | null>) { // <--- changed
+    const sound = audioRef.current; // <--- changed
+    if (!sound) return; // <--- changed
+
+    sound.pause(); // <--- changed
+    sound.currentTime = 0; // <--- changed
+    sound.play().catch(() => { // <--- changed
+        // Browser may block audio until the user interacts with the page. // <--- changed
+    }); // <--- changed
+}
+
 export default function TradingGame() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const phoneAudioContextRef = useRef<AudioContext | null>(null); // <--- changed
-    const phoneUnlockBufferRef = useRef<AudioBuffer | null>(null); // <--- changed
-    const phoneLockBufferRef = useRef<AudioBuffer | null>(null); // <--- changed
+    const phoneUnlockSoundRef = useRef<HTMLAudioElement | null>(null); // <--- changed
+    const phoneLockSoundRef = useRef<HTMLAudioElement | null>(null); // <--- changed
     const appStartRef = useRef(Date.now());
     const fallbackMarketSessionStartRef = useRef(new Date("2026-05-18T08:30:00-04:00").getTime()); // <--- changed
     const csvCandlesRef = useRef<CsvCandle[]>([]);
@@ -776,59 +786,19 @@ export default function TradingGame() {
         ); // <--- changed
     }
 
-    async function loadPhoneSoundBuffer(path: string) { // <--- changed
-        const AudioContextClass = window.AudioContext; // <--- changed
-        const audioContext = phoneAudioContextRef.current ?? new AudioContextClass(); // <--- changed
-        phoneAudioContextRef.current = audioContext; // <--- changed
-
-        const response = await fetch(path); // <--- changed
-        const arrayBuffer = await response.arrayBuffer(); // <--- changed
-
-        return await audioContext.decodeAudioData(arrayBuffer); // <--- changed
-    }
-
-    function playPhoneSoundBuffer(bufferRef: React.RefObject<AudioBuffer | null>) { // <--- changed
-        const buffer = bufferRef.current; // <--- changed
-        const audioContext = phoneAudioContextRef.current; // <--- changed
-
-        if (!buffer || !audioContext) return; // <--- changed
-
-        if (audioContext.state === "suspended") { // <--- changed
-            audioContext.resume().catch(() => { }); // <--- changed
-        }
-
-        const source = audioContext.createBufferSource(); // <--- changed
-        source.buffer = buffer; // <--- changed
-        source.connect(audioContext.destination); // <--- changed
-
-        const startOffset = Math.min(PHONE_SOUND_START_OFFSET_SECONDS, Math.max(0, buffer.duration - 0.01)); // <--- changed
-        source.start(0, startOffset); // <--- changed: starts instantly from the beginning
-    }
-
     useEffect(() => { // <--- changed
-        let cancelled = false; // <--- changed
+        phoneUnlockSoundRef.current = new Audio(PHONE_UNLOCK_SOUND_PATH); // <--- changed
+        phoneLockSoundRef.current = new Audio(PHONE_LOCK_SOUND_PATH); // <--- changed
 
-        async function preloadPhoneSounds() { // <--- changed
-            try {
-                const [unlockBuffer, lockBuffer] = await Promise.all([
-                    loadPhoneSoundBuffer(PHONE_UNLOCK_SOUND_PATH),
-                    loadPhoneSoundBuffer(PHONE_LOCK_SOUND_PATH),
-                ]); // <--- changed
-
-                if (cancelled) return; // <--- changed
-
-                phoneUnlockBufferRef.current = unlockBuffer; // <--- changed
-                phoneLockBufferRef.current = lockBuffer; // <--- changed
-            } catch {
-                // Sound preload failed. The app should keep running normally. // <--- changed
-            }
+        if (phoneUnlockSoundRef.current) { // <--- changed
+            phoneUnlockSoundRef.current.preload = "auto"; // <--- changed
+            phoneUnlockSoundRef.current.load(); // <--- changed
         }
 
-        preloadPhoneSounds(); // <--- changed
-
-        return () => {
-            cancelled = true; // <--- changed
-        };
+        if (phoneLockSoundRef.current) { // <--- changed
+            phoneLockSoundRef.current.preload = "auto"; // <--- changed
+            phoneLockSoundRef.current.load(); // <--- changed
+        }
     }, []); // <--- changed
 
     const [balance, setBalance] = useState(5000); // <--- changed
@@ -1029,7 +999,7 @@ export default function TradingGame() {
     function openPhonePanel() {
         if (phoneOpen) return; // <--- changed
 
-        playPhoneSoundBuffer(phoneUnlockBufferRef); // <--- changed
+        playPhoneSound(phoneUnlockSoundRef); // <--- changed
         setPhoneClosing(false); // <--- changed
         setPhoneOpen(true); // <--- changed
     }
@@ -1037,7 +1007,7 @@ export default function TradingGame() {
     function closePhonePanel() {
         if (!phoneOpen || phoneClosing) return; // <--- changed
 
-        playPhoneSoundBuffer(phoneLockBufferRef); // <--- changed
+        playPhoneSound(phoneLockSoundRef); // <--- changed
         setPhoneClosing(true); // <--- changed
 
         window.setTimeout(() => {
