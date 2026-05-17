@@ -116,19 +116,20 @@ const TRIM_BASE_CANDLES = 96;
 // Change these numbers to quickly tune the iPhone home screen layout. // <--- changed
 const HOME_APP_SIZE = 56; // <--- changed: size of the normal home screen apps/icons
 const HOME_APP_GRID_GAP = 16; // <--- changed: space between apps in the grid
-const HOME_APP_GRID_VERTICAL_OFFSET = 20; // <--- changed: moves the entire app grid up/down
+const HOME_APP_GRID_VERTICAL_OFFSET = 30; // <--- changed: moves the entire app grid up/down
 
 const HOME_SEARCH_WIDTH = 70; // <--- changed: width of the search bar
 const HOME_SEARCH_HEIGHT = 25; // <--- changed: height of the search bar
 const HOME_SEARCH_RADIUS = 999; // <--- changed: roundness of the search bar corners
-const HOME_SEARCH_VERTICAL_OFFSET = 15; // <--- changed: moves the search bar up/down
+const HOME_SEARCH_VERTICAL_OFFSET = 30; // <--- changed: moves the search bar up/down
 
 const HOME_DOCK_WIDTH = 300; // <--- changed: width of the dock/background bar
 const HOME_DOCK_APP_SIZE = HOME_APP_SIZE; // <--- changed: size of dock apps/icons
 const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 20; // <--- changed: height of the dock
 const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
-const HOME_DOCK_VERTICAL_OFFSET = 0; // <--- changed: moves the dock up/down
+const HOME_DOCK_VERTICAL_OFFSET = 5; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
+const PHONE_HOME_BAR_BOTTOM_OFFSET = 8; // <--- changed: moves home bar down/up without pushing dock outside phone
 
 const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel further down
 const PHONE_BASE_WIDTH = 340; // <--- changed: PC-perfect full phone object width
@@ -725,7 +726,7 @@ function PhoneBatterySvg({ percent }: { percent: number | null }) {
                 x="13.5"
                 y="13.72"
                 textAnchor="middle"
-                fontSize={typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) > 768 ? "10.9" : "12.4"}
+                fontSize="10.9" // <--- changed: fixed size so the whole phone scales as one object
                 fontWeight="900"
                 fill="#050505"
                 fontFamily="Arial, sans-serif"
@@ -2558,7 +2559,7 @@ export default function TradingGame() {
                 isPhoneSizedScreen && window.innerWidth > window.innerHeight
             ); // <--- changed: desktop PC should never show rotate blocker
 
-            setIsDesktopStatusRender(!isPhoneSizedScreen); // <--- changed: desktop-only fake phone status bar polish
+            setIsDesktopStatusRender(true); // <--- changed: keep PC-perfect status bar styling on mobile too; the whole phone scales as one object
         };
 
         document.documentElement.style.overflow = "hidden";
@@ -3458,7 +3459,13 @@ export default function TradingGame() {
                                                 <div style={styles.phoneStatusLeft}>
                                                     <span>{phoneStatusTime}</span>
 
-                                                    {locationServicesOn && ( // <--- changed
+                                                    <span
+                                                        style={{
+                                                            ...styles.phoneLocationSlot,
+                                                            opacity: locationServicesOn ? 1 : 0, // <--- changed: reserves space so time never shifts
+                                                        }}
+                                                        aria-hidden={!locationServicesOn}
+                                                    >
                                                         <svg
                                                             width="15"
                                                             height="15"
@@ -3471,7 +3478,7 @@ export default function TradingGame() {
                                                                 fill="currentColor"
                                                             />
                                                         </svg>
-                                                    )}
+                                                    </span>
                                                 </div>
 
                                                 <div style={styles.phoneDynamicIsland}>
@@ -4333,7 +4340,7 @@ const styles: Record<string, CSSProperties> = {
         position: "absolute", // <--- changed
         left: 0, // <--- changed
         top: 0, // <--- changed
-        transformOrigin: "top left", // <--- changed: scale applies to full phone object
+        transformOrigin: "top left", // <--- changed: scale applies to the full fixed-size phone object
         pointerEvents: "auto", // <--- changed
     },
     phonePanelClosing: {
@@ -4343,13 +4350,12 @@ const styles: Record<string, CSSProperties> = {
         width: "100%", // <--- changed: fills fixed full phone object
         height: "100%", // <--- changed: fills fixed full phone object
         pointerEvents: "auto", // <--- changed
-        borderRadius: "10.8% / 5%", // <--- changed
-        border: "2px solid rgba(255,255,255,0.2)", // <--- changed
+        borderRadius: "14% / 7%", border: "2px solid rgba(255,255,255,0.2)", // <--- changed
         background: "linear-gradient(180deg, #171717 0%, #050505 100%)", // <--- changed
         boxShadow: "0 28px 65px rgba(0,0,0,0.76)", // <--- changed
         position: "relative", // <--- changed
         overflow: "hidden", // <--- changed
-        padding: "10px 10px 16px", // <--- changed
+        padding: "10px 10px 6px", // <--- changed: more bottom room for lower dock placement
         boxSizing: "border-box", // <--- changed
     },
     phoneStatusBar: {
@@ -4387,7 +4393,7 @@ const styles: Record<string, CSSProperties> = {
     },
     phoneStatusLeft: {
         display: "flex", // <--- changed
-        justifyContent: "flex-start", // <--- changed
+        justifyContent: "center", // <--- changed
         alignItems: "center", // <--- changed
         gap: 5, // <--- changed
         letterSpacing: -0.45, // <--- changed
@@ -4396,6 +4402,14 @@ const styles: Record<string, CSSProperties> = {
         fontWeight: 900, // <--- changed
         color: "#ffffff", // <--- changed
         lineHeight: "18px", // <--- changed: aligns time with status icons
+    },
+    phoneLocationSlot: {
+        width: 15, // <--- changed: permanently reserves location icon space
+        height: 15, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        flexShrink: 0, // <--- changed
     },
     phoneLocationSvg: {
         color: "#ffffff", // <--- changed
@@ -4529,7 +4543,7 @@ const styles: Record<string, CSSProperties> = {
         borderRadius: HOME_SEARCH_RADIUS, // <--- changed
         position: "absolute", // <--- changed: prevents iPhone Safari flex spacing drift
         left: "50%", // <--- changed
-        bottom: HOME_DOCK_VERTICAL_OFFSET + HOME_DOCK_HEIGHT + HOME_SEARCH_VERTICAL_OFFSET, // <--- changed: search vertical offset knob
+        bottom: HOME_DOCK_VERTICAL_OFFSET + HOME_DOCK_HEIGHT + HOME_SEARCH_VERTICAL_OFFSET, // <--- changed: follows freely moving dock
         transform: "translateX(-50%)", // <--- changed
         background: "rgba(255,255,255,0.22)", // <--- changed
         color: "rgba(255,255,255,0.86)", // <--- changed
@@ -4554,7 +4568,7 @@ const styles: Record<string, CSSProperties> = {
         borderRadius: HOME_DOCK_RADIUS, // <--- changed
         position: "absolute", // <--- changed: fixed dock placement on PC + iPhone
         left: "50%", // <--- changed
-        bottom: HOME_DOCK_VERTICAL_OFFSET, // <--- changed: dock vertical knob
+        bottom: HOME_DOCK_VERTICAL_OFFSET, // <--- changed: dock can move freely up/down
         transform: "translateX(-50%)", // <--- changed
         background: "rgba(255,255,255,0.18)", // <--- changed
         border: "1px solid rgba(255,255,255,0.14)", // <--- changed
@@ -4578,11 +4592,11 @@ const styles: Record<string, CSSProperties> = {
     phoneHomeBar: {
         position: "absolute", // <--- changed
         left: "50%", // <--- changed
-        bottom: 8, // <--- changed
+        bottom: PHONE_HOME_BAR_BOTTOM_OFFSET, // <--- changed: home bar vertical knob
         transform: "translateX(-50%)", // <--- changed
-        width: 84, // <--- changed
+        width: 100, // <--- changed
         height: 4, // <--- changed
-        borderRadius: 999, // <--- changed
+        borderRadius: 999, // <const HOME_SEARCH_VERTICAL_OFFSET--- changed
         background: "rgba(255,255,255,0.78)", // <--- changed
     },
     pauseButton: {
