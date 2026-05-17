@@ -135,8 +135,8 @@ const PHONE_VERTICAL_SHIFT = 170; // <--- changed: moves whole phone panel furth
 const PHONE_BASE_WIDTH = 340; // <--- changed: PC-perfect full phone object width
 const PHONE_BASE_HEIGHT = 680; // <--- changed: PC-perfect full phone object height
 
-const PHONE_UNLOCK_SOUND_PATH = "/sounds/phone unlock.wav"; // <--- changed: put this file in public/sounds/
-const PHONE_LOCK_SOUND_PATH = "/sounds/phone lock.wav"; // <--- changed: put this file in public/sounds/
+const PHONE_UNLOCK_SOUND_PATH = "/sounds/phone unlock.mp3"; // <--- changed: put this file in public/sounds/
+const PHONE_LOCK_SOUND_PATH = "/sounds/phone lock.mp3"; // <--- changed: put this file in public/sounds/
 const PHONE_SOUND_START_OFFSET_SECONDS = 0; // <--- changed: do not cut into the audio
 
 const GAME_BASE_WIDTH = 480; // <--- changed: fixed professional design-stage width
