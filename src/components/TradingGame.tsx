@@ -2556,7 +2556,7 @@ export default function TradingGame() {
             ); // <--- changed: scale the whole app stage, not just the phone
 
             setAppScale(nextAppScale); // <--- changed
-            setMobilePhoneScale(1.15); // <--- changed: phone remains PC-perfect inside the scaled app stage
+            setMobilePhoneScale(1.11); // <--- changed: phone remains PC-perfect inside the scaled app stage
 
             setIsLandscape(
                 isPhoneSizedScreen && window.innerWidth > window.innerHeight
