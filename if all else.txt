@@ -869,145 +869,6 @@ function IPhoneMusicIconSvg() { // <--- changed
 }
 
 
-function formatDialedPhoneNumber(value: string) { // <--- changed
-    const digits = value.replace(/\D/g, "").slice(0, 10); // <--- changed
-
-    if (digits.length === 0) return ""; // <--- changed
-    if (digits.length <= 3) return digits; // <--- changed: iPhone-style early dialing stage, example 999
-    if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`; // <--- changed: iPhone-style middle stage, example 999-9999
-
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`; // <--- changed: iPhone-style full number, example (999) 999-9999
-}
-
-function IPhonePhoneApp({ // <--- changed
-    dialedNumber,
-    closing,
-    onDigit,
-    onDelete,
-    onCall,
-}: {
-    dialedNumber: string;
-    closing: boolean;
-    onDigit: (value: string) => void;
-    onDelete: () => void;
-    onCall: () => void;
-}) {
-    const keypadRows = [
-        [
-            { main: "1", sub: "" },
-            { main: "2", sub: "ABC" },
-            { main: "3", sub: "DEF" },
-        ],
-        [
-            { main: "4", sub: "GHI" },
-            { main: "5", sub: "JKL" },
-            { main: "6", sub: "MNO" },
-        ],
-        [
-            { main: "7", sub: "PQRS" },
-            { main: "8", sub: "TUV" },
-            { main: "9", sub: "WXYZ" },
-        ],
-        [
-            { main: "*", sub: "" },
-            { main: "0", sub: "+" },
-            { main: "#", sub: "" },
-        ],
-    ];
-
-    return (
-        <div
-            style={{
-                ...styles.phoneAppPage,
-                ...(closing ? styles.phoneAppPageClosing : {}),
-            }}
-        >
-            <div style={styles.phoneAppTopSpacer} />
-
-            <div style={styles.phoneDialerDisplayWrap}>
-                <div style={styles.phoneDialerNumber}>
-                    {formatDialedPhoneNumber(dialedNumber) || ""}
-                </div>
-                <button style={styles.phoneDialerAddNumber} type="button">
-                    + Add Number
-                </button>
-            </div>
-
-            <div style={styles.phoneDialerKeypad}>
-                {keypadRows.flat().map((key) => (
-                    <button
-                        key={`${key.main}-${key.sub}`}
-                        type="button"
-                        style={styles.phoneDialerKey}
-                        onClick={() => onDigit(key.main)}
-                    >
-                        <span
-                            style={{
-                                ...styles.phoneDialerKeyMain,
-                                ...(!key.sub ? styles.phoneDialerKeyMainCentered : {}), // <--- changed: centers *, #, and 1 when there is no letter row
-                                ...(key.main === "*" ? styles.phoneDialerKeyAsterisk : {}), // <--- changed: makes * match # size and visual center
-                            }}
-                        >
-                            {key.main}
-                        </span>
-                        {key.sub ? (
-                            <span style={styles.phoneDialerKeySub}>{key.sub}</span>
-                        ) : null}
-                    </button>
-                ))}
-            </div>
-
-            <div style={styles.phoneDialerActions}>
-                <div style={styles.phoneDialerSideAction} />
-
-                <button
-                    type="button"
-                    style={styles.phoneDialerCallButton}
-                    onClick={onCall}
-                    aria-label="Fake call"
-                >
-                    <IPhonePhoneIconSvg />
-                </button>
-
-                <button
-                    type="button"
-                    style={{
-                        ...styles.phoneDialerDelete,
-                        opacity: dialedNumber ? 1 : 0,
-                        pointerEvents: dialedNumber ? "auto" : "none",
-                    }}
-                    onClick={onDelete}
-                    aria-label="Delete number"
-                >
-                    ⌫
-                </button>
-            </div>
-
-            <div style={styles.phoneDialerTabs}>
-                {[
-                    ["☆", "Favorites"],
-                    ["↻", "Recents"],
-                    ["◉", "Contacts"],
-                    ["●", "Keypad"],
-                    ["▣", "Voicemail"],
-                ].map(([icon, label]) => (
-                    <div
-                        key={label}
-                        style={{
-                            ...styles.phoneDialerTab,
-                            ...(label === "Keypad" ? styles.phoneDialerTabActive : {}),
-                        }}
-                    >
-                        <span style={styles.phoneDialerTabIcon}>{icon}</span>
-                        <span style={styles.phoneDialerTabLabel}>{label}</span> {/* <--- changed: fixed label box prevents icon/text vertical settling */}
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-
 
 function IPhoneNestIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
     return (
@@ -2008,11 +1869,6 @@ export default function TradingGame() {
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
     const [phoneClosing, setPhoneClosing] = useState(false); // <--- changed
-    const [activePhoneApp, setActivePhoneApp] = useState<"home" | "phone">("home"); // <--- changed
-    const [phoneAppClosing, setPhoneAppClosing] = useState(false); // <--- changed
-    const [dialedPhoneNumber, setDialedPhoneNumber] = useState(""); // <--- changed
-    const [homeButtonAnimating, setHomeButtonAnimating] = useState(false); // <--- changed: locks home button while its press/close animation runs
-    const [homeButtonHidden, setHomeButtonHidden] = useState(false); // <--- changed: keeps home bar faded until app close finishes
     const [cellStrength, setCellStrength] = useState(4); // <--- changed
     const [wifiStrength, setWifiStrength] = useState(3); // <--- changed
     const [locationServicesOn, setLocationServicesOn] = useState(true); // <--- changed
@@ -2202,8 +2058,6 @@ export default function TradingGame() {
 
         playPhoneSound(phoneUnlockSoundRef); // <--- changed
         setPhoneClosing(false); // <--- changed
-        setActivePhoneApp("home"); // <--- changed
-        setPhoneAppClosing(false); // <--- changed
         setPhoneOpen(true); // <--- changed
     }
 
@@ -2216,84 +2070,7 @@ export default function TradingGame() {
         window.setTimeout(() => {
             setPhoneOpen(false); // <--- changed
             setPhoneClosing(false); // <--- changed
-            setActivePhoneApp("home"); // <--- changed
-            setPhoneAppClosing(false); // <--- changed
         }, 280);
-    }
-
-    function openFakePhoneApp() { // <--- changed
-        setPhoneAppClosing(false); // <--- changed
-        setActivePhoneApp("phone"); // <--- changed
-    }
-
-    function handlePhoneHomePress() { // <--- changed
-        if (homeButtonAnimating) return; // <--- changed: prevents double-triggering while the home bar is fading back in
-
-        const shouldCloseApp = activePhoneApp !== "home" && !phoneAppClosing; // <--- changed
-
-        setHomeButtonAnimating(true); // <--- changed
-        setHomeButtonHidden(false); // <--- changed
-
-        window.setTimeout(() => {
-            setHomeButtonHidden(true); // <--- changed: quick fade after it nudges upward
-        }, 95); // <--- changed
-
-        if (shouldCloseApp) { // <--- changed
-            window.setTimeout(() => {
-                setPhoneAppClosing(true); // <--- changed: app begins its slide-down close after the home bar press starts
-            }, 115); // <--- changed
-
-            window.setTimeout(() => {
-                setActivePhoneApp("home"); // <--- changed
-                setPhoneAppClosing(false); // <--- changed
-                setHomeButtonAnimating(false); // <--- changed: removes the press/drop animation before fade-in starts
-            }, 455); // <--- changed
-
-            window.setTimeout(() => {
-                setHomeButtonHidden(false); // <--- changed: fade the home bar back in from its normal starting position
-            }, 475); // <--- changed
-
-            window.setTimeout(() => {
-                setHomeButtonAnimating(false); // <--- changed: functionality returns after fade-in finishes
-            }, 920); // <--- changed: waits for the slower fade-in before unlocking
-
-            return; // <--- changed
-        }
-
-        window.setTimeout(() => {
-            setHomeButtonAnimating(false); // <--- changed: reset to the normal home bar position before fade-in
-        }, 260); // <--- changed
-
-        window.setTimeout(() => {
-            setHomeButtonHidden(false); // <--- changed: fade in smoothly from the normal starting point
-        }, 280); // <--- changed
-
-        window.setTimeout(() => {
-            setHomeButtonAnimating(false); // <--- changed
-        }, 725); // <--- changed: waits for the slower fade-in before unlocking
-    }
-
-    function handlePhoneDigit(value: string) { // <--- changed
-        if (!/^[0-9]$/.test(value)) return; // <--- changed: phone number display only accepts digits
-
-        setDialedPhoneNumber((prev) => {
-            const digitsOnly = prev.replace(/\D/g, "").slice(0, 10); // <--- changed
-            if (digitsOnly.length >= 10) return digitsOnly; // <--- changed: hard cap at (123)-456-7890
-            return `${digitsOnly}${value}`.slice(0, 10); // <--- changed
-        });
-    }
-
-    function handlePhoneDelete() { // <--- changed
-        setDialedPhoneNumber((prev) => prev.replace(/\D/g, "").slice(0, 10).slice(0, -1)); // <--- changed
-    }
-
-    function handleFakeCall() { // <--- changed
-        if (!dialedPhoneNumber) return; // <--- changed
-        setDialedPhoneNumber("Calling..."); // <--- changed
-
-        window.setTimeout(() => {
-            setDialedPhoneNumber(""); // <--- changed
-        }, 900); // <--- changed
     }
 
     function handleToggleSimulationPause() {
@@ -4735,22 +4512,6 @@ export default function TradingGame() {
                         0% { opacity: 1; backdrop-filter: blur(3px); }
                         100% { opacity: 0; backdrop-filter: blur(0px); }
                     }
-
-                    @keyframes phoneAppExpandIn {
-                        0% { transform: translateY(100%); opacity: 1; }
-                        100% { transform: translateY(0); opacity: 1; }
-                    }
-
-                    @keyframes phoneAppSlideDownOut {
-                        0% { transform: translateY(0); opacity: 1; }
-                        100% { transform: translateY(112%); opacity: 0.92; }
-                    }
-
-                    @keyframes phoneHomeBarPressOut {
-                        0% { transform: translateX(-50%) translateY(0); opacity: 1; }
-                        35% { transform: translateX(-50%) translateY(-7px); opacity: 1; }
-                        100% { transform: translateX(-50%) translateY(5px); opacity: 0; }
-                    }
                 `}
             </style>
 
@@ -4896,13 +4657,7 @@ export default function TradingGame() {
 
                                                         <div style={styles.phoneDock}> {/* <--- changed */}
                                                             {phoneDockApps.map((app) => (
-                                                                <div
-                                                                    key={app.name}
-                                                                    style={styles.phoneDockSlot}
-                                                                    onClick={app.icon === "phone" ? openFakePhoneApp : undefined}
-                                                                    role={app.icon === "phone" ? "button" : undefined}
-                                                                    aria-label={app.icon === "phone" ? "Open Phone app" : undefined}
-                                                                >
+                                                                <div key={app.name} style={styles.phoneDockSlot}>
                                                                     <div
                                                                         style={{
                                                                             ...styles.phoneDockAppIcon,
@@ -4930,33 +4685,7 @@ export default function TradingGame() {
                                                         </div>
                                                     </div>
 
-                                                    {activePhoneApp === "phone" && ( // <--- changed
-                                                        <IPhonePhoneApp
-                                                            dialedNumber={dialedPhoneNumber}
-                                                            closing={phoneAppClosing}
-                                                            onDigit={handlePhoneDigit}
-                                                            onDelete={handlePhoneDelete}
-                                                            onCall={handleFakeCall}
-                                                        />
-                                                    )}
-
-                                                    <button
-                                                        type="button"
-                                                        style={{
-                                                            ...styles.phoneHomeBarButton,
-                                                            ...(homeButtonAnimating ? styles.phoneHomeBarButtonLocked : {}), // <--- changed
-                                                        }}
-                                                        onClick={handlePhoneHomePress}
-                                                        aria-label={activePhoneApp === "phone" ? "Close Phone app" : "Home"}
-                                                    >
-                                                        <span
-                                                            style={{
-                                                                ...styles.phoneHomeBar,
-                                                                ...(homeButtonAnimating ? styles.phoneHomeBarPressing : {}), // <--- changed
-                                                                ...(homeButtonHidden ? styles.phoneHomeBarHidden : {}), // <--- changed
-                                                            }}
-                                                        />
-                                                    </button>
+                                                    <div style={styles.phoneHomeBar} />
                                                 </div>
                                             </div>
                                         </div>
@@ -5805,7 +5534,7 @@ const styles: Record<string, CSSProperties> = {
         fontWeight: 900, // <--- changed
         opacity: 0.96, // <--- changed
         position: "relative", // <--- changed
-        zIndex: 11, // <--- changed: stays visible above full-screen app pages
+        zIndex: 2, // <--- changed
         padding: "0 12px", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
@@ -6023,226 +5752,6 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        cursor: "pointer", // <--- changed
-        WebkitTapHighlightColor: "transparent", // <--- changed
-    },
-    phoneAppPage: { // <--- changed
-        position: "absolute", // <--- changed
-        left: 0, // <--- changed: fills the full phone screen width instead of looking like an inset square
-        right: 0, // <--- changed: fills the full phone screen width instead of looking like an inset square
-        top: 0, // <--- changed: page now expands across the full phone shell
-        bottom: 0, // <--- changed: page now expands across the full phone shell
-        paddingTop: 44, // <--- changed: leaves the time / Wi-Fi / island area visible above the app content
-        paddingBottom: 34, // <--- changed: leaves the home bar area usable below the app content
-        background: "#000000", // <--- changed
-        color: "#ffffff", // <--- changed
-        zIndex: 8, // <--- changed: below the status bar and home bar, above the home screen apps
-        overflow: "hidden", // <--- changed
-        display: "flex", // <--- changed
-        flexDirection: "column", // <--- changed
-        alignItems: "center", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        borderRadius: "inherit", // <--- changed: clips with the same rounded phone shell instead of a square card
-        animation: "phoneAppExpandIn 360ms cubic-bezier(0.22, 1, 0.36, 1) both", // <--- changed: smooth slide up with no bounce/readjust
-        transformOrigin: "bottom center", // <--- changed
-        WebkitFontSmoothing: "antialiased", // <--- changed
-    },
-    phoneAppPageClosing: { // <--- changed
-        animation: "phoneAppSlideDownOut 320ms ease-in both", // <--- changed
-    },
-    phoneAppTopSpacer: { // <--- changed
-        height: 10, // <--- changed: safe area is now handled by phoneAppPage paddingTop
-        flexShrink: 0, // <--- changed
-    },
-    phoneDialerDisplayWrap: { // <--- changed
-        width: "100%", // <--- changed
-        height: 92, // <--- changed
-        display: "flex", // <--- changed
-        flexDirection: "column", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "flex-end", // <--- changed
-        padding: "0 18px 10px", // <--- changed
-        boxSizing: "border-box", // <--- changed
-    },
-    phoneDialerNumber: { // <--- changed
-        color: "#ffffff", // <--- changed
-        minHeight: 36, // <--- changed
-        maxWidth: "100%", // <--- changed
-        fontSize: 31, // <--- changed
-        fontWeight: 400, // <--- changed
-        letterSpacing: 0.6, // <--- changed
-        lineHeight: "36px", // <--- changed
-        whiteSpace: "nowrap", // <--- changed
-        overflow: "hidden", // <--- changed
-        textOverflow: "ellipsis", // <--- changed
-    },
-    phoneDialerAddNumber: { // <--- changed
-        height: 22, // <--- changed
-        background: "transparent", // <--- changed
-        border: "none", // <--- changed
-        color: "#0a84ff", // <--- changed
-        fontSize: 14, // <--- changed
-        fontWeight: 500, // <--- changed
-        opacity: 0.98, // <--- changed
-        cursor: "pointer", // <--- changed
-    },
-    phoneDialerKeypad: { // <--- changed
-        width: 252, // <--- changed
-        display: "grid", // <--- changed
-        gridTemplateColumns: "repeat(3, 1fr)", // <--- changed
-        gap: "12px 18px", // <--- changed
-        justifyItems: "center", // <--- changed
-        marginTop: 4, // <--- changed
-        flexShrink: 0, // <--- changed
-    },
-    phoneDialerKey: { // <--- changed
-        width: 66, // <--- changed
-        height: 66, // <--- changed
-        borderRadius: 999, // <--- changed
-        border: "none", // <--- changed
-        background: "#333333", // <--- changed
-        color: "#ffffff", // <--- changed
-        display: "flex", // <--- changed
-        flexDirection: "column", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        cursor: "pointer", // <--- changed
-        WebkitTapHighlightColor: "transparent", // <--- changed
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)", // <--- changed
-    },
-    phoneDialerKeyMain: { // <--- changed
-        fontSize: 31, // <--- changed
-        fontWeight: 400, // <--- changed
-        lineHeight: "30px", // <--- changed
-        transform: "translateY(1px)", // <--- changed
-    },
-    phoneDialerKeyMainCentered: { // <--- changed
-        lineHeight: "66px", // <--- changed: visually centers keys with no small letter row, especially * and #
-        transform: "translateY(0)", // <--- changed
-    },
-    phoneDialerKeyAsterisk: { // <--- changed
-        fontSize: 38, // <--- changed: makes * as visually large as #
-        lineHeight: "66px", // <--- changed
-        transform: "translateY(5px)", // <--- changed: optical center for the asterisk glyph
-    },
-    phoneDialerKeySub: { // <--- changed
-        minHeight: 11, // <--- changed
-        color: "rgba(255,255,255,0.72)", // <--- changed
-        fontSize: 9, // <--- changed
-        fontWeight: 800, // <--- changed
-        letterSpacing: 1.1, // <--- changed
-        lineHeight: "11px", // <--- changed
-    },
-    phoneDialerActions: { // <--- changed
-        width: 252, // <--- changed
-        height: 76, // <--- changed
-        display: "grid", // <--- changed
-        gridTemplateColumns: "1fr 76px 1fr", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyItems: "center", // <--- changed
-        marginTop: 10, // <--- changed
-        flexShrink: 0, // <--- changed
-    },
-    phoneDialerSideAction: { // <--- changed
-        width: 50, // <--- changed
-        height: 50, // <--- changed
-    },
-    phoneDialerCallButton: { // <--- changed
-        width: 68, // <--- changed
-        height: 68, // <--- changed
-        borderRadius: 999, // <--- changed
-        border: "none", // <--- changed
-        background: "#34c759", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        cursor: "pointer", // <--- changed
-        transform: "rotate(98deg)", // <--- changed
-        overflow: "hidden", // <--- changed
-    },
-    phoneDialerDelete: { // <--- changed
-        width: 54, // <--- changed
-        height: 54, // <--- changed
-        border: "none", // <--- changed
-        background: "transparent", // <--- changed
-        color: "rgba(255,255,255,0.78)", // <--- changed
-        fontSize: 24, // <--- changed
-        fontWeight: 700, // <--- changed
-        cursor: "pointer", // <--- changed
-        transition: "opacity 160ms ease", // <--- changed
-    },
-    phoneDialerTabs: { // <--- changed
-        position: "absolute", // <--- changed
-        left: 0, // <--- changed
-        right: 0, // <--- changed
-        bottom: 0, // <--- changed: locks the tab bar to the bottom so it does not readjust after the app slide-in
-        height: 76, // <--- changed: gray background still extends to the phone bottom
-        borderTop: "1px solid rgba(255,255,255,0.12)", // <--- changed
-        background: "rgba(14,14,14,0.96)", // <--- changed
-        display: "grid", // <--- changed
-        gridTemplateColumns: "repeat(5, 1fr)", // <--- changed
-        alignItems: "start", // <--- changed: prevents center recalculation after slide-in
-        paddingTop: 8, // <--- changed: fixed final tab-row start position
-        paddingBottom: 20, // <--- changed: keeps gray extension below the tab row
-        boxSizing: "border-box", // <--- changed
-        transform: "translateZ(0)", // <--- changed: locks compositor layer during app animation
-        willChange: "transform", // <--- changed
-    },
-    phoneDialerTab: { // <--- changed
-        color: "rgba(255,255,255,0.48)", // <--- changed
-        width: "100%", // <--- changed
-        height: 48, // <--- changed: fixed tab item box prevents vertical settling
-        fontSize: 9.5, // <--- changed
-        fontWeight: 600, // <--- changed
-        display: "grid", // <--- changed
-        gridTemplateRows: "25px 13px", // <--- changed: fixed icon row + fixed label row
-        alignItems: "center", // <--- changed
-        justifyItems: "center", // <--- changed
-        rowGap: 0, // <--- changed
-        lineHeight: 1, // <--- changed
-        transform: "translateZ(0)", // <--- changed
-        backfaceVisibility: "hidden", // <--- changed
-    },
-    phoneDialerTabActive: { // <--- changed
-        color: "#0a84ff", // <--- changed
-    },
-    phoneDialerTabIcon: { // <--- changed
-        width: 25, // <--- changed
-        height: 25, // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        fontSize: 19, // <--- changed
-        lineHeight: "25px", // <--- changed
-        fontWeight: 700, // <--- changed
-        overflow: "hidden", // <--- changed
-        transform: "translateY(0)", // <--- changed
-    },
-    phoneDialerTabLabel: { // <--- changed
-        height: 13, // <--- changed
-        display: "block", // <--- changed
-        fontSize: 9.5, // <--- changed
-        lineHeight: "13px", // <--- changed
-        fontWeight: 600, // <--- changed
-        whiteSpace: "nowrap", // <--- changed
-        transform: "translateY(0)", // <--- changed
-    },
-    phoneHomeBarButton: { // <--- changed
-        position: "absolute", // <--- changed
-        left: 0, // <--- changed
-        right: 0, // <--- changed
-        bottom: 0, // <--- changed
-        height: 34, // <--- changed
-        zIndex: 12, // <--- changed
-        border: "none", // <--- changed
-        background: "transparent", // <--- changed
-        padding: 0, // <--- changed
-        margin: 0, // <--- changed
-        cursor: "pointer", // <--- changed
-        WebkitTapHighlightColor: "transparent", // <--- changed
-    },
-    phoneHomeBarButtonLocked: { // <--- changed
-        pointerEvents: "none", // <--- changed: home button cannot work again until fade-in is finished
     },
     phoneHomeBar: {
         position: "absolute", // <--- changed
@@ -6253,15 +5762,6 @@ const styles: Record<string, CSSProperties> = {
         height: 4, // <--- changed
         borderRadius: 999, // <const HOME_SEARCH_VERTICAL_OFFSET--- changed
         background: "rgba(255,255,255,0.78)", // <--- changed
-        opacity: 1, // <--- changed
-        transition: "opacity 440ms ease, transform 180ms ease", // <--- changed: slightly slower smooth fade-in from resting position
-    },
-    phoneHomeBarPressing: { // <--- changed
-        animation: "phoneHomeBarPressOut 260ms ease-in both", // <--- changed: moves up slightly, drops down, and fades quickly
-    },
-    phoneHomeBarHidden: { // <--- changed
-        opacity: 0, // <--- changed
-        transform: "translateX(-50%) translateY(0)", // <--- changed: hidden/fade-in starts from the normal resting position, not the dropped position
     },
     pauseButton: {
         position: "absolute", // <--- changed
