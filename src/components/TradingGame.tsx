@@ -824,8 +824,9 @@ function IPhoneNestIconSvg() { // <--- changed
                     strokeLinejoin="round"
                 />
 
+                {/* <--- changed: cleaner chimney, tucked into the roof so it reads connected */}
                 <path
-                    d="M43.95 22.85H48.25C48.78 22.85 49.2 23.28 49.2 23.8V32.35H43.95V22.85Z"
+                    d="M42.9 23.15H47.95C48.45 23.15 48.85 23.55 48.85 24.05V33.2L42.9 27.75V23.15Z"
                     fill="url(#nestGreenClean)"
                 />
 
