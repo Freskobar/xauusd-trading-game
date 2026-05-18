@@ -220,7 +220,7 @@ const ILEARN_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG i
 
 
 // iTrade PNG icon tweak knobs // <--- changed
-const ITRADE_ICON_SIZE = 20; // <--- changed: scales only the top PNG layer inside the fixed app square
+const ITRADE_ICON_SIZE = 62; // <--- changed: scales only the top PNG layer inside the fixed app square
 const ITRADE_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
 const ITRADE_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
 const ITRADE_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
@@ -1046,9 +1046,9 @@ function IPhoneILearnIconSvg() { // <--- changed: uses PNG from src/assets/ilear
                 draggable={false}
                 style={{
                     position: "absolute",
-                    inset: 0,
-                    width: HOME_APP_SIZE,
-                    height: HOME_APP_SIZE,
+                    inset: -3, // <--- changed: crops out baked-in white/light PNG edge
+                    width: HOME_APP_SIZE + 6, // <--- changed: keeps app square full while hiding outline
+                    height: HOME_APP_SIZE + 6, // <--- changed
                     display: "block",
                     objectFit: "cover",
                     borderRadius: ILEARN_ICON_RADIUS,
@@ -1684,9 +1684,9 @@ function IPhoneITradeIconSvg() { // <--- changed: uses PNG from src/assets/itrad
                 draggable={false}
                 style={{
                     position: "absolute",
-                    inset: 0,
-                    width: HOME_APP_SIZE,
-                    height: HOME_APP_SIZE,
+                    inset: -3, // <--- changed: crops out baked-in white/light PNG edge
+                    width: HOME_APP_SIZE + 6, // <--- changed: keeps app square full while hiding outline
+                    height: HOME_APP_SIZE + 6, // <--- changed
                     display: "block",
                     objectFit: "cover",
                     borderRadius: ITRADE_ICON_RADIUS,
@@ -4466,7 +4466,7 @@ export default function TradingGame() {
             iconStyle: { width: HOME_BIG_APP_SIZE, height: HOME_BIG_APP_SIZE, maxWidth: "none", maxHeight: "none", borderRadius: 24 }, // <--- changed
             glyphStyle: { fontSize: 42 }, // <--- changed
         },
-        { name: "iTrade", bg: "linear-gradient(145deg, #ffffff, #d9dde7)" },
+        { name: "iTrade", bg: "transparent" },
         { name: "Centra", bg: "transparent" }, // <--- changed
         { name: "Locara", bg: "transparent" },
         { name: "Nest", bg: "transparent" }, // <--- changed
