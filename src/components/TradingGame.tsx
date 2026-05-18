@@ -9,6 +9,7 @@ import {
 } from "react";
 import centraBankIcon from "../assets/centra-bank-icon.png";
 import nestIcon from "../assets/nest-icon.png";
+import settingsIcon from "../assets/settings-icon.png";
 
 type Candle = {
     open: number;
@@ -143,8 +144,15 @@ const CENTRA_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG i
 // Nest PNG icon tweak knobs // <--- changed
 const NEST_ICON_SIZE = 70; // <--- changed: overall PNG size inside the app square
 const NEST_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
-const NEST_ICON_Y_OFFSET = 2; // <--- changed: move image up/down inside the app square
+const NEST_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
 const NEST_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+// Settings PNG icon tweak knobs // <--- changed
+const SETTINGS_ICON_SIZE = 70; // <--- changed: overall PNG size inside the app square
+const SETTINGS_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const SETTINGS_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
+const SETTINGS_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
 
 const PHONE_VERTICAL_SHIFT = 150; // <--- changed: moves whole phone panel further down
 const PHONE_BASE_WIDTH = 340; // <--- changed: PC-perfect full phone object width
@@ -984,98 +992,37 @@ function IPhoneILearnIconSvg() { // <--- changed
 }
 
 
-function IPhoneSettingsIconSvg() { // <--- changed
-    const teeth = Array.from({ length: 8 }, (_, index) => index * 45); // <--- changed
-
+function IPhoneSettingsIconSvg() { // <--- changed: uses PNG from src/assets/settings-icon.png
     return (
-        <svg
-            width="56"
-            height="56"
-            viewBox="0 0 64 64"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="Settings"
-            style={{ display: "block" }}
-            shapeRendering="geometricPrecision"
+        <div
+            style={{
+                width: `${HOME_APP_SIZE}px`,
+                height: `${HOME_APP_SIZE}px`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                borderRadius: `${SETTINGS_ICON_RADIUS}px`,
+                pointerEvents: "none",
+                userSelect: "none",
+            }}
         >
-            <defs>
-                <linearGradient
-                    id="settingsBackgroundGradient"
-                    x1="9"
-                    y1="3"
-                    x2="55"
-                    y2="61"
-                    gradientUnits="userSpaceOnUse"
-                >
-                    <stop offset="0%" stopColor="#505762" />
-                    <stop offset="46%" stopColor="#303640" />
-                    <stop offset="100%" stopColor="#171d26" />
-                </linearGradient>
-
-                <radialGradient
-                    id="settingsBackgroundGlow"
-                    cx="36%"
-                    cy="11%"
-                    r="82%"
-                >
-                    <stop offset="0%" stopColor="rgba(255,255,255,0.12)" />
-                    <stop offset="48%" stopColor="rgba(255,255,255,0.025)" />
-                    <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-                </radialGradient>
-            </defs>
-
-            <rect
-                x="0"
-                y="0"
-                width="64"
-                height="64"
-                rx="14.5"
-                fill="url(#settingsBackgroundGradient)"
+            <img
+                src={settingsIcon}
+                alt="Settings"
+                draggable={false}
+                style={{
+                    width: `${SETTINGS_ICON_SIZE}px`,
+                    height: `${SETTINGS_ICON_SIZE}px`,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: `${SETTINGS_ICON_RADIUS}px`,
+                    transform: `translate(${SETTINGS_ICON_X_OFFSET}px, ${SETTINGS_ICON_Y_OFFSET}px)`,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
             />
-
-            <rect
-                x="0"
-                y="0"
-                width="64"
-                height="64"
-                rx="14.5"
-                fill="url(#settingsBackgroundGlow)"
-            />
-
-            <g fill="#a7adb4"> {/* <--- changed: removed gear drop shadow */}
-                {teeth.map((angle) => (
-                    <rect
-                        key={angle}
-                        x="28.15"
-                        y="7.8"
-                        width="7.7"
-                        height="18.7"
-                        rx="2"
-                        transform={`rotate(${angle} 32 32)`}
-                    />
-                ))}
-
-                <circle
-                    cx="32"
-                    cy="32"
-                    r="18.55"
-                />
-            </g>
-
-            <circle
-                cx="32"
-                cy="32"
-                r="9"
-                fill="url(#settingsBackgroundGradient)"
-            />
-
-            <circle
-                cx="32"
-                cy="32"
-                r="9"
-                fill="url(#settingsBackgroundGlow)"
-            />
-        </svg>
+        </div>
     );
 }
 
