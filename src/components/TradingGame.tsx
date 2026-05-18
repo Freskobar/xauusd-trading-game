@@ -798,17 +798,17 @@ function IPhoneMusicIconSvg() { // <--- changed
 
 
 
-function IPhoneNestIconSvg() { // <--- changed: uses PNG from src/assets/nest-icon.png
+function IPhoneNestIconSvg() { // <--- changed: restored clean PNG rendering
     return (
         <div
             style={{
-                width: `${HOME_APP_SIZE}px`,
-                height: `${HOME_APP_SIZE}px`,
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 overflow: "hidden",
-                borderRadius: `${NEST_ICON_RADIUS}px`,
+                borderRadius: NEST_ICON_RADIUS,
                 pointerEvents: "none",
                 userSelect: "none",
             }}
@@ -818,11 +818,11 @@ function IPhoneNestIconSvg() { // <--- changed: uses PNG from src/assets/nest-ic
                 alt="Nest"
                 draggable={false}
                 style={{
-                    width: `${NEST_ICON_SIZE}px`,
-                    height: `${NEST_ICON_SIZE}px`,
+                    width: NEST_ICON_SIZE,
+                    height: NEST_ICON_SIZE,
                     display: "block",
                     objectFit: "cover",
-                    borderRadius: `${NEST_ICON_RADIUS}px`,
+                    borderRadius: NEST_ICON_RADIUS,
                     transform: `translate(${NEST_ICON_X_OFFSET}px, ${NEST_ICON_Y_OFFSET}px)`,
                     pointerEvents: "none",
                     userSelect: "none",
@@ -833,17 +833,18 @@ function IPhoneNestIconSvg() { // <--- changed: uses PNG from src/assets/nest-ic
 }
 
 
-function IPhoneCentraIconSvg() { // <--- changed: uses PNG from src/assets/centra-bank-icon.png
+
+function IPhoneCentraIconSvg() { // <--- changed: restored clean PNG rendering
     return (
         <div
             style={{
-                width: `${HOME_APP_SIZE}px`,
-                height: `${HOME_APP_SIZE}px`,
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 overflow: "hidden",
-                borderRadius: `${CENTRA_ICON_RADIUS}px`,
+                borderRadius: CENTRA_ICON_RADIUS,
                 pointerEvents: "none",
                 userSelect: "none",
             }}
@@ -853,11 +854,11 @@ function IPhoneCentraIconSvg() { // <--- changed: uses PNG from src/assets/centr
                 alt="Centra Bank"
                 draggable={false}
                 style={{
-                    width: `${CENTRA_ICON_SIZE}px`,
-                    height: `${CENTRA_ICON_SIZE}px`,
+                    width: CENTRA_ICON_SIZE,
+                    height: CENTRA_ICON_SIZE,
                     display: "block",
                     objectFit: "cover",
-                    borderRadius: `${CENTRA_ICON_RADIUS}px`,
+                    borderRadius: CENTRA_ICON_RADIUS,
                     transform: `translate(${CENTRA_ICON_X_OFFSET}px, ${CENTRA_ICON_Y_OFFSET}px)`,
                     pointerEvents: "none",
                     userSelect: "none",
@@ -866,6 +867,7 @@ function IPhoneCentraIconSvg() { // <--- changed: uses PNG from src/assets/centr
         </div>
     );
 }
+
 
 
 function IPhoneILearnIconSvg() { // <--- changed
@@ -1001,17 +1003,17 @@ function IPhoneILearnIconSvg() { // <--- changed
 }
 
 
-function IPhoneSettingsIconSvg() { // <--- changed: uses PNG from src/assets/settings-icon.png
+function IPhoneSettingsIconSvg() { // <--- changed: restored clean PNG rendering
     return (
         <div
             style={{
-                width: `${HOME_APP_SIZE}px`,
-                height: `${HOME_APP_SIZE}px`,
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 overflow: "hidden",
-                borderRadius: `${SETTINGS_ICON_RADIUS}px`,
+                borderRadius: SETTINGS_ICON_RADIUS,
                 pointerEvents: "none",
                 userSelect: "none",
             }}
@@ -1021,11 +1023,11 @@ function IPhoneSettingsIconSvg() { // <--- changed: uses PNG from src/assets/set
                 alt="Settings"
                 draggable={false}
                 style={{
-                    width: `${SETTINGS_ICON_SIZE}px`,
-                    height: `${SETTINGS_ICON_SIZE}px`,
+                    width: SETTINGS_ICON_SIZE,
+                    height: SETTINGS_ICON_SIZE,
                     display: "block",
                     objectFit: "cover",
-                    borderRadius: `${SETTINGS_ICON_RADIUS}px`,
+                    borderRadius: SETTINGS_ICON_RADIUS,
                     transform: `translate(${SETTINGS_ICON_X_OFFSET}px, ${SETTINGS_ICON_Y_OFFSET}px)`,
                     pointerEvents: "none",
                     userSelect: "none",
@@ -1037,19 +1039,22 @@ function IPhoneSettingsIconSvg() { // <--- changed: uses PNG from src/assets/set
 
 
 
-function IPhoneDashlyIconSvg() { // <--- changed: uses PNG from src/assets/dashly-icon.png
+function IPhoneDashlyIconSvg() { // <--- changed: restored clean PNG rendering
     return (
         <div
             style={{
-                width: `${HOME_APP_SIZE}px`,
-                height: `${HOME_APP_SIZE}px`,
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 overflow: "hidden",
-                borderRadius: `${DASHLY_ICON_RADIUS}px`,
+                borderRadius: DASHLY_ICON_RADIUS,
                 pointerEvents: "none",
                 userSelect: "none",
+                background: "transparent", // <--- changed: keeps Dashly white outline fix
+                border: "none", // <--- changed
+                boxShadow: "none", // <--- changed
             }}
         >
             <img
@@ -1057,11 +1062,11 @@ function IPhoneDashlyIconSvg() { // <--- changed: uses PNG from src/assets/dashl
                 alt="Dashly"
                 draggable={false}
                 style={{
-                    width: `${DASHLY_ICON_SIZE}px`,
-                    height: `${DASHLY_ICON_SIZE}px`,
+                    width: DASHLY_ICON_SIZE,
+                    height: DASHLY_ICON_SIZE,
                     display: "block",
                     objectFit: "cover",
-                    borderRadius: `${DASHLY_ICON_RADIUS}px`,
+                    borderRadius: DASHLY_ICON_RADIUS,
                     transform: `translate(${DASHLY_ICON_X_OFFSET}px, ${DASHLY_ICON_Y_OFFSET}px)`,
                     pointerEvents: "none",
                     userSelect: "none",
@@ -1070,6 +1075,7 @@ function IPhoneDashlyIconSvg() { // <--- changed: uses PNG from src/assets/dashl
         </div>
     );
 }
+
 
 
 function IPhoneSafariIconSvg() { // <--- changed
@@ -3822,7 +3828,7 @@ export default function TradingGame() {
         { name: "Centra", bg: "transparent" }, // <--- changed
         { name: "Locara", bg: "linear-gradient(145deg, #073d68, #031b31)" },
         { name: "Nest", bg: "transparent" }, // <--- changed
-        { name: "Dashly", bg: "linear-gradient(145deg, #eeeeee, #c8c8c8)" },
+        { name: "Dashly", bg: "transparent" },
         { name: "Titan Gym", bg: "linear-gradient(145deg, #ffffff, #f7f7f7)" },
         { name: "Vaulté", bg: "linear-gradient(145deg, #22d3ee, #0096c7)" },
         { name: "Throttle", bg: "radial-gradient(circle at center, #ffffff 0 18%, #34c759 19% 68%, #f2f2f2 69%)" },
