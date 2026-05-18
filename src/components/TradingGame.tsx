@@ -1017,7 +1017,7 @@ function IPhoneCentraIconSvg() { // <--- changed
             </text>
 
             <line
-                x1="43.8"
+                x1="44.6"
                 y1="55.55" x2="48.2"
                 y2="55.55" stroke="url(#centraWhiteGradient)"
                 strokeWidth="0.62"
