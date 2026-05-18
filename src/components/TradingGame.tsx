@@ -926,6 +926,183 @@ function formatDialedPhoneNumber(value: string) { // <--- changed
     return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`; // <--- changed: iPhone-style full number, example (999) 999-9999
 }
 
+
+function PhoneBackspaceIcon() { // <--- changed: custom SVG delete icon renders consistently on PC and iPhone
+    return (
+        <svg
+            width="31" // <--- changed: slightly larger delete icon
+            height="24" // <--- changed: slightly larger delete icon
+            viewBox="0 0 28 22"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            focusable="false"
+            style={{
+                display: "block",
+                width: 31, // <--- changed: slightly larger delete icon
+                height: 24, // <--- changed: slightly larger delete icon
+                flexShrink: 0,
+                transform: "translateY(0.25px)",
+            }}
+        >
+            <path
+                d="M10.35 3.25H24.05C25.25 3.25 26.25 4.25 26.25 5.45V16.55C26.25 17.75 25.25 18.75 24.05 18.75H10.35L1.95 11L10.35 3.25Z"
+                fill="transparent" // <--- changed: no solid grey fill
+                stroke="rgba(255,255,255,0.92)" // <--- changed: white outline delete shape
+                strokeWidth="1.75" // <--- changed
+                strokeLinejoin="round" // <--- changed
+            />
+            <path
+                d="M15.45 7.75L20.7 13M20.7 7.75L15.45 13"
+                stroke="#ffffff" // <--- changed: white X in center
+                strokeWidth="2.15"
+                strokeLinecap="round"
+            />
+        </svg>
+    );
+}
+
+
+
+function PhoneKeypadTabIcon() { // <--- changed: locked to the same 26px visual box as every Phone tab icon
+    const dots = [0, 1, 2].flatMap((row) =>
+        [0, 1, 2].map((col) => ({
+            cx: 8 + col * 6,
+            cy: 7 + row * 5.8,
+        }))
+    );
+
+    return (
+        <svg
+            width="26"
+            height="26"
+            viewBox="0 0 26 26"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            focusable="false"
+            style={{
+                display: "block",
+                width: 26,
+                height: 26,
+                flexShrink: 0,
+            }}
+        >
+            {dots.map((dot, index) => (
+                <circle
+                    key={index}
+                    cx={dot.cx}
+                    cy={dot.cy}
+                    r="1.55"
+                    fill="currentColor"
+                />
+            ))}
+        </svg>
+    );
+}
+
+function PhoneContactsTabIcon() { // <--- changed: locked profile icon size/gap to match Calls/Keypad/Search
+    return (
+        <svg
+            width="26"
+            height="26"
+            viewBox="0 0 26 26"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            focusable="false"
+            style={{
+                display: "block",
+                width: 26,
+                height: 26,
+                flexShrink: 0,
+            }}
+        >
+            <circle
+                cx="13"
+                cy="8.25"
+                r="3.85"
+                fill="currentColor"
+            />
+            <path
+                d="M5.8 21.1C6.28 16.72 9.18 14.15 13 14.15C16.82 14.15 19.72 16.72 20.2 21.1C20.28 21.78 19.75 22.35 19.07 22.35H6.93C6.25 22.35 5.72 21.78 5.8 21.1Z"
+                fill="currentColor"
+            />
+        </svg>
+    );
+}
+
+function PhoneCallsTabIcon() { // <--- changed: restored perfected clean clock/history icon
+    return (
+        <svg
+            width="26"
+            height="26"
+            viewBox="0 0 26 26"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            focusable="false"
+            style={{
+                display: "block",
+                width: 26,
+                height: 26,
+                flexShrink: 0,
+                overflow: "visible",
+            }}
+        >
+            <circle
+                cx="13"
+                cy="13"
+                r="8.65"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+            />
+            <path
+                d="M13 7.75V13.05L16.65 15.35"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
+
+function PhoneSearchTabIcon() { // <--- changed: locked magnifier icon size/gap to match Calls/Contacts/Keypad
+    return (
+        <svg
+            width="26"
+            height="26"
+            viewBox="0 0 26 26"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            focusable="false"
+            style={{
+                display: "block",
+                width: 26,
+                height: 26,
+                flexShrink: 0,
+            }}
+        >
+            <circle
+                cx="11.3"
+                cy="11.3"
+                r="5.85"
+                stroke="currentColor"
+                strokeWidth="2.3"
+            />
+            <path
+                d="M15.85 15.85L20.8 20.8"
+                stroke="currentColor"
+                strokeWidth="2.3"
+                strokeLinecap="round"
+            />
+        </svg>
+    );
+}
+
 function IPhonePhoneApp({ // <--- changed
     dialedNumber,
     closing,
@@ -1071,26 +1248,26 @@ function IPhonePhoneApp({ // <--- changed
                     onClick={onDelete}
                     aria-label="Delete number"
                 >
-                    ⌫
+                    <PhoneBackspaceIcon />
                 </button>
             </div>
 
             <div style={styles.phoneDialerTabs}>
                 {[
-                    ["↻", "Calls"], // <--- changed
-                    ["◉", "Contacts"], // <--- changed
-                    ["●", "Keypad"], // <--- changed
-                    ["⌕", "Search"], // <--- changed
-                ].map(([icon, label]) => (
+                    { id: "calls", icon: <PhoneCallsTabIcon />, label: "Calls" }, // <--- changed: SVG sized to match the other tab icons
+                    { id: "contacts", icon: <PhoneContactsTabIcon />, label: "Contacts" }, // <--- changed: profile/head-and-shoulders icon
+                    { id: "keypad", icon: <PhoneKeypadTabIcon />, label: "Keypad" }, // <--- changed: 3x3 keypad dots instead of one dot
+                    { id: "search", icon: <PhoneSearchTabIcon />, label: "Search" }, // <--- changed: SVG magnifying glass sized to match the other tab icons
+                ].map((tab) => (
                     <div
-                        key={label}
+                        key={tab.id} // <--- changed: always a clean string key, fixes TypeScript key error
                         style={{
                             ...styles.phoneDialerTab,
-                            ...(label === "Keypad" ? styles.phoneDialerTabActive : {}),
+                            ...(tab.id === "keypad" ? styles.phoneDialerTabActive : {}),
                         }}
                     >
-                        <span style={styles.phoneDialerTabIcon}>{icon}</span>
-                        <span style={styles.phoneDialerTabLabel}>{label}</span> {/* <--- changed: fixed label box prevents icon/text vertical settling */}
+                        <span style={styles.phoneDialerTabIcon}>{tab.icon}</span>
+                        <span style={styles.phoneDialerTabLabel}>{tab.label}</span> {/* <--- changed: fixed label box prevents icon/text vertical settling */}
                     </div>
                 ))}
             </div>
@@ -6261,10 +6438,15 @@ const styles: Record<string, CSSProperties> = {
         border: "none", // <--- changed
         background: "transparent", // <--- changed
         color: "rgba(255,255,255,0.78)", // <--- changed
-        fontSize: 24, // <--- changed
-        fontWeight: 700, // <--- changed
         cursor: "pointer", // <--- changed
         transition: "opacity 160ms ease", // <--- changed
+        display: "flex", // <--- changed: centers custom SVG consistently on PC and phone
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        padding: 0, // <--- changed: removes browser default button spacing
+        WebkitAppearance: "none", // <--- changed: removes iOS button rendering differences
+        appearance: "none", // <--- changed
+        lineHeight: 1, // <--- changed
     },
     phoneDialerTabs: { // <--- changed
         position: "absolute", // <--- changed
@@ -6286,14 +6468,14 @@ const styles: Record<string, CSSProperties> = {
     phoneDialerTab: { // <--- changed
         color: "rgba(255,255,255,0.48)", // <--- changed
         width: "100%", // <--- changed
-        height: 48, // <--- changed: fixed tab item box prevents vertical settling
+        height: 52, // <--- changed: exact same tab item box for every tab
         fontSize: 9.5, // <--- changed
         fontWeight: 600, // <--- changed
         display: "grid", // <--- changed
-        gridTemplateRows: "25px 13px", // <--- changed: fixed icon row + fixed label row
+        gridTemplateRows: "26px 13px", // <--- changed: same icon box + same label box for all tabs
         alignItems: "center", // <--- changed
         justifyItems: "center", // <--- changed
-        rowGap: 0, // <--- changed
+        rowGap: 3, // <--- changed: consistent icon-to-label gap for every tab
         lineHeight: 1, // <--- changed
         transform: "translateZ(0)", // <--- changed
         backfaceVisibility: "hidden", // <--- changed
@@ -6302,22 +6484,24 @@ const styles: Record<string, CSSProperties> = {
         color: "#0a84ff", // <--- changed
     },
     phoneDialerTabIcon: { // <--- changed
-        width: 25, // <--- changed
-        height: 25, // <--- changed
+        width: 26, // <--- changed: shared fixed icon slot
+        height: 26, // <--- changed: shared fixed icon slot
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
         fontSize: 19, // <--- changed
-        lineHeight: "25px", // <--- changed
+        lineHeight: "26px", // <--- changed
         fontWeight: 700, // <--- changed
         overflow: "hidden", // <--- changed
         transform: "translateY(0)", // <--- changed
     },
     phoneDialerTabLabel: { // <--- changed
         height: 13, // <--- changed
-        display: "block", // <--- changed
+        display: "flex", // <--- changed
         fontSize: 9.5, // <--- changed
         lineHeight: "13px", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
         fontWeight: 600, // <--- changed
         whiteSpace: "nowrap", // <--- changed
         transform: "translateY(0)", // <--- changed
