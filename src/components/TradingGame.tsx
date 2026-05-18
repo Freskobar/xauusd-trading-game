@@ -857,20 +857,20 @@ function IPhoneILearnIconSvg() { // <--- changed
             />
 
             <g filter="url(#iLearnCapShadow)">
-                {/* Lower bowl first, so the top diamond sits over it */}
+                {/* Lower bowl first */}
                 <path
-                    d="M20.1 33.85L31.15 40.1C31.7 40.42 32.3 40.42 32.85 40.1L43.9 33.85V39.85C43.9 42.95 38.55 46.2 32 46.2C25.45 46.2 20.1 42.95 20.1 39.85V33.85Z"
+                    d="M20.1 33.55L31.15 39.8C31.7 40.12 32.3 40.12 32.85 39.8L43.9 33.55V40.05C43.9 43.05 38.55 46.2 32 46.2C25.45 46.2 20.1 43.05 20.1 40.05V33.55Z"
                     fill="url(#iLearnCapGradient)"
                 />
 
-                {/* Clean green cutout/separation between top board and lower bowl */}
+                {/* <--- changed: thicker cutout between the top board and lower bowl */}
                 <path
-                    d="M18.55 32.15L31.15 39.25C31.7 39.56 32.3 39.56 32.85 39.25L45.45 32.15L43.65 34.85L32.95 40.95C32.35 41.3 31.65 41.3 31.05 40.95L20.35 34.85Z"
+                    d="M17.65 31.15L31 38.7C31.62 39.05 32.38 39.05 33 38.7L46.35 31.15L43.7 35.45L33.05 41.55C32.4 41.93 31.6 41.93 30.95 41.55L20.3 35.45Z"
                     fill="url(#iLearnBackgroundGradient)"
                 />
 
                 <path
-                    d="M18.55 32.15L31.15 39.25C31.7 39.56 32.3 39.56 32.85 39.25L45.45 32.15L43.65 34.85L32.95 40.95C32.35 41.3 31.65 41.3 31.05 40.95L20.35 34.85Z"
+                    d="M17.65 31.15L31 38.7C31.62 39.05 32.38 39.05 33 38.7L46.35 31.15L43.7 35.45L33.05 41.55C32.4 41.93 31.6 41.93 30.95 41.55L20.3 35.45Z"
                     fill="url(#iLearnBackgroundGlow)"
                 />
 
@@ -880,7 +880,30 @@ function IPhoneILearnIconSvg() { // <--- changed
                     fill="url(#iLearnCapGradient)"
                 />
 
-                {/* Small center button on top */}
+                {/* <--- changed: tassel groove/cutout line on top cap */}
+                <path
+                    d="M33.8 29.45L46.45 32.78"
+                    stroke="url(#iLearnBackgroundGradient)"
+                    strokeWidth="1.25"
+                    strokeLinecap="round"
+                />
+                <path
+                    d="M33.8 29.45L46.45 32.78"
+                    stroke="url(#iLearnBackgroundGlow)"
+                    strokeWidth="1.25"
+                    strokeLinecap="round"
+                />
+
+                {/* Tassel cord, redrawn over the cutout groove */}
+                <path
+                    d="M34.1 30.05L45.85 33.1C47.15 33.42 48.05 34.62 48.05 35.95V43.35"
+                    stroke="url(#iLearnCapGradient)"
+                    strokeWidth="2.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+
+                {/* Center button on top */}
                 <circle
                     cx="32"
                     cy="30.45"
@@ -888,13 +911,13 @@ function IPhoneILearnIconSvg() { // <--- changed
                     fill="url(#iLearnCapGradient)"
                 />
 
-                {/* Tassel cord */}
-                <path
-                    d="M34.1 30.05L45.85 33.1C47.15 33.42 48.05 34.62 48.05 35.95V43.35"
-                    stroke="url(#iLearnCapGradient)"
-                    strokeWidth="3.15"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                {/* <--- changed: small background ring cutout around the button so it reads like a cap detail */}
+                <circle
+                    cx="32"
+                    cy="30.45"
+                    r="3.15"
+                    stroke="url(#iLearnBackgroundGradient)"
+                    strokeWidth="0.65"
                 />
 
                 <circle
@@ -907,6 +930,14 @@ function IPhoneILearnIconSvg() { // <--- changed
                 <path
                     d="M47.05 46.05C47.25 45.3 48.85 45.3 49.05 46.05L50.25 52.05C50.38 52.75 49.85 53.4 49.15 53.4H46.95C46.25 53.4 45.72 52.75 45.85 52.05L47.05 46.05Z"
                     fill="url(#iLearnCapGradient)"
+                />
+
+                {/* <--- changed: tassel lower cutout to separate the knot from the hanging piece */}
+                <path
+                    d="M46.55 46.0H49.55"
+                    stroke="url(#iLearnBackgroundGradient)"
+                    strokeWidth="0.95"
+                    strokeLinecap="round"
                 />
             </g>
         </svg>
