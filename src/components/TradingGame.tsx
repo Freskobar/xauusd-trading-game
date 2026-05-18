@@ -993,36 +993,35 @@ function IPhoneCentraIconSvg() { // <--- changed
                 CENTRA
             </text>
 
-            <line
-                x1="15.8"
-                y1="55.55"
-                x2="21.4"
-                y2="55.55"
-                stroke="url(#centraWhiteGradient)"
-                strokeWidth="0.62"
-                strokeLinecap="round"
-            />
+            <g aria-label="BANK wordmark">
+                {/* <--- changed: redrawn BANK dividers as separate short paths with clear gaps */}
+                <path
+                    d="M13.8 55.55H17.0"
+                    stroke="url(#centraWhiteGradient)"
+                    strokeWidth="0.62"
+                    strokeLinecap="round"
+                />
 
-            <text
-                x="32"
-                y="57.15"
-                textAnchor="middle"
-                fontSize="5.15" // <--- changed: bigger Bank text for readability
-                fontWeight="800"
-                letterSpacing="2.15" // <--- changed: tighter spacing makes it easier to read
-                fill="url(#centraWhiteGradient)"
-                fontFamily="Arial, Helvetica, sans-serif"
-            >
-                BANK
-            </text>
+                <text
+                    x="32"
+                    y="57.15"
+                    textAnchor="middle"
+                    fontSize="5.15" // <--- changed: bigger Bank text for readability
+                    fontWeight="800"
+                    letterSpacing="2.15" // <--- changed: tighter spacing makes it easier to read
+                    fill="url(#centraWhiteGradient)"
+                    fontFamily="Arial, Helvetica, sans-serif"
+                >
+                    BANK
+                </text>
 
-            <line
-                x1="44.6"
-                y1="55.55" x2="48.2"
-                y2="55.55" stroke="url(#centraWhiteGradient)"
-                strokeWidth="0.62"
-                strokeLinecap="round"
-            />
+                <path
+                    d="M47.0 55.55H50.2"
+                    stroke="url(#centraWhiteGradient)"
+                    strokeWidth="0.62"
+                    strokeLinecap="round"
+                />
+            </g>
         </svg>
     );
 }
