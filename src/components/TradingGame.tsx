@@ -11,6 +11,13 @@ import centraBankIcon from "../assets/centra-bank-icon.png";
 import nestIcon from "../assets/nest-icon.png";
 import settingsIcon from "../assets/settings-icon.png";
 import dashlyIcon from "../assets/dashly-icon.png";
+import appHubIcon from "../assets/app-hub-icon.png";
+import titanGymIcon from "../assets/titan-gym-icon.png";
+import locaraIcon from "../assets/locara-icon.png";
+import throttleIcon from "../assets/throttle-icon.png";
+import vaulteIcon from "../assets/vaulte-icon.png";
+import vantaIcon from "../assets/vanta-icon.png";
+import ilearnIcon from "../assets/ilearn-icon.png";
 
 type Candle = {
     open: number;
@@ -137,7 +144,7 @@ const PHONE_HOME_BAR_BOTTOM_OFFSET = 8; // <--- changed: moves home bar down/up 
 
 
 // Centra Bank PNG icon tweak knobs // <--- changed
-const CENTRA_ICON_SIZE = 70; // <--- changed: overall PNG size inside the app square
+const CENTRA_ICON_SIZE = 75; // <--- changed: overall PNG size inside the app square
 const CENTRA_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
 const CENTRA_ICON_Y_OFFSET = 2; // <--- changed: move image up/down inside the app square
 const CENTRA_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
@@ -149,7 +156,7 @@ const NEST_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app
 const NEST_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
 
 // Settings PNG icon tweak knobs // <--- changed
-const SETTINGS_ICON_SIZE = 70; // <--- changed: overall PNG size inside the app square
+const SETTINGS_ICON_SIZE = 65; // <--- changed: overall PNG size inside the app square
 const SETTINGS_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
 const SETTINGS_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
 const SETTINGS_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
@@ -160,6 +167,62 @@ const DASHLY_ICON_SIZE = 70; // <--- changed: overall PNG size inside the app sq
 const DASHLY_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
 const DASHLY_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
 const DASHLY_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+
+// App Hub PNG icon tweak knobs // <--- changed
+const APP_HUB_ICON_SIZE = 65; // <--- changed: overall PNG size inside the app square
+const APP_HUB_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const APP_HUB_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
+const APP_HUB_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+
+// Titan Gym PNG icon tweak knobs // <--- changed
+const TITAN_GYM_ICON_SIZE = 60; // <--- changed: overall PNG size inside the app square
+const TITAN_GYM_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const TITAN_GYM_ICON_Y_OFFSET = 1; // <--- changed: move image up/down inside the app square
+const TITAN_GYM_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+
+// Locara PNG icon tweak knobs // <--- changed
+const LOCARA_ICON_SIZE = 60; // <--- changed: overall PNG size inside the app square
+const LOCARA_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const LOCARA_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
+const LOCARA_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+
+// Throttle PNG icon tweak knobs // <--- changed
+const THROTTLE_ICON_SIZE = 52; // <--- changed: overall PNG size inside the app square
+const THROTTLE_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const THROTTLE_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
+const THROTTLE_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+
+// Vaulte PNG icon tweak knobs // <--- changed
+const VAULTE_ICON_SIZE = 50; // <--- changed: overall PNG size inside the app square
+const VAULTE_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const VAULTE_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
+const VAULTE_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+
+// Vanta PNG icon tweak knobs // <--- changed
+const VANTA_ICON_SIZE = 55; // <--- changed: overall PNG size inside the app square
+const VANTA_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const VANTA_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
+const VANTA_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+
+// iLearn PNG icon tweak knobs // <--- changed
+const ILEARN_ICON_SIZE = 62; // <--- changed: scales only the top PNG layer inside the fixed app square
+const ILEARN_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const ILEARN_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
+const ILEARN_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+
+
+
+
+
+
 
 
 
@@ -798,32 +861,67 @@ function IPhoneMusicIconSvg() { // <--- changed
 
 
 
-function IPhoneNestIconSvg() { // <--- changed: restored clean PNG rendering
+function IPhoneNestIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
     return (
         <div
             style={{
                 width: HOME_APP_SIZE,
                 height: HOME_APP_SIZE,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
                 overflow: "hidden",
                 borderRadius: NEST_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
                 pointerEvents: "none",
                 userSelect: "none",
+                lineHeight: 0,
             }}
         >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={nestIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: NEST_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
             <img
                 src={nestIcon}
                 alt="Nest"
                 draggable={false}
                 style={{
-                    width: NEST_ICON_SIZE,
-                    height: NEST_ICON_SIZE,
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
                     display: "block",
                     objectFit: "cover",
                     borderRadius: NEST_ICON_RADIUS,
-                    transform: `translate(${NEST_ICON_X_OFFSET}px, ${NEST_ICON_Y_OFFSET}px)`,
+                    transform: `translate(-50%, -50%) translate(${NEST_ICON_X_OFFSET}px, ${NEST_ICON_Y_OFFSET}px) scale(${NEST_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
                     pointerEvents: "none",
                     userSelect: "none",
                 }}
@@ -834,32 +932,67 @@ function IPhoneNestIconSvg() { // <--- changed: restored clean PNG rendering
 
 
 
-function IPhoneCentraIconSvg() { // <--- changed: restored clean PNG rendering
+function IPhoneCentraIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
     return (
         <div
             style={{
                 width: HOME_APP_SIZE,
                 height: HOME_APP_SIZE,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
                 overflow: "hidden",
                 borderRadius: CENTRA_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
                 pointerEvents: "none",
                 userSelect: "none",
+                lineHeight: 0,
             }}
         >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={centraBankIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: CENTRA_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
             <img
                 src={centraBankIcon}
                 alt="Centra Bank"
                 draggable={false}
                 style={{
-                    width: CENTRA_ICON_SIZE,
-                    height: CENTRA_ICON_SIZE,
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
                     display: "block",
                     objectFit: "cover",
                     borderRadius: CENTRA_ICON_RADIUS,
-                    transform: `translate(${CENTRA_ICON_X_OFFSET}px, ${CENTRA_ICON_Y_OFFSET}px)`,
+                    transform: `translate(-50%, -50%) translate(${CENTRA_ICON_X_OFFSET}px, ${CENTRA_ICON_Y_OFFSET}px) scale(${CENTRA_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
                     pointerEvents: "none",
                     userSelect: "none",
                 }}
@@ -870,165 +1003,137 @@ function IPhoneCentraIconSvg() { // <--- changed: restored clean PNG rendering
 
 
 
-function IPhoneILearnIconSvg() { // <--- changed
-    return (
-        <svg
-            width="56"
-            height="56"
-            viewBox="0 0 64 64"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="iLearn"
-            style={{ display: "block" }}
-            shapeRendering="geometricPrecision"
-        >
-            <defs>
-                <linearGradient
-                    id="iLearnBackgroundGradient"
-                    x1="10"
-                    y1="3"
-                    x2="54"
-                    y2="61"
-                    gradientUnits="userSpaceOnUse"
-                >
-                    <stop offset="0%" stopColor="#145d38" />
-                    <stop offset="48%" stopColor="#0d452c" />
-                    <stop offset="100%" stopColor="#07331f" />
-                </linearGradient>
-
-                <radialGradient
-                    id="iLearnBackgroundGlow"
-                    cx="36%"
-                    cy="12%"
-                    r="82%"
-                >
-                    <stop offset="0%" stopColor="rgba(255,255,255,0.10)" />
-                    <stop offset="48%" stopColor="rgba(255,255,255,0.025)" />
-                    <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-                </radialGradient>
-
-                <linearGradient
-                    id="iLearnCapGradient"
-                    x1="18"
-                    y1="17"
-                    x2="46"
-                    y2="47"
-                    gradientUnits="userSpaceOnUse"
-                >
-                    <stop offset="0%" stopColor="#ffffff" />
-                    <stop offset="55%" stopColor="#f7f7f7" />
-                    <stop offset="100%" stopColor="#dadada" />
-                </linearGradient>
-            </defs>
-
-            <rect
-                x="0"
-                y="0"
-                width="64"
-                height="64"
-                rx="14.5"
-                fill="url(#iLearnBackgroundGradient)"
-            />
-
-            <rect
-                x="0"
-                y="0"
-                width="64"
-                height="64"
-                rx="14.5"
-                fill="url(#iLearnBackgroundGlow)"
-            />
-
-            <g>
-                {/* Lower bowl first */}
-                <path
-                    d="M20.1 33.55L31.15 39.8C31.7 40.12 32.3 40.12 32.85 39.8L43.9 33.55V40.05C43.9 43.05 38.55 46.2 32 46.2C25.45 46.2 20.1 43.05 20.1 40.05V33.55Z"
-                    fill="url(#iLearnCapGradient)"
-                />
-
-                {/* <--- changed: thicker cutout between the top board and lower bowl */}
-                <path
-                    d="M17.65 31.15L31 38.7C31.62 39.05 32.38 39.05 33 38.7L46.35 31.15L43.7 35.45L33.05 41.55C32.4 41.93 31.6 41.93 30.95 41.55L20.3 35.45Z"
-                    fill="url(#iLearnBackgroundGradient)"
-                />
-
-                <path
-                    d="M17.65 31.15L31 38.7C31.62 39.05 32.38 39.05 33 38.7L46.35 31.15L43.7 35.45L33.05 41.55C32.4 41.93 31.6 41.93 30.95 41.55L20.3 35.45Z"
-                    fill="url(#iLearnBackgroundGlow)"
-                />
-
-                {/* Top diamond / mortarboard */}
-                <path
-                    d="M12.2 30.2C11.1 29.58 11.1 28.02 12.2 27.4L31 16.9C31.62 16.56 32.38 16.56 33 16.9L51.8 27.4C52.9 28.02 52.9 29.58 51.8 30.2L33 40.75C32.38 41.1 31.62 41.1 31 40.75L12.2 30.2Z"
-                    fill="url(#iLearnCapGradient)"
-                />
-
-                {/* <--- changed: tassel groove/cutout line on top cap */}
-
-                {/* Tassel cord, redrawn over the cutout groove */}
-                <path
-                    d="M34.1 30.05L45.85 33.1C47.15 33.42 48.05 34.62 48.05 35.95V43.35"
-                    stroke="url(#iLearnCapGradient)"
-                    strokeWidth="2.75"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                />
-
-                {/* Center button on top */}
-                <circle
-                    cx="32"
-                    cy="30.45"
-                    r="2.7"
-                    fill="url(#iLearnCapGradient)"
-                />
-
-                {/* <--- changed: small background ring cutout around the button so it reads like a cap detail */}
-
-                <circle
-                    cx="48.05"
-                    cy="43.45"
-                    r="2.55"
-                    fill="url(#iLearnCapGradient)"
-                />
-
-                <path
-                    d="M47.05 46.05C47.25 45.3 48.85 45.3 49.05 46.05L50.25 52.05C50.38 52.75 49.85 53.4 49.15 53.4H46.95C46.25 53.4 45.72 52.75 45.85 52.05L47.05 46.05Z"
-                    fill="url(#iLearnCapGradient)"
-                />
-
-                {/* <--- changed: tassel lower cutout to separate the knot from the hanging piece */}
-            </g>
-        </svg>
-    );
-}
-
-
-function IPhoneSettingsIconSvg() { // <--- changed: restored clean PNG rendering
+function IPhoneILearnIconSvg() { // <--- changed: uses PNG from src/assets/ilearn-icon.png with fixed app square
     return (
         <div
             style={{
                 width: HOME_APP_SIZE,
                 height: HOME_APP_SIZE,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
                 overflow: "hidden",
-                borderRadius: SETTINGS_ICON_RADIUS,
+                borderRadius: ILEARN_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
                 pointerEvents: "none",
                 userSelect: "none",
+                lineHeight: 0,
             }}
         >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={ilearnIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: ILEARN_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
+            <img
+                src={ilearnIcon}
+                alt="iLearn"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: ILEARN_ICON_RADIUS,
+                    transform: `translate(-50%, -50%) translate(${ILEARN_ICON_X_OFFSET}px, ${ILEARN_ICON_Y_OFFSET}px) scale(${ILEARN_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+        </div>
+    );
+}
+
+
+function IPhoneSettingsIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
+    return (
+        <div
+            style={{
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
+                overflow: "hidden",
+                borderRadius: SETTINGS_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                pointerEvents: "none",
+                userSelect: "none",
+                lineHeight: 0,
+            }}
+        >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={settingsIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: SETTINGS_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
             <img
                 src={settingsIcon}
                 alt="Settings"
                 draggable={false}
                 style={{
-                    width: SETTINGS_ICON_SIZE,
-                    height: SETTINGS_ICON_SIZE,
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
                     display: "block",
                     objectFit: "cover",
                     borderRadius: SETTINGS_ICON_RADIUS,
-                    transform: `translate(${SETTINGS_ICON_X_OFFSET}px, ${SETTINGS_ICON_Y_OFFSET}px)`,
+                    transform: `translate(-50%, -50%) translate(${SETTINGS_ICON_X_OFFSET}px, ${SETTINGS_ICON_Y_OFFSET}px) scale(${SETTINGS_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
                     pointerEvents: "none",
                     userSelect: "none",
                 }}
@@ -1039,35 +1144,493 @@ function IPhoneSettingsIconSvg() { // <--- changed: restored clean PNG rendering
 
 
 
-function IPhoneDashlyIconSvg() { // <--- changed: restored clean PNG rendering
+function IPhoneDashlyIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
     return (
         <div
             style={{
                 width: HOME_APP_SIZE,
                 height: HOME_APP_SIZE,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
                 overflow: "hidden",
                 borderRadius: DASHLY_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
                 pointerEvents: "none",
                 userSelect: "none",
-                background: "transparent", // <--- changed: keeps Dashly white outline fix
-                border: "none", // <--- changed
-                boxShadow: "none", // <--- changed
+                lineHeight: 0,
             }}
         >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={dashlyIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: DASHLY_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
             <img
                 src={dashlyIcon}
                 alt="Dashly"
                 draggable={false}
                 style={{
-                    width: DASHLY_ICON_SIZE,
-                    height: DASHLY_ICON_SIZE,
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
                     display: "block",
                     objectFit: "cover",
                     borderRadius: DASHLY_ICON_RADIUS,
-                    transform: `translate(${DASHLY_ICON_X_OFFSET}px, ${DASHLY_ICON_Y_OFFSET}px)`,
+                    transform: `translate(-50%, -50%) translate(${DASHLY_ICON_X_OFFSET}px, ${DASHLY_ICON_Y_OFFSET}px) scale(${DASHLY_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+        </div>
+    );
+}
+
+
+
+function IPhoneAppHubIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
+    return (
+        <div
+            style={{
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
+                overflow: "hidden",
+                borderRadius: APP_HUB_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                pointerEvents: "none",
+                userSelect: "none",
+                lineHeight: 0,
+            }}
+        >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={appHubIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: APP_HUB_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
+            <img
+                src={appHubIcon}
+                alt="App Hub"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: APP_HUB_ICON_RADIUS,
+                    transform: `translate(-50%, -50%) translate(${APP_HUB_ICON_X_OFFSET}px, ${APP_HUB_ICON_Y_OFFSET}px) scale(${APP_HUB_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+        </div>
+    );
+}
+
+
+
+function IPhoneTitanGymIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
+    return (
+        <div
+            style={{
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
+                overflow: "hidden",
+                borderRadius: TITAN_GYM_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                pointerEvents: "none",
+                userSelect: "none",
+                lineHeight: 0,
+            }}
+        >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={titanGymIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: TITAN_GYM_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
+            <img
+                src={titanGymIcon}
+                alt="Titan Gym"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: TITAN_GYM_ICON_RADIUS,
+                    transform: `translate(-50%, -50%) translate(${TITAN_GYM_ICON_X_OFFSET}px, ${TITAN_GYM_ICON_Y_OFFSET}px) scale(${TITAN_GYM_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+        </div>
+    );
+}
+
+
+
+function IPhoneLocaraIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
+    return (
+        <div
+            style={{
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
+                overflow: "hidden",
+                borderRadius: LOCARA_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                pointerEvents: "none",
+                userSelect: "none",
+                lineHeight: 0,
+            }}
+        >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={locaraIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: LOCARA_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
+            <img
+                src={locaraIcon}
+                alt="Locara"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: LOCARA_ICON_RADIUS,
+                    transform: `translate(-50%, -50%) translate(${LOCARA_ICON_X_OFFSET}px, ${LOCARA_ICON_Y_OFFSET}px) scale(${LOCARA_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+        </div>
+    );
+}
+
+
+
+function IPhoneThrottleIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
+    return (
+        <div
+            style={{
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
+                overflow: "hidden",
+                borderRadius: THROTTLE_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                pointerEvents: "none",
+                userSelect: "none",
+                lineHeight: 0,
+            }}
+        >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={throttleIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: THROTTLE_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
+            <img
+                src={throttleIcon}
+                alt="Throttle"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: THROTTLE_ICON_RADIUS,
+                    transform: `translate(-50%, -50%) translate(${THROTTLE_ICON_X_OFFSET}px, ${THROTTLE_ICON_Y_OFFSET}px) scale(${THROTTLE_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+        </div>
+    );
+}
+
+
+
+function IPhoneVaulteIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
+    return (
+        <div
+            style={{
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
+                overflow: "hidden",
+                borderRadius: VAULTE_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                pointerEvents: "none",
+                userSelect: "none",
+                lineHeight: 0,
+            }}
+        >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={vaulteIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: VAULTE_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
+            <img
+                src={vaulteIcon}
+                alt="Vaulte"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: VAULTE_ICON_RADIUS,
+                    transform: `translate(-50%, -50%) translate(${VAULTE_ICON_X_OFFSET}px, ${VAULTE_ICON_Y_OFFSET}px) scale(${VAULTE_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+        </div>
+    );
+}
+
+
+
+function IPhoneVantaIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
+    return (
+        <div
+            style={{
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
+                overflow: "hidden",
+                borderRadius: VANTA_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                pointerEvents: "none",
+                userSelect: "none",
+                lineHeight: 0,
+            }}
+        >
+            {/* full-size base layer keeps the app square visually full-size */}
+            <img
+                src={vantaIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: VANTA_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            {/* tweak knob scales only this top PNG layer */}
+            <img
+                src={vantaIcon}
+                alt="Vanta"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: VANTA_ICON_RADIUS,
+                    transform: `translate(-50%, -50%) translate(${VANTA_ICON_X_OFFSET}px, ${VANTA_ICON_Y_OFFSET}px) scale(${VANTA_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
                     pointerEvents: "none",
                     userSelect: "none",
                 }}
@@ -3826,14 +4389,14 @@ export default function TradingGame() {
         },
         { name: "iTrade", bg: "linear-gradient(145deg, #ffffff, #d9dde7)" },
         { name: "Centra", bg: "transparent" }, // <--- changed
-        { name: "Locara", bg: "linear-gradient(145deg, #073d68, #031b31)" },
+        { name: "Locara", bg: "transparent" },
         { name: "Nest", bg: "transparent" }, // <--- changed
         { name: "Dashly", bg: "transparent" },
-        { name: "Titan Gym", bg: "linear-gradient(145deg, #ffffff, #f7f7f7)" },
-        { name: "Vaulté", bg: "linear-gradient(145deg, #22d3ee, #0096c7)" },
-        { name: "Throttle", bg: "radial-gradient(circle at center, #ffffff 0 18%, #34c759 19% 68%, #f2f2f2 69%)" },
+        { name: "Titan Gym", bg: "transparent" },
+        { name: "Vaulté", bg: "transparent" },
+        { name: "Throttle", bg: "transparent" },
         { name: "iLearn", bg: "transparent" }, // <--- changed
-        { name: "Vanta", bg: "linear-gradient(145deg, #151515, #050505)" },
+        { name: "Vanta", bg: "transparent" },
         { name: "Settings", bg: "transparent" }, // <--- changed
         { name: "App Hub", bg: "linear-gradient(145deg, #1f3d5d, #0b1c32)" },
     ];
@@ -3983,6 +4546,18 @@ export default function TradingGame() {
                                                                             <IPhoneNestIconSvg />
                                                                         ) : app.name === "Dashly" ? ( // <--- changed
                                                                             <IPhoneDashlyIconSvg />
+                                                                        ) : app.name === "App Hub" ? ( // <--- changed
+                                                                            <IPhoneAppHubIconSvg />
+                                                                        ) : app.name === "Titan Gym" ? ( // <--- changed
+                                                                            <IPhoneTitanGymIconSvg />
+                                                                        ) : app.name === "Locara" ? ( // <--- changed
+                                                                            <IPhoneLocaraIconSvg />
+                                                                        ) : app.name === "Throttle" ? ( // <--- changed
+                                                                            <IPhoneThrottleIconSvg />
+                                                                        ) : app.name === "Vaulte" || app.name === "Vault" || app.name === "Vaulté" ? ( // <--- changed
+                                                                            <IPhoneVaulteIconSvg />
+                                                                        ) : app.name === "Vanta" ? ( // <--- changed
+                                                                            <IPhoneVantaIconSvg />
                                                                         ) : (
                                                                             <span style={{ ...styles.phoneHomeAppGlyph, ...app.glyphStyle }}> {/* <--- changed */}
                                                                                 {app.name.slice(0, 1)}
