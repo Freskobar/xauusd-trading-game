@@ -18,6 +18,7 @@ import throttleIcon from "../assets/throttle-icon.png";
 import vaulteIcon from "../assets/vaulte-icon.png";
 import vantaIcon from "../assets/vanta-icon.png";
 import ilearnIcon from "../assets/ilearn-icon.png";
+import itradeIcon from "../assets/itrade-icon.png";
 
 type Candle = {
     open: number;
@@ -216,6 +217,14 @@ const ILEARN_ICON_SIZE = 62; // <--- changed: scales only the top PNG layer insi
 const ILEARN_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
 const ILEARN_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
 const ILEARN_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+
+// iTrade PNG icon tweak knobs // <--- changed
+const ITRADE_ICON_SIZE = 20; // <--- changed: scales only the top PNG layer inside the fixed app square
+const ITRADE_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const ITRADE_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
+const ITRADE_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
 
 
 
@@ -1630,6 +1639,76 @@ function IPhoneVantaIconSvg() { // <--- changed: fixed app square with PNG-size 
                     objectFit: "cover",
                     borderRadius: VANTA_ICON_RADIUS,
                     transform: `translate(-50%, -50%) translate(${VANTA_ICON_X_OFFSET}px, ${VANTA_ICON_Y_OFFSET}px) scale(${VANTA_ICON_SIZE / HOME_APP_SIZE})`,
+                    transformOrigin: "center center",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+        </div>
+    );
+}
+
+
+
+
+function IPhoneITradeIconSvg() { // <--- changed: uses PNG from src/assets/itrade-icon.png with fixed app square
+    return (
+        <div
+            style={{
+                width: HOME_APP_SIZE,
+                height: HOME_APP_SIZE,
+                minWidth: HOME_APP_SIZE,
+                minHeight: HOME_APP_SIZE,
+                maxWidth: HOME_APP_SIZE,
+                maxHeight: HOME_APP_SIZE,
+                flex: `0 0 ${HOME_APP_SIZE}px`,
+                flexShrink: 0,
+                flexGrow: 0,
+                aspectRatio: "1 / 1",
+                position: "relative",
+                display: "block",
+                overflow: "hidden",
+                borderRadius: ITRADE_ICON_RADIUS,
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                pointerEvents: "none",
+                userSelect: "none",
+                lineHeight: 0,
+            }}
+        >
+            <img
+                src={itradeIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: ITRADE_ICON_RADIUS,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+
+            <img
+                src={itradeIcon}
+                alt="iTrade"
+                draggable={false}
+                style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: HOME_APP_SIZE,
+                    height: HOME_APP_SIZE,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: ITRADE_ICON_RADIUS,
+                    transform: `translate(-50%, -50%) translate(${ITRADE_ICON_X_OFFSET}px, ${ITRADE_ICON_Y_OFFSET}px) scale(${ITRADE_ICON_SIZE / HOME_APP_SIZE})`,
                     transformOrigin: "center center",
                     pointerEvents: "none",
                     userSelect: "none",
@@ -4558,6 +4637,8 @@ export default function TradingGame() {
                                                                             <IPhoneVaulteIconSvg />
                                                                         ) : app.name === "Vanta" ? ( // <--- changed
                                                                             <IPhoneVantaIconSvg />
+                                                                        ) : app.name === "iTrade" ? (
+                                                                            <IPhoneITradeIconSvg />
                                                                         ) : (
                                                                             <span style={{ ...styles.phoneHomeAppGlyph, ...app.glyphStyle }}> {/* <--- changed */}
                                                                                 {app.name.slice(0, 1)}
