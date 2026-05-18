@@ -779,103 +779,97 @@ function IPhoneNestIconSvg() { // <--- changed
             shapeRendering="geometricPrecision"
         >
             <defs>
-                <linearGradient id="nestBgSimple" x1="8" y1="2" x2="56" y2="62" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#fff8ec" />
-                    <stop offset="52%" stopColor="#f3e5d0" />
-                    <stop offset="100%" stopColor="#e4cfb4" />
+                <linearGradient id="nestBgClean" x1="8" y1="4" x2="56" y2="62" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#fff7ea" />
+                    <stop offset="55%" stopColor="#ead9bf" />
+                    <stop offset="100%" stopColor="#d8bd99" />
                 </linearGradient>
 
-                <radialGradient id="nestBgSimpleGlow" cx="34%" cy="12%" r="84%">
-                    <stop offset="0%" stopColor="rgba(255,255,255,0.62)" />
-                    <stop offset="55%" stopColor="rgba(255,255,255,0.10)" />
+                <radialGradient id="nestBgCleanGlow" cx="34%" cy="12%" r="78%">
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.55)" />
+                    <stop offset="62%" stopColor="rgba(255,255,255,0.10)" />
                     <stop offset="100%" stopColor="rgba(255,255,255,0)" />
                 </radialGradient>
 
-                <linearGradient id="nestGreenSimple" x1="14" y1="14" x2="48" y2="60" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#294838" />
-                    <stop offset="58%" stopColor="#173629" />
-                    <stop offset="100%" stopColor="#0e2a20" />
+                <linearGradient id="nestGreenClean" x1="16" y1="14" x2="48" y2="55" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#2b503d" />
+                    <stop offset="58%" stopColor="#173728" />
+                    <stop offset="100%" stopColor="#0d271d" />
                 </linearGradient>
 
-                <linearGradient id="nestLeafSimple" x1="8" y1="34" x2="56" y2="47" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#6d8c64" />
-                    <stop offset="100%" stopColor="#4c6f4f" />
-                </linearGradient>
-
-                <linearGradient id="nestGoldSimple" x1="27" y1="40" x2="37" y2="49" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#dec47f" />
-                    <stop offset="100%" stopColor="#b78f45" />
+                <linearGradient id="nestDoorClean" x1="27" y1="40" x2="37" y2="51" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#ddc27c" />
+                    <stop offset="100%" stopColor="#b99148" />
                 </linearGradient>
             </defs>
 
-            <rect x="0" y="0" width="64" height="64" rx="14.5" fill="url(#nestBgSimple)" />
-            <rect x="0" y="0" width="64" height="64" rx="14.5" fill="url(#nestBgSimpleGlow)" />
+            <rect x="0" y="0" width="64" height="64" rx="14.5" fill="url(#nestBgClean)" />
+            <rect x="0" y="0" width="64" height="64" rx="14.5" fill="url(#nestBgCleanGlow)" />
 
-            {/* Clean simple house outline */}
-            <g stroke="url(#nestGreenSimple)" strokeLinecap="round" strokeLinejoin="round" fill="none">
+            {/* <--- changed: simplified clean Nest-style house mark */}
+            <g transform="translate(0 -6.4)">
                 <path
-                    d="M13.5 36.9L31.05 20.65C31.6 20.15 32.4 20.15 32.95 20.65L50.5 36.9"
-                    strokeWidth="4.8"
+                    d="M16.4 34.2L30.85 20.95C31.5 20.35 32.5 20.35 33.15 20.95L47.6 34.2"
+                    stroke="url(#nestGreenClean)"
+                    strokeWidth="2.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                 />
+
                 <path
-                    d="M20.3 34.7V40.4C20.3 47.2 25 51.6 32 51.6C39 51.6 43.7 47.2 43.7 40.4V34.7"
-                    strokeWidth="4.8"
+                    d="M21.2 33.15V40.05C21.2 47.05 25.45 51.15 32 51.15C38.55 51.15 42.8 47.05 42.8 40.05V33.15"
+                    stroke="url(#nestGreenClean)"
+                    strokeWidth="2.45"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+
+                <rect
+                    x="43.2"
+                    y="23.2"
+                    width="5.9"
+                    height="10.2"
+                    rx="1"
+                    fill="url(#nestGreenClean)"
+                />
+
+                {/* <--- changed: simple inner cutout */}
+                <path
+                    d="M24.2 35.35L31.15 28.95C31.65 28.48 32.35 28.48 32.85 28.95L39.8 35.35V40.05C39.8 44.95 36.75 47.85 32 47.85C27.25 47.85 24.2 44.95 24.2 40.05V35.35Z"
+                    fill="url(#nestBgClean)"
+                />
+
+                {/* <--- changed: cleaner four-pane window */}
+                <g fill="url(#nestGreenClean)">
+                    <rect x="28.55" y="34" width="3.4" height="3.4" rx="0.45" />
+                    <rect x="33.05" y="34" width="3.4" height="3.4" rx="0.45" />
+                    <rect x="28.55" y="38.5" width="3.4" height="3.4" rx="0.45" />
+                    <rect x="33.05" y="38.5" width="3.4" height="3.4" rx="0.45" />
+                </g>
+
+                <path
+                    d="M27.55 47.65C28.1 44.55 29.75 42.65 32 42.65C34.25 42.65 35.9 44.55 36.45 47.65C35.25 48.25 33.75 48.58 32 48.58C30.25 48.58 28.75 48.25 27.55 47.65Z"
+                    fill="url(#nestDoorClean)"
+                />
+
+                {/* <--- changed: one clean nest curve instead of busy branches/leaves */}
+                <path
+                    d="M17.2 40.15C20.55 47.95 26.65 51.25 32 51.25C37.35 51.25 43.45 47.95 46.8 40.15"
+                    stroke="url(#nestGreenClean)"
+                    strokeWidth="1.55"
+                    strokeLinecap="round"
+                    fill="none"
                 />
             </g>
 
-            {/* Chimney */}
-            <rect
-                x="44.25"
-                y="22.1"
-                width="6.25"
-                height="13.45"
-                rx="1.05"
-                fill="url(#nestGreenSimple)"
-            />
-
-            {/* Cream interior cover to keep the center clean/cut out */}
-            <path
-                d="M23 35.7L31.2 28.05C31.65 27.62 32.35 27.62 32.8 28.05L41 35.7V40.1C41 45.1 37.35 48.45 32 48.45C26.65 48.45 23 45.1 23 40.1V35.7Z"
-                fill="url(#nestBgSimple)"
-            />
-
-            {/* Window */}
-            <g fill="url(#nestGreenSimple)">
-                <rect x="29" y="33.4" width="3.75" height="3.75" rx="0.55" />
-                <rect x="34.25" y="33.4" width="3.75" height="3.75" rx="0.55" />
-                <rect x="29" y="38.6" width="3.75" height="3.75" rx="0.55" />
-                <rect x="34.25" y="38.6" width="3.75" height="3.75" rx="0.55" />
-            </g>
-
-            {/* Gold door */}
-            <path
-                d="M26.9 48.1C27.45 44.6 29.45 42.3 32 42.3C34.55 42.3 36.55 44.6 37.1 48.1C35.75 48.85 34 49.28 32 49.28C30 49.28 28.25 48.85 26.9 48.1Z"
-                fill="url(#nestGoldSimple)"
-            />
-
-            {/* Simple nest branches */}
-            <g stroke="url(#nestGreenSimple)" strokeLinecap="round" fill="none">
-                <path d="M14.25 39.2C16.3 49.15 24.4 53.6 32 53.6C39.6 53.6 47.7 49.15 49.75 39.2" strokeWidth="2.25" />
-                <path d="M12.9 43.25C18.3 51.85 25.7 55.25 32 55.25C38.3 55.25 45.7 51.85 51.1 43.25" strokeWidth="2.45" />
-                <path d="M15.4 46.95C21.35 53.45 27.65 56.25 32 56.25C36.35 56.25 42.65 53.45 48.6 46.95" strokeWidth="2.55" />
-            </g>
-
-            {/* Simple leaves */}
-            <g fill="url(#nestLeafSimple)">
-                <path d="M11.6 38.75C9.45 37.95 8.45 36.08 8.35 33.9C10.6 34.15 12.42 35.42 13.12 37.35C13.35 38 12.3 39 11.6 38.75Z" />
-                <path d="M52.4 38.75C54.55 37.95 55.55 36.08 55.65 33.9C53.4 34.15 51.58 35.42 50.88 37.35C50.65 38 51.7 39 52.4 38.75Z" />
-                <path d="M52.6 45.65C54.82 45.15 56.12 43.52 56.45 41.32C54.2 41.25 52.25 42.35 51.18 44.22C50.85 44.82 51.85 45.82 52.6 45.65Z" />
-            </g>
-
-            {/* Wordmark */}
             <text
                 x="32"
-                y="61.2"
+                y="58.8"
                 textAnchor="middle"
-                fontSize="14.1"
-                fontWeight="600"
-                letterSpacing="2.15"
-                fill="url(#nestGreenSimple)"
+                fontSize="13.6"
+                fontWeight="700"
+                letterSpacing="2"
+                fill="url(#nestGreenClean)"
                 fontFamily="Arial Rounded MT Bold, Arial, Helvetica, sans-serif"
             >
                 nest
@@ -996,7 +990,7 @@ function IPhoneCentraIconSvg() { // <--- changed
             <g aria-label="BANK wordmark">
                 {/* <--- changed: redrawn BANK dividers as separate short paths with clear gaps */}
                 <path
-                    d="M13.8 55.55H17.0"
+                    d="M13.8 58.0H17.0"
                     stroke="url(#centraWhiteGradient)"
                     strokeWidth="0.62"
                     strokeLinecap="round"
@@ -1004,7 +998,7 @@ function IPhoneCentraIconSvg() { // <--- changed
 
                 <text
                     x="32"
-                    y="57.15"
+                    y="59.55"
                     textAnchor="middle"
                     fontSize="5.15" // <--- changed: bigger Bank text for readability
                     fontWeight="800"
@@ -1016,7 +1010,7 @@ function IPhoneCentraIconSvg() { // <--- changed
                 </text>
 
                 <path
-                    d="M47.0 55.55H50.2"
+                    d="M47.0 58.0H50.2"
                     stroke="url(#centraWhiteGradient)"
                     strokeWidth="0.62"
                     strokeLinecap="round"
