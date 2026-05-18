@@ -869,10 +869,57 @@ function IPhoneMusicIconSvg() { // <--- changed
 }
 
 
-function formatDialedPhoneNumber(value: string) { // <--- changed
-    const digits = value.replace(/\D/g, "").slice(0, 10); // <--- changed
 
-    if (digits.length === 0) return ""; // <--- changed
+const DIAL_PAD_SOUND_PATHS: Record<string, string> = { // <--- changed
+    "1": "/sounds/1.m4a", // <--- changed
+    "2": "/sounds/2.m4a", // <--- changed
+    "3": "/sounds/3.m4a", // <--- changed
+    "4": "/sounds/4.m4a", // <--- changed
+    "5": "/sounds/5.m4a", // <--- changed
+    "6": "/sounds/6.m4a", // <--- changed
+    "7": "/sounds/7.m4a", // <--- changed
+    "8": "/sounds/8.m4a", // <--- changed
+    "9": "/sounds/9.m4a", // <--- changed
+    "0": "/sounds/0.m4a", // <--- changed
+    "*": "/sounds/asterik.m4a", // <--- changed: filename in public/sounds
+    "#": "/sounds/pound.m4a", // <--- changed: filename in public/sounds
+};
+
+function playDialPadSound(value: string) { // <--- changed
+    const soundPath = DIAL_PAD_SOUND_PATHS[value]; // <--- changed
+    if (!soundPath) return; // <--- changed
+
+    const sound = new Audio(soundPath); // <--- changed: fresh audio lets repeated same-key taps play immediately
+    sound.preload = "auto"; // <--- changed
+    sound.currentTime = 0; // <--- changed
+    sound.volume = 0.45; // <--- changed
+    sound.play().catch(() => { // <--- changed
+        // Browser may block audio until direct user interaction is allowed. // <--- changed
+    }); // <--- changed
+}
+
+function formatDialedPhoneNumber(value: string) { // <--- changed
+    if (value === "Calling...") return value; // <--- changed
+
+    const dialChars = value.replace(/[^0-9*#]/g, "").slice(0, 10); // <--- changed: allows *, #, and digits
+
+    if (dialChars.length === 0) return ""; // <--- changed
+
+    const startsWithSpecialCode = dialChars.startsWith("*") || dialChars.startsWith("#"); // <--- changed
+
+    if (startsWithSpecialCode) { // <--- changed: iPhone-style special-code dialing, example *99 999-9999
+        const prefix = dialChars.slice(0, 3); // <--- changed: *99 or #99
+        const rest = dialChars.slice(3); // <--- changed
+
+        if (dialChars.length <= 3) return dialChars; // <--- changed: example *99
+        if (rest.length <= 3) return `${prefix} ${rest}`; // <--- changed: example *99 999
+
+        return `${prefix} ${rest.slice(0, 3)}-${rest.slice(3, 7)}`; // <--- changed: example *99 999-9999
+    }
+
+    const digits = dialChars.replace(/\D/g, "").slice(0, 10); // <--- changed
+
+    if (digits.length === 0) return dialChars; // <--- changed: fallback for non-leading special symbols
     if (digits.length <= 3) return digits; // <--- changed: iPhone-style early dialing stage, example 999
     if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`; // <--- changed: iPhone-style middle stage, example 999-9999
 
@@ -892,6 +939,42 @@ function IPhonePhoneApp({ // <--- changed
     onDelete: () => void;
     onCall: () => void;
 }) {
+    const [pressedDialKey, setPressedDialKey] = useState<string | null>(null); // <--- changed: tracks the exact keypad button being pressed
+    const pressedDialKeyTimeoutRef = useRef<number | null>(null); // <--- changed: keeps every press visible briefly
+
+    function pressDialKey(value: string) { // <--- changed: starts the light-gray press immediately on first touch/click
+        playDialPadSound(value); // <--- changed: plays matching public/sounds keypad .m4a immediately
+
+        if (pressedDialKeyTimeoutRef.current !== null) { // <--- changed
+            window.clearTimeout(pressedDialKeyTimeoutRef.current); // <--- changed
+            pressedDialKeyTimeoutRef.current = null; // <--- changed
+        } // <--- changed
+
+        setPressedDialKey(null); // <--- changed: force same-key repeat taps to visibly restart
+        window.requestAnimationFrame(() => { // <--- changed
+            setPressedDialKey(value); // <--- changed
+        }); // <--- changed
+    }
+
+    function releaseDialKey(value: string) { // <--- changed: returns the key to normal gray after every press, even repeated same-key taps
+        if (pressedDialKeyTimeoutRef.current !== null) { // <--- changed
+            window.clearTimeout(pressedDialKeyTimeoutRef.current); // <--- changed
+        } // <--- changed
+
+        pressedDialKeyTimeoutRef.current = window.setTimeout(() => { // <--- changed
+            setPressedDialKey((currentValue) => currentValue === value ? null : currentValue); // <--- changed
+            pressedDialKeyTimeoutRef.current = null; // <--- changed
+        }, 55); // <--- changed: shorter reset so the same key can flash again on the next tap
+    }
+
+    useEffect(() => { // <--- changed: cleans up the keypad press timer if the fake Phone app unmounts
+        return () => { // <--- changed
+            if (pressedDialKeyTimeoutRef.current !== null) { // <--- changed
+                window.clearTimeout(pressedDialKeyTimeoutRef.current); // <--- changed
+            } // <--- changed
+        }; // <--- changed
+    }, []); // <--- changed
+
     const keypadRows = [
         [
             { main: "1", sub: "" },
@@ -938,7 +1021,16 @@ function IPhonePhoneApp({ // <--- changed
                     <button
                         key={`${key.main}-${key.sub}`}
                         type="button"
-                        style={styles.phoneDialerKey}
+                        style={{
+                            ...styles.phoneDialerKey,
+                            ...(pressedDialKey === key.main ? styles.phoneDialerKeyPressed : {}), // <--- changed: light gray only while actively pressed
+                        }}
+                        onPointerDown={() => { // <--- changed: press feedback starts immediately on every click/tap
+                            pressDialKey(key.main); // <--- changed
+                        }} // <--- changed
+                        onPointerUp={() => releaseDialKey(key.main)} // <--- changed
+                        onPointerLeave={() => releaseDialKey(key.main)} // <--- changed
+                        onPointerCancel={() => releaseDialKey(key.main)} // <--- changed
                         onClick={() => onDigit(key.main)}
                     >
                         <span
@@ -985,11 +1077,10 @@ function IPhonePhoneApp({ // <--- changed
 
             <div style={styles.phoneDialerTabs}>
                 {[
-                    ["☆", "Favorites"],
-                    ["↻", "Recents"],
-                    ["◉", "Contacts"],
-                    ["●", "Keypad"],
-                    ["▣", "Voicemail"],
+                    ["↻", "Calls"], // <--- changed
+                    ["◉", "Contacts"], // <--- changed
+                    ["●", "Keypad"], // <--- changed
+                    ["⌕", "Search"], // <--- changed
                 ].map(([icon, label]) => (
                     <div
                         key={label}
@@ -2274,17 +2365,17 @@ export default function TradingGame() {
     }
 
     function handlePhoneDigit(value: string) { // <--- changed
-        if (!/^[0-9]$/.test(value)) return; // <--- changed: phone number display only accepts digits
+        if (!/^[0-9*#]$/.test(value)) return; // <--- changed: accepts digits plus * and #
 
         setDialedPhoneNumber((prev) => {
-            const digitsOnly = prev.replace(/\D/g, "").slice(0, 10); // <--- changed
-            if (digitsOnly.length >= 10) return digitsOnly; // <--- changed: hard cap at (123)-456-7890
-            return `${digitsOnly}${value}`.slice(0, 10); // <--- changed
+            const dialChars = prev.replace(/[^0-9*#]/g, "").slice(0, 10); // <--- changed
+            if (dialChars.length >= 10) return dialChars; // <--- changed: hard cap at 10 dial characters
+            return `${dialChars}${value}`.slice(0, 10); // <--- changed
         });
     }
 
     function handlePhoneDelete() { // <--- changed
-        setDialedPhoneNumber((prev) => prev.replace(/\D/g, "").slice(0, 10).slice(0, -1)); // <--- changed
+        setDialedPhoneNumber((prev) => prev.replace(/[^0-9*#]/g, "").slice(0, 10).slice(0, -1)); // <--- changed
     }
 
     function handleFakeCall() { // <--- changed
@@ -5658,7 +5749,7 @@ const styles: Record<string, CSSProperties> = {
     },
     timeframeToggleGrid: {
         display: "grid", // <--- changed
-        gridTemplateColumns: "repeat(5, 1fr)", // <--- changed
+        gridTemplateColumns: "repeat(4, 1fr)", // <--- changed: four Phone app tabs only
         gap: 7, // <--- changed
     },
     timeframeToggle: {
@@ -6109,6 +6200,10 @@ const styles: Record<string, CSSProperties> = {
         cursor: "pointer", // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
         boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)", // <--- changed
+        transition: "background 80ms ease", // <--- changed: quick iPhone-like press feedback
+    },
+    phoneDialerKeyPressed: { // <--- changed
+        background: "#5f5f63", // <--- changed: light gray only while each key is actively pressed/flashed
     },
     phoneDialerKeyMain: { // <--- changed
         fontSize: 31, // <--- changed
@@ -6157,7 +6252,7 @@ const styles: Record<string, CSSProperties> = {
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
         cursor: "pointer", // <--- changed
-        transform: "rotate(98deg)", // <--- changed
+        transform: "none", // <--- changed: keeps the green call button handset facing the same direction as the iPhone Phone app icon
         overflow: "hidden", // <--- changed
     },
     phoneDialerDelete: { // <--- changed
@@ -6180,7 +6275,7 @@ const styles: Record<string, CSSProperties> = {
         borderTop: "1px solid rgba(255,255,255,0.12)", // <--- changed
         background: "rgba(14,14,14,0.96)", // <--- changed
         display: "grid", // <--- changed
-        gridTemplateColumns: "repeat(5, 1fr)", // <--- changed
+        gridTemplateColumns: "repeat(4, 1fr)", // <--- changed: four Phone app tabs only
         alignItems: "start", // <--- changed: prevents center recalculation after slide-in
         paddingTop: 8, // <--- changed: fixed final tab-row start position
         paddingBottom: 20, // <--- changed: keeps gray extension below the tab row
