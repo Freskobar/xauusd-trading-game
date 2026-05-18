@@ -677,8 +677,10 @@ function PhoneBatterySvg({ percent }: { percent: number | null }) {
 
             <text
                 x="13.5"
-                y="13.72"
+                y="9.15"
                 textAnchor="middle"
+                dominantBaseline="middle" // <--- changed: keeps battery percentage vertically centered on mobile Safari
+                alignmentBaseline="middle" // <--- changed: extra Safari/iOS alignment help
                 fontSize="10.9" // <--- changed: fixed size so the whole phone scales as one object
                 fontWeight="900"
                 fill="#050505"
@@ -952,8 +954,8 @@ function IPhoneCentraIconSvg() { // <--- changed
                 fill="url(#centraBackgroundGlow)"
             />
 
-            {/* <--- changed: centered logo group, drawn flatter and closer to the reference */}
-            <g transform="translate(0 -8.6)" fill="url(#centraWhiteGradient)">
+            {/* <--- changed: centered logo group, slightly smaller so the Centra Bank text has more room */}
+            <g transform="translate(0 -8.2) translate(32 35) scale(0.88) translate(-32 -35)" fill="url(#centraWhiteGradient)">
                 {/* Bank roof */}
                 <path
                     d="M18.25 24.9L31.15 18.15C31.68 17.88 32.32 17.88 32.85 18.15L45.75 24.9C46.28 25.18 46.6 25.72 46.6 26.32V28.55C46.6 29.18 45.92 29.58 45.38 29.25L32 22.22L18.62 29.25C18.08 29.58 17.4 29.18 17.4 28.55V26.32C17.4 25.72 17.72 25.18 18.25 24.9Z"
@@ -980,11 +982,11 @@ function IPhoneCentraIconSvg() { // <--- changed
             {/* <--- changed: text block centered under bank mark */}
             <text
                 x="32"
-                y="51.4"
+                y="52.0"
                 textAnchor="middle"
-                fontSize="7.2"
-                fontWeight="800"
-                letterSpacing="1.65"
+                fontSize="8.35" // <--- changed: bigger Centra text for readability
+                fontWeight="900"
+                letterSpacing="1.25" // <--- changed: tighter spacing makes it easier to read
                 fill="url(#centraWhiteGradient)"
                 fontFamily="Arial, Helvetica, sans-serif"
             >
@@ -992,10 +994,10 @@ function IPhoneCentraIconSvg() { // <--- changed
             </text>
 
             <line
-                x1="16.8"
-                y1="55.0"
-                x2="21.7"
-                y2="55.0"
+                x1="15.8"
+                y1="55.55"
+                x2="21.4"
+                y2="55.55"
                 stroke="url(#centraWhiteGradient)"
                 strokeWidth="0.62"
                 strokeLinecap="round"
@@ -1003,11 +1005,11 @@ function IPhoneCentraIconSvg() { // <--- changed
 
             <text
                 x="32"
-                y="56.45"
+                y="57.15"
                 textAnchor="middle"
-                fontSize="4.45"
-                fontWeight="700"
-                letterSpacing="2.9"
+                fontSize="5.15" // <--- changed: bigger Bank text for readability
+                fontWeight="800"
+                letterSpacing="2.15" // <--- changed: tighter spacing makes it easier to read
                 fill="url(#centraWhiteGradient)"
                 fontFamily="Arial, Helvetica, sans-serif"
             >
@@ -1015,9 +1017,9 @@ function IPhoneCentraIconSvg() { // <--- changed
             </text>
 
             <line
-                x1="42.3"
-                y1="55.0" x2="47.2"
-                y2="55.0" stroke="url(#centraWhiteGradient)"
+                x1="43.8"
+                y1="55.55" x2="48.2"
+                y2="55.55" stroke="url(#centraWhiteGradient)"
                 strokeWidth="0.62"
                 strokeLinecap="round"
             />
