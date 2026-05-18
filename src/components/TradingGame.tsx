@@ -953,9 +953,9 @@ function PhoneBackspaceIcon() { // <--- changed: custom SVG delete icon renders 
                 strokeLinejoin="round" // <--- changed
             />
             <path
-                d="M15.45 7.75L20.7 13M20.7 7.75L15.45 13"
-                stroke="#ffffff" // <--- changed: white X in center
-                strokeWidth="2.15"
+                d="M16.05 8.45L20.1 12.5M20.1 8.45L16.05 12.5"
+                stroke="#ffffff" // <--- changed: slightly smaller centered white X
+                strokeWidth="1.95" // <--- changed
                 strokeLinecap="round"
             />
         </svg>
@@ -1069,7 +1069,7 @@ function PhoneCallsTabIcon() { // <--- changed: restored perfected clean clock/h
     );
 }
 
-function PhoneSearchTabIcon() { // <--- changed: locked magnifier icon size/gap to match Calls/Contacts/Keypad
+function PhoneSearchTabIcon() { // <--- changed: clean magnifier with a small gap so the handle never overlaps the circle
     return (
         <svg
             width="26"
@@ -1084,20 +1084,23 @@ function PhoneSearchTabIcon() { // <--- changed: locked magnifier icon size/gap 
                 width: 26,
                 height: 26,
                 flexShrink: 0,
+                overflow: "visible", // <--- changed
             }}
         >
             <circle
-                cx="11.3"
-                cy="11.3"
-                r="5.85"
+                cx="10.45"
+                cy="10.45"
+                r="5.45"
                 stroke="currentColor"
-                strokeWidth="2.3"
+                strokeWidth="2"
+                fill="none"
             />
             <path
-                d="M15.85 15.85L20.8 20.8"
+                d="M16.1 16.1L20.85 20.85"
                 stroke="currentColor"
-                strokeWidth="2.3"
+                strokeWidth="2"
                 strokeLinecap="round"
+                strokeLinejoin="round"
             />
         </svg>
     );
@@ -6508,10 +6511,11 @@ const styles: Record<string, CSSProperties> = {
     },
     phoneHomeBarButton: { // <--- changed
         position: "absolute", // <--- changed
-        left: 0, // <--- changed
-        right: 0, // <--- changed
-        bottom: 0, // <--- changed
-        height: 34, // <--- changed
+        left: "50%", // <--- changed: hitbox is centered on the visible home bar only
+        bottom: PHONE_HOME_BAR_BOTTOM_OFFSET - 10, // <--- changed: small vertical tap area around the actual home bar
+        width: 120, // <--- changed: clickable area no longer spans the full phone width
+        height: 24, // <--- changed: clickable area stays close to the visible home bar
+        transform: "translateX(-50%)", // <--- changed
         zIndex: 12, // <--- changed
         border: "none", // <--- changed
         background: "transparent", // <--- changed
