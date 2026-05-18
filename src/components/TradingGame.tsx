@@ -7,6 +7,8 @@ import {
     type MouseEvent as ReactMouseEvent,
     type TouchEvent as ReactTouchEvent,
 } from "react";
+import centraBankIcon from "../assets/centra-bank-icon.png";
+import nestIcon from "../assets/nest-icon.png";
 
 type Candle = {
     open: number;
@@ -130,6 +132,19 @@ const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
 const HOME_DOCK_VERTICAL_OFFSET = 5; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
 const PHONE_HOME_BAR_BOTTOM_OFFSET = 8; // <--- changed: moves home bar down/up without pushing dock outside phone
+
+
+// Centra Bank PNG icon tweak knobs // <--- changed
+const CENTRA_ICON_SIZE = 70; // <--- changed: overall PNG size inside the app square
+const CENTRA_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const CENTRA_ICON_Y_OFFSET = 2; // <--- changed: move image up/down inside the app square
+const CENTRA_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+// Nest PNG icon tweak knobs // <--- changed
+const NEST_ICON_SIZE = 70; // <--- changed: overall PNG size inside the app square
+const NEST_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const NEST_ICON_Y_OFFSET = 2; // <--- changed: move image up/down inside the app square
+const NEST_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
 
 const PHONE_VERTICAL_SHIFT = 150; // <--- changed: moves whole phone panel further down
 const PHONE_BASE_WIDTH = 340; // <--- changed: PC-perfect full phone object width
@@ -766,254 +781,72 @@ function IPhoneMusicIconSvg() { // <--- changed
 
 
 
-function IPhoneNestIconSvg() { // <--- changed
+function IPhoneNestIconSvg() { // <--- changed: uses PNG from src/assets/nest-icon.png
     return (
-        <svg
-            width="56"
-            height="56"
-            viewBox="0 0 64 64"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="Nest"
-            style={{ display: "block" }}
-            shapeRendering="geometricPrecision"
+        <div
+            style={{
+                width: `${HOME_APP_SIZE}px`,
+                height: `${HOME_APP_SIZE}px`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                borderRadius: `${NEST_ICON_RADIUS}px`,
+                pointerEvents: "none",
+                userSelect: "none",
+            }}
         >
-            <defs>
-                <linearGradient id="nestBgClean" x1="8" y1="4" x2="56" y2="62" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#fff7ea" />
-                    <stop offset="55%" stopColor="#ead9bf" />
-                    <stop offset="100%" stopColor="#d8bd99" />
-                </linearGradient>
-
-                <radialGradient id="nestBgCleanGlow" cx="34%" cy="12%" r="78%">
-                    <stop offset="0%" stopColor="rgba(255,255,255,0.55)" />
-                    <stop offset="62%" stopColor="rgba(255,255,255,0.10)" />
-                    <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-                </radialGradient>
-
-                <linearGradient id="nestGreenClean" x1="16" y1="14" x2="48" y2="55" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#2b503d" />
-                    <stop offset="58%" stopColor="#173728" />
-                    <stop offset="100%" stopColor="#0d271d" />
-                </linearGradient>
-
-                <linearGradient id="nestDoorClean" x1="27" y1="40" x2="37" y2="51" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#ddc27c" />
-                    <stop offset="100%" stopColor="#b99148" />
-                </linearGradient>
-            </defs>
-
-            <rect x="0" y="0" width="64" height="64" rx="14.5" fill="url(#nestBgClean)" />
-            <rect x="0" y="0" width="64" height="64" rx="14.5" fill="url(#nestBgCleanGlow)" />
-
-            {/* <--- changed: simplified clean Nest-style house mark */}
-            <g transform="translate(0 -6.4)">
-                <path
-                    d="M16.4 34.2L30.85 20.95C31.5 20.35 32.5 20.35 33.15 20.95L47.6 34.2"
-                    stroke="url(#nestGreenClean)"
-                    strokeWidth="2.45"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                />
-
-                <path
-                    d="M21.2 33.15V40.05C21.2 47.05 25.45 51.15 32 51.15C38.55 51.15 42.8 47.05 42.8 40.05V33.15"
-                    stroke="url(#nestGreenClean)"
-                    strokeWidth="2.45"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                />
-
-                {/* <--- changed: cleaner chimney, tucked into the roof so it reads connected */}
-                <path
-                    d="M43.05 22.45H48C48.5 22.45 48.9 22.85 48.9 23.35V32L43.05 26.25V22.45Z"
-                    fill="url(#nestGreenClean)"
-                />
-
-                {/* <--- changed: simple inner cutout */}
-                <path
-                    d="M24.2 35.35L31.15 28.95C31.65 28.48 32.35 28.48 32.85 28.95L39.8 35.35V40.05C39.8 44.95 36.75 47.85 32 47.85C27.25 47.85 24.2 44.95 24.2 40.05V35.35Z"
-                    fill="url(#nestBgClean)"
-                />
-
-                {/* <--- changed: cleaner four-pane window */}
-                <g fill="url(#nestGreenClean)">
-                    <rect x="28.55" y="32.25" width="3.4" height="3.4" rx="0.45" />
-                    <rect x="33.05" y="32.25" width="3.4" height="3.4" rx="0.45" />
-                    <rect x="28.55" y="36.75" width="3.4" height="3.4" rx="0.45" />
-                    <rect x="33.05" y="36.75" width="3.4" height="3.4" rx="0.45" />
-                </g>
-
-                <path
-                    d="M27.55 47.65C28.1 44.55 29.75 42.65 32 42.65C34.25 42.65 35.9 44.55 36.45 47.65C35.25 48.25 33.75 48.58 32 48.58C30.25 48.58 28.75 48.25 27.55 47.65Z"
-                    fill="url(#nestDoorClean)"
-                />
-
-                {/* <--- changed: one clean nest curve instead of busy branches/leaves */}
-                <path
-                    d="M17.2 40.15C20.55 47.95 26.65 51.25 32 51.25C37.35 51.25 43.45 47.95 46.8 40.15"
-                    stroke="url(#nestGreenClean)"
-                    strokeWidth="1.55"
-                    strokeLinecap="round"
-                    fill="none"
-                />
-            </g>
-
-            <text
-                x="32"
-                y="58.8"
-                textAnchor="middle"
-                fontSize="13.6"
-                fontWeight="500"
-                letterSpacing="2.15"
-                fill="url(#nestGreenClean)"
-                fontFamily="Arial Rounded MT Bold, Arial, Helvetica, sans-serif"
-            >
-                nest
-            </text>
-        </svg>
+            <img
+                src={nestIcon}
+                alt="Nest"
+                draggable={false}
+                style={{
+                    width: `${NEST_ICON_SIZE}px`,
+                    height: `${NEST_ICON_SIZE}px`,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: `${NEST_ICON_RADIUS}px`,
+                    transform: `translate(${NEST_ICON_X_OFFSET}px, ${NEST_ICON_Y_OFFSET}px)`,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+        </div>
     );
 }
 
 
-function IPhoneCentraIconSvg() { // <--- changed
+function IPhoneCentraIconSvg() { // <--- changed: uses PNG from src/assets/centra-bank-icon.png
     return (
-        <svg
-            width="56"
-            height="56"
-            viewBox="0 0 64 64"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="Centra"
-            style={{ display: "block" }}
-            shapeRendering="geometricPrecision"
+        <div
+            style={{
+                width: `${HOME_APP_SIZE}px`,
+                height: `${HOME_APP_SIZE}px`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                borderRadius: `${CENTRA_ICON_RADIUS}px`,
+                pointerEvents: "none",
+                userSelect: "none",
+            }}
         >
-            <defs>
-                <linearGradient
-                    id="centraBackgroundGradient"
-                    x1="9"
-                    y1="3"
-                    x2="55"
-                    y2="61"
-                    gradientUnits="userSpaceOnUse"
-                >
-                    <stop offset="0%" stopColor="#153f78" />
-                    <stop offset="50%" stopColor="#082f63" />
-                    <stop offset="100%" stopColor="#041d42" />
-                </linearGradient>
-
-                <radialGradient
-                    id="centraBackgroundGlow"
-                    cx="36%"
-                    cy="12%"
-                    r="82%"
-                >
-                    <stop offset="0%" stopColor="rgba(255,255,255,0.10)" />
-                    <stop offset="48%" stopColor="rgba(255,255,255,0.025)" />
-                    <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-                </radialGradient>
-
-                <linearGradient
-                    id="centraWhiteGradient"
-                    x1="18"
-                    y1="12"
-                    x2="46"
-                    y2="58"
-                    gradientUnits="userSpaceOnUse"
-                >
-                    <stop offset="0%" stopColor="#ffffff" />
-                    <stop offset="58%" stopColor="#f3f3f3" />
-                    <stop offset="100%" stopColor="#d6d6d6" />
-                </linearGradient>
-            </defs>
-
-            <rect
-                x="0"
-                y="0"
-                width="64"
-                height="64"
-                rx="14.5"
-                fill="url(#centraBackgroundGradient)"
+            <img
+                src={centraBankIcon}
+                alt="Centra Bank"
+                draggable={false}
+                style={{
+                    width: `${CENTRA_ICON_SIZE}px`,
+                    height: `${CENTRA_ICON_SIZE}px`,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: `${CENTRA_ICON_RADIUS}px`,
+                    transform: `translate(${CENTRA_ICON_X_OFFSET}px, ${CENTRA_ICON_Y_OFFSET}px)`,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
             />
-
-            <rect
-                x="0"
-                y="0"
-                width="64"
-                height="64"
-                rx="14.5"
-                fill="url(#centraBackgroundGlow)"
-            />
-
-            {/* <--- changed: centered logo group, slightly smaller so the Centra Bank text has more room */}
-            <g transform="translate(0 -8.2) translate(32 35) scale(0.88) translate(-32 -35)" fill="url(#centraWhiteGradient)">
-                {/* Bank roof */}
-                <path
-                    d="M18.25 24.9L31.15 18.15C31.68 17.88 32.32 17.88 32.85 18.15L45.75 24.9C46.28 25.18 46.6 25.72 46.6 26.32V28.55C46.6 29.18 45.92 29.58 45.38 29.25L32 22.22L18.62 29.25C18.08 29.58 17.4 29.18 17.4 28.55V26.32C17.4 25.72 17.72 25.18 18.25 24.9Z"
-                />
-
-                {/* Column caps */}
-                <rect x="20.25" y="31.25" width="7.85" height="2.05" rx="0.55" />
-                <rect x="28.08" y="31.25" width="7.84" height="2.05" rx="0.55" />
-                <rect x="35.9" y="31.25" width="7.85" height="2.05" rx="0.55" />
-
-                {/* Columns */}
-                <rect x="21.55" y="33.15" width="5.25" height="10.2" rx="0.25" />
-                <rect x="29.38" y="33.15" width="5.24" height="10.2" rx="0.25" />
-                <rect x="37.2" y="33.15" width="5.25" height="10.2" rx="0.25" />
-
-                {/* Bottom caps and base */}
-                <rect x="20.05" y="42.85" width="7.95" height="2.1" rx="0.35" />
-                <rect x="28.03" y="42.85" width="7.94" height="2.1" rx="0.35" />
-                <rect x="36" y="42.85" width="7.95" height="2.1" rx="0.35" />
-                <rect x="18.75" y="46.1" width="26.5" height="2.05" rx="0.45" />
-                <rect x="18.15" y="49.05" width="27.7" height="1.8" rx="0.4" />
-            </g>
-
-            {/* <--- changed: text block centered under bank mark */}
-            <text
-                x="32"
-                y="52.0"
-                textAnchor="middle"
-                fontSize="8.35" // <--- changed: bigger Centra text for readability
-                fontWeight="900"
-                letterSpacing="1.25" // <--- changed: tighter spacing makes it easier to read
-                fill="url(#centraWhiteGradient)"
-                fontFamily="Arial, Helvetica, sans-serif"
-            >
-                CENTRA
-            </text>
-
-            <g aria-label="BANK wordmark">
-                {/* <--- changed: redrawn BANK dividers as separate short paths with clear gaps */}
-                <path
-                    d="M13.8 58.0H17.0"
-                    stroke="url(#centraWhiteGradient)"
-                    strokeWidth="0.62"
-                    strokeLinecap="round"
-                />
-
-                <text
-                    x="32"
-                    y="59.55"
-                    textAnchor="middle"
-                    fontSize="5.15" // <--- changed: bigger Bank text for readability
-                    fontWeight="800"
-                    letterSpacing="2.15" // <--- changed: tighter spacing makes it easier to read
-                    fill="url(#centraWhiteGradient)"
-                    fontFamily="Arial, Helvetica, sans-serif"
-                >
-                    BANK
-                </text>
-
-                <path
-                    d="M47.0 58.0H50.2"
-                    stroke="url(#centraWhiteGradient)"
-                    strokeWidth="0.62"
-                    strokeLinecap="round"
-                />
-            </g>
-        </svg>
+        </div>
     );
 }
 
