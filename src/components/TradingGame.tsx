@@ -873,9 +873,9 @@ function IPhoneCentraIconSvg() { // <--- changed
             </text>
 
             <line
-                x1="20.1"
+                x1="17.4"
                 y1="55.0"
-                x2="24.95"
+                x2="22.6"
                 y2="55.0"
                 stroke="url(#centraWhiteGradient)"
                 strokeWidth="0.62"
@@ -896,8 +896,8 @@ function IPhoneCentraIconSvg() { // <--- changed
             </text>
 
             <line
-                x1="39.05"
-                y1="55.0" x2="43.9"
+                x1="41.4"
+                y1="55.0" x2="46.6"
                 y2="55.0" stroke="url(#centraWhiteGradient)"
                 strokeWidth="0.62"
                 strokeLinecap="round"
