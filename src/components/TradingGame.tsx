@@ -10,6 +10,7 @@ import {
 import centraBankIcon from "../assets/centra-bank-icon.png";
 import nestIcon from "../assets/nest-icon.png";
 import settingsIcon from "../assets/settings-icon.png";
+import dashlyIcon from "../assets/dashly-icon.png";
 
 type Candle = {
     open: number;
@@ -152,6 +153,14 @@ const SETTINGS_ICON_SIZE = 70; // <--- changed: overall PNG size inside the app 
 const SETTINGS_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
 const SETTINGS_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
 const SETTINGS_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
+
+// Dashly PNG icon tweak knobs // <--- changed
+const DASHLY_ICON_SIZE = 70; // <--- changed: overall PNG size inside the app square
+const DASHLY_ICON_X_OFFSET = 0; // <--- changed: move image left/right inside the app square
+const DASHLY_ICON_Y_OFFSET = 0; // <--- changed: move image up/down inside the app square
+const DASHLY_ICON_RADIUS = 14.5; // <--- changed: corner roundness for the PNG inside the app square
+
 
 
 const PHONE_VERTICAL_SHIFT = 150; // <--- changed: moves whole phone panel further down
@@ -1018,6 +1027,42 @@ function IPhoneSettingsIconSvg() { // <--- changed: uses PNG from src/assets/set
                     objectFit: "cover",
                     borderRadius: `${SETTINGS_ICON_RADIUS}px`,
                     transform: `translate(${SETTINGS_ICON_X_OFFSET}px, ${SETTINGS_ICON_Y_OFFSET}px)`,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                }}
+            />
+        </div>
+    );
+}
+
+
+
+function IPhoneDashlyIconSvg() { // <--- changed: uses PNG from src/assets/dashly-icon.png
+    return (
+        <div
+            style={{
+                width: `${HOME_APP_SIZE}px`,
+                height: `${HOME_APP_SIZE}px`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                borderRadius: `${DASHLY_ICON_RADIUS}px`,
+                pointerEvents: "none",
+                userSelect: "none",
+            }}
+        >
+            <img
+                src={dashlyIcon}
+                alt="Dashly"
+                draggable={false}
+                style={{
+                    width: `${DASHLY_ICON_SIZE}px`,
+                    height: `${DASHLY_ICON_SIZE}px`,
+                    display: "block",
+                    objectFit: "cover",
+                    borderRadius: `${DASHLY_ICON_RADIUS}px`,
+                    transform: `translate(${DASHLY_ICON_X_OFFSET}px, ${DASHLY_ICON_Y_OFFSET}px)`,
                     pointerEvents: "none",
                     userSelect: "none",
                 }}
@@ -3930,6 +3975,8 @@ export default function TradingGame() {
                                                                             <IPhoneCentraIconSvg />
                                                                         ) : app.name === "Nest" ? ( // <--- changed
                                                                             <IPhoneNestIconSvg />
+                                                                        ) : app.name === "Dashly" ? ( // <--- changed
+                                                                            <IPhoneDashlyIconSvg />
                                                                         ) : (
                                                                             <span style={{ ...styles.phoneHomeAppGlyph, ...app.glyphStyle }}> {/* <--- changed */}
                                                                                 {app.name.slice(0, 1)}
