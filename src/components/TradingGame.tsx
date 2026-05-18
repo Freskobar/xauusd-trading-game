@@ -824,12 +824,8 @@ function IPhoneNestIconSvg() { // <--- changed
                     strokeLinejoin="round"
                 />
 
-                <rect
-                    x="43.2"
-                    y="23.2"
-                    width="5.9"
-                    height="10.2"
-                    rx="1"
+                <path
+                    d="M43.95 22.85H48.25C48.78 22.85 49.2 23.28 49.2 23.8V32.35H43.95V22.85Z"
                     fill="url(#nestGreenClean)"
                 />
 
@@ -841,10 +837,10 @@ function IPhoneNestIconSvg() { // <--- changed
 
                 {/* <--- changed: cleaner four-pane window */}
                 <g fill="url(#nestGreenClean)">
-                    <rect x="28.55" y="34" width="3.4" height="3.4" rx="0.45" />
-                    <rect x="33.05" y="34" width="3.4" height="3.4" rx="0.45" />
-                    <rect x="28.55" y="38.5" width="3.4" height="3.4" rx="0.45" />
-                    <rect x="33.05" y="38.5" width="3.4" height="3.4" rx="0.45" />
+                    <rect x="28.55" y="32.25" width="3.4" height="3.4" rx="0.45" />
+                    <rect x="33.05" y="32.25" width="3.4" height="3.4" rx="0.45" />
+                    <rect x="28.55" y="36.75" width="3.4" height="3.4" rx="0.45" />
+                    <rect x="33.05" y="36.75" width="3.4" height="3.4" rx="0.45" />
                 </g>
 
                 <path
@@ -867,8 +863,8 @@ function IPhoneNestIconSvg() { // <--- changed
                 y="58.8"
                 textAnchor="middle"
                 fontSize="13.6"
-                fontWeight="700"
-                letterSpacing="2"
+                fontWeight="500"
+                letterSpacing="2.15"
                 fill="url(#nestGreenClean)"
                 fontFamily="Arial Rounded MT Bold, Arial, Helvetica, sans-serif"
             >
