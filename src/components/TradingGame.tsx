@@ -144,6 +144,7 @@ const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage h
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
 const HOME_APP_GRID_WIDTH = HOME_APP_GRID_COLUMNS * HOME_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_APP_GRID_GAP; // <--- changed: fixed app grid width so iPhone Safari cannot stretch gaps
+const HOME_BIG_APP_SIZE = HOME_APP_SIZE * 2 + HOME_APP_GRID_GAP; // <--- changed: true 2x2 app tile size
 
 
 
@@ -757,6 +758,269 @@ function IPhoneMusicIconSvg() { // <--- changed
                     fill="white"
                 />
             </g>
+        </svg>
+    );
+}
+
+
+
+function IPhoneILearnIconSvg() { // <--- changed
+    return (
+        <svg
+            width="56"
+            height="56"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="iLearn"
+            style={{ display: "block" }}
+            shapeRendering="geometricPrecision"
+        >
+            <defs>
+                <linearGradient
+                    id="iLearnBackgroundGradient"
+                    x1="10"
+                    y1="3"
+                    x2="54"
+                    y2="61"
+                    gradientUnits="userSpaceOnUse"
+                >
+                    <stop offset="0%" stopColor="#145d38" />
+                    <stop offset="48%" stopColor="#0d452c" />
+                    <stop offset="100%" stopColor="#07331f" />
+                </linearGradient>
+
+                <radialGradient
+                    id="iLearnBackgroundGlow"
+                    cx="36%"
+                    cy="12%"
+                    r="82%"
+                >
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.10)" />
+                    <stop offset="48%" stopColor="rgba(255,255,255,0.025)" />
+                    <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                </radialGradient>
+
+                <linearGradient
+                    id="iLearnCapGradient"
+                    x1="18"
+                    y1="17"
+                    x2="46"
+                    y2="47"
+                    gradientUnits="userSpaceOnUse"
+                >
+                    <stop offset="0%" stopColor="#ffffff" />
+                    <stop offset="55%" stopColor="#f7f7f7" />
+                    <stop offset="100%" stopColor="#dadada" />
+                </linearGradient>
+
+                <filter
+                    id="iLearnCapShadow"
+                    x="-35%"
+                    y="-35%"
+                    width="170%"
+                    height="170%"
+                >
+                    <feDropShadow
+                        dx="0"
+                        dy="2.5"
+                        stdDeviation="2.2"
+                        floodColor="#000000"
+                        floodOpacity="0.32"
+                    />
+                    <feDropShadow
+                        dx="0"
+                        dy="-0.45"
+                        stdDeviation="0.35"
+                        floodColor="#ffffff"
+                        floodOpacity="0.65"
+                    />
+                </filter>
+            </defs>
+
+            <rect
+                x="0"
+                y="0"
+                width="64"
+                height="64"
+                rx="14.5"
+                fill="url(#iLearnBackgroundGradient)"
+            />
+
+            <rect
+                x="0"
+                y="0"
+                width="64"
+                height="64"
+                rx="14.5"
+                fill="url(#iLearnBackgroundGlow)"
+            />
+
+            <g filter="url(#iLearnCapShadow)">
+                {/* Lower bowl first, so the top diamond sits over it */}
+                <path
+                    d="M20.1 33.85L31.15 40.1C31.7 40.42 32.3 40.42 32.85 40.1L43.9 33.85V39.85C43.9 42.95 38.55 46.2 32 46.2C25.45 46.2 20.1 42.95 20.1 39.85V33.85Z"
+                    fill="url(#iLearnCapGradient)"
+                />
+
+                {/* Clean green cutout/separation between top board and lower bowl */}
+                <path
+                    d="M18.55 32.15L31.15 39.25C31.7 39.56 32.3 39.56 32.85 39.25L45.45 32.15L43.65 34.85L32.95 40.95C32.35 41.3 31.65 41.3 31.05 40.95L20.35 34.85Z"
+                    fill="url(#iLearnBackgroundGradient)"
+                />
+
+                <path
+                    d="M18.55 32.15L31.15 39.25C31.7 39.56 32.3 39.56 32.85 39.25L45.45 32.15L43.65 34.85L32.95 40.95C32.35 41.3 31.65 41.3 31.05 40.95L20.35 34.85Z"
+                    fill="url(#iLearnBackgroundGlow)"
+                />
+
+                {/* Top diamond / mortarboard */}
+                <path
+                    d="M12.2 30.2C11.1 29.58 11.1 28.02 12.2 27.4L31 16.9C31.62 16.56 32.38 16.56 33 16.9L51.8 27.4C52.9 28.02 52.9 29.58 51.8 30.2L33 40.75C32.38 41.1 31.62 41.1 31 40.75L12.2 30.2Z"
+                    fill="url(#iLearnCapGradient)"
+                />
+
+                {/* Small center button on top */}
+                <circle
+                    cx="32"
+                    cy="30.45"
+                    r="2.7"
+                    fill="url(#iLearnCapGradient)"
+                />
+
+                {/* Tassel cord */}
+                <path
+                    d="M34.1 30.05L45.85 33.1C47.15 33.42 48.05 34.62 48.05 35.95V43.35"
+                    stroke="url(#iLearnCapGradient)"
+                    strokeWidth="3.15"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+
+                <circle
+                    cx="48.05"
+                    cy="43.45"
+                    r="2.55"
+                    fill="url(#iLearnCapGradient)"
+                />
+
+                <path
+                    d="M47.05 46.05C47.25 45.3 48.85 45.3 49.05 46.05L50.25 52.05C50.38 52.75 49.85 53.4 49.15 53.4H46.95C46.25 53.4 45.72 52.75 45.85 52.05L47.05 46.05Z"
+                    fill="url(#iLearnCapGradient)"
+                />
+            </g>
+        </svg>
+    );
+}
+
+
+function IPhoneSettingsIconSvg() { // <--- changed
+    const teeth = Array.from({ length: 8 }, (_, index) => index * 45); // <--- changed
+
+    return (
+        <svg
+            width="56"
+            height="56"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="Settings"
+            style={{ display: "block" }}
+            shapeRendering="geometricPrecision"
+        >
+            <defs>
+                <linearGradient
+                    id="settingsBackgroundGradient"
+                    x1="9"
+                    y1="3"
+                    x2="55"
+                    y2="61"
+                    gradientUnits="userSpaceOnUse"
+                >
+                    <stop offset="0%" stopColor="#505762" />
+                    <stop offset="46%" stopColor="#303640" />
+                    <stop offset="100%" stopColor="#171d26" />
+                </linearGradient>
+
+                <radialGradient
+                    id="settingsBackgroundGlow"
+                    cx="36%"
+                    cy="11%"
+                    r="82%"
+                >
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.12)" />
+                    <stop offset="48%" stopColor="rgba(255,255,255,0.025)" />
+                    <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                </radialGradient>
+
+                <filter
+                    id="settingsGearShadow"
+                    x="-35%"
+                    y="-35%"
+                    width="170%"
+                    height="170%"
+                >
+                    <feDropShadow
+                        dx="0"
+                        dy="2.2"
+                        stdDeviation="2"
+                        floodColor="#000000"
+                        floodOpacity="0.34"
+                    />
+                </filter>
+            </defs>
+
+            <rect
+                x="0"
+                y="0"
+                width="64"
+                height="64"
+                rx="14.5"
+                fill="url(#settingsBackgroundGradient)"
+            />
+
+            <rect
+                x="0"
+                y="0"
+                width="64"
+                height="64"
+                rx="14.5"
+                fill="url(#settingsBackgroundGlow)"
+            />
+
+            <g filter="url(#settingsGearShadow)" fill="#a7adb4"> {/* <--- changed: one exact gray fill for both teeth and circular gear body */}
+                {teeth.map((angle) => (
+                    <rect
+                        key={angle}
+                        x="28.15"
+                        y="7.8"
+                        width="7.7"
+                        height="18.7"
+                        rx="2"
+                        transform={`rotate(${angle} 32 32)`}
+                    />
+                ))}
+
+                <circle
+                    cx="32"
+                    cy="32"
+                    r="18.55"
+                />
+            </g>
+
+            <circle
+                cx="32"
+                cy="32"
+                r="9"
+                fill="url(#settingsBackgroundGradient)"
+            />
+
+            <circle
+                cx="32"
+                cy="32"
+                r="9"
+                fill="url(#settingsBackgroundGlow)"
+            />
         </svg>
     );
 }
@@ -3493,32 +3757,35 @@ export default function TradingGame() {
     ]);
 
 
-    const phoneHomeApps = [ // <--- changed: static iPhone-style home screen apps
-        { name: "Music", bg: "linear-gradient(145deg, #ff5a75, #f51646)" },
-        { name: "Sounds", bg: "linear-gradient(145deg, #ff5a75, #f51646)" },
-        { name: "Calendar", bg: "linear-gradient(180deg, #ffffff, #f2f2f2)" },
-        { name: "Contacts", bg: "linear-gradient(145deg, #eeeae0, #c9c4ba)" },
-        { name: "Photos", bg: "conic-gradient(from 0deg, #ff3b30, #ff9500, #ffcc00, #34c759, #00c7be, #007aff, #af52de, #ff2d55, #ff3b30)" },
-        { name: "Maps", bg: "linear-gradient(145deg, #ffffff, #eef4ff)" },
-        { name: "Home", bg: "linear-gradient(145deg, #38e6ff, #00a7d8)" },
-        { name: "Weather", bg: "linear-gradient(145deg, #67e8f9, #0ea5e9)" },
-        { name: "Files", bg: "linear-gradient(145deg, #ffffff, #d9dde7)" },
-        { name: "Phone", bg: "linear-gradient(145deg, #58f073, #0fbf42)" },
-        { name: "Garage", bg: "linear-gradient(145deg, #073d68, #031b31)" },
-        { name: "News", bg: "linear-gradient(145deg, #ffffff, #f7f7f7)" },
-        { name: "Calc", bg: "linear-gradient(145deg, #eeeeee, #c8c8c8)" },
-        { name: "Cloud", bg: "linear-gradient(145deg, #ffffff, #f7f7f7)" },
-        { name: "Ring", bg: "linear-gradient(145deg, #22d3ee, #0096c7)" },
-        { name: "Find", bg: "radial-gradient(circle at center, #ffffff 0 18%, #34c759 19% 68%, #f2f2f2 69%)" },
-        { name: "Fitness", bg: "radial-gradient(circle at center, #090909 0 23%, #39ff14 24% 40%, #ffe600 41% 55%, #ff2d55 56%)" },
-        { name: "Stocks", bg: "linear-gradient(145deg, #151515, #050505)" },
-        { name: "Ride", bg: "linear-gradient(145deg, #ff321f, #d90b00)" },
-        { name: "Cards", bg: "linear-gradient(145deg, #1f3d5d, #0b1c32)" },
-        { name: "Shazam", bg: "linear-gradient(145deg, #2bb7ff, #007aff)" },
-        { name: "Messages", bg: "linear-gradient(145deg, #58f073, #0fbf42)" },
-        { name: "Radio", bg: "linear-gradient(145deg, #e40046, #9b002f)" },
-        { name: "Settings", bg: "linear-gradient(145deg, #f5f5f5, #a8a8a8)" },
+    const phoneHomeApps: { name: string; bg: string; slotStyle?: CSSProperties; iconStyle?: CSSProperties; glyphStyle?: CSSProperties }[] = [ // <--- changed: static iPhone-style home screen apps
+        {
+            name: "Vitals", // <--- changed
+            bg: "linear-gradient(145deg, #ff5a75, #f51646)", // <--- changed
+            slotStyle: { gridColumn: "1 / span 2", gridRow: "1 / span 2", width: HOME_BIG_APP_SIZE }, // <--- changed
+            iconStyle: { width: HOME_BIG_APP_SIZE, height: HOME_BIG_APP_SIZE, maxWidth: "none", maxHeight: "none", borderRadius: 24 }, // <--- changed
+            glyphStyle: { fontSize: 42 }, // <--- changed
+        },
+        {
+            name: "Investing", // <--- changed
+            bg: "linear-gradient(145deg, #151515, #050505)", // <--- changed
+            slotStyle: { gridColumn: "3 / span 2", gridRow: "1 / span 2", width: HOME_BIG_APP_SIZE }, // <--- changed
+            iconStyle: { width: HOME_BIG_APP_SIZE, height: HOME_BIG_APP_SIZE, maxWidth: "none", maxHeight: "none", borderRadius: 24 }, // <--- changed
+            glyphStyle: { fontSize: 42 }, // <--- changed
+        },
+        { name: "iTrade", bg: "linear-gradient(145deg, #ffffff, #d9dde7)" },
+        { name: "Centra", bg: "linear-gradient(145deg, #58f073, #0fbf42)" },
+        { name: "Locara", bg: "linear-gradient(145deg, #073d68, #031b31)" },
+        { name: "Nest", bg: "linear-gradient(145deg, #ffffff, #f7f7f7)" },
+        { name: "Dashly", bg: "linear-gradient(145deg, #eeeeee, #c8c8c8)" },
+        { name: "Titan Gym", bg: "linear-gradient(145deg, #ffffff, #f7f7f7)" },
+        { name: "Vaulté", bg: "linear-gradient(145deg, #22d3ee, #0096c7)" },
+        { name: "Throttle", bg: "radial-gradient(circle at center, #ffffff 0 18%, #34c759 19% 68%, #f2f2f2 69%)" },
+        { name: "iLearn", bg: "transparent" }, // <--- changed
+        { name: "Vanta", bg: "linear-gradient(145deg, #151515, #050505)" },
+        { name: "Settings", bg: "transparent" }, // <--- changed
+        { name: "App Hub", bg: "linear-gradient(145deg, #1f3d5d, #0b1c32)" },
     ];
+
 
     const phoneDockApps = [ // <--- changed: static bottom dock apps
         { name: "Phone", bg: "linear-gradient(180deg, #67f36f 0%, #11c43a 100%)", icon: "phone" }, // <--- changed
@@ -3645,17 +3912,24 @@ export default function TradingGame() {
 
                                                     <div style={styles.phoneHomeScreen}> {/* <--- changed */}
                                                         <div style={styles.phoneAppGrid}> {/* <--- changed */}
-                                                            {phoneHomeApps.slice(0, HOME_APP_GRID_COLUMNS * HOME_APP_GRID_ROWS).map((app) => (
-                                                                <div key={app.name} style={styles.phoneAppSlot}>
+                                                            {phoneHomeApps.map((app) => ( // <--- changed
+                                                                <div key={app.name} style={{ ...styles.phoneAppSlot, ...app.slotStyle }}> {/* <--- changed */}
                                                                     <div
                                                                         style={{
                                                                             ...styles.phoneHomeAppIcon,
                                                                             background: app.bg,
+                                                                            ...app.iconStyle, // <--- changed
                                                                         }}
                                                                     >
-                                                                        <span style={styles.phoneHomeAppGlyph}>
-                                                                            {app.name.slice(0, 1)}
-                                                                        </span>
+                                                                        {app.name === "Settings" ? ( // <--- changed
+                                                                            <IPhoneSettingsIconSvg />
+                                                                        ) : app.name === "iLearn" ? ( // <--- changed
+                                                                            <IPhoneILearnIconSvg />
+                                                                        ) : (
+                                                                            <span style={{ ...styles.phoneHomeAppGlyph, ...app.glyphStyle }}> {/* <--- changed */}
+                                                                                {app.name.slice(0, 1)}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                     <div style={styles.phoneHomeAppName}>{app.name}</div>
                                                                 </div>
@@ -3684,6 +3958,8 @@ export default function TradingGame() {
                                                                             <IPhoneMusicIconSvg />
                                                                         ) : app.icon === "messages" ? ( // <--- changed
                                                                             <IPhoneMessagesIconSvg />
+                                                                        ) : app.name === "Settings" ? ( // <--- changed
+                                                                            <IPhoneSettingsIconSvg />
                                                                         ) : (
                                                                             <span style={styles.phoneHomeAppGlyph}>
                                                                                 {app.name.slice(0, 1)}
