@@ -764,6 +764,149 @@ function IPhoneMusicIconSvg() { // <--- changed
 
 
 
+function IPhoneCentraIconSvg() { // <--- changed
+    return (
+        <svg
+            width="56"
+            height="56"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="Centra"
+            style={{ display: "block" }}
+            shapeRendering="geometricPrecision"
+        >
+            <defs>
+                <linearGradient
+                    id="centraBackgroundGradient"
+                    x1="9"
+                    y1="3"
+                    x2="55"
+                    y2="61"
+                    gradientUnits="userSpaceOnUse"
+                >
+                    <stop offset="0%" stopColor="#153f78" />
+                    <stop offset="50%" stopColor="#082f63" />
+                    <stop offset="100%" stopColor="#041d42" />
+                </linearGradient>
+
+                <radialGradient
+                    id="centraBackgroundGlow"
+                    cx="36%"
+                    cy="12%"
+                    r="82%"
+                >
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.10)" />
+                    <stop offset="48%" stopColor="rgba(255,255,255,0.025)" />
+                    <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                </radialGradient>
+
+                <linearGradient
+                    id="centraWhiteGradient"
+                    x1="18"
+                    y1="12"
+                    x2="46"
+                    y2="58"
+                    gradientUnits="userSpaceOnUse"
+                >
+                    <stop offset="0%" stopColor="#ffffff" />
+                    <stop offset="58%" stopColor="#f3f3f3" />
+                    <stop offset="100%" stopColor="#d6d6d6" />
+                </linearGradient>
+            </defs>
+
+            <rect
+                x="0"
+                y="0"
+                width="64"
+                height="64"
+                rx="14.5"
+                fill="url(#centraBackgroundGradient)"
+            />
+
+            <rect
+                x="0"
+                y="0"
+                width="64"
+                height="64"
+                rx="14.5"
+                fill="url(#centraBackgroundGlow)"
+            />
+
+            {/* <--- changed: centered logo group, drawn flatter and closer to the reference */}
+            <g transform="translate(0 -8.6)" fill="url(#centraWhiteGradient)">
+                {/* Bank roof */}
+                <path
+                    d="M18.25 24.9L31.15 18.15C31.68 17.88 32.32 17.88 32.85 18.15L45.75 24.9C46.28 25.18 46.6 25.72 46.6 26.32V28.55C46.6 29.18 45.92 29.58 45.38 29.25L32 22.22L18.62 29.25C18.08 29.58 17.4 29.18 17.4 28.55V26.32C17.4 25.72 17.72 25.18 18.25 24.9Z"
+                />
+
+                {/* Column caps */}
+                <rect x="20.25" y="31.25" width="7.85" height="2.05" rx="0.55" />
+                <rect x="28.08" y="31.25" width="7.84" height="2.05" rx="0.55" />
+                <rect x="35.9" y="31.25" width="7.85" height="2.05" rx="0.55" />
+
+                {/* Columns */}
+                <rect x="21.55" y="33.15" width="5.25" height="10.2" rx="0.25" />
+                <rect x="29.38" y="33.15" width="5.24" height="10.2" rx="0.25" />
+                <rect x="37.2" y="33.15" width="5.25" height="10.2" rx="0.25" />
+
+                {/* Bottom caps and base */}
+                <rect x="20.05" y="42.85" width="7.95" height="2.1" rx="0.35" />
+                <rect x="28.03" y="42.85" width="7.94" height="2.1" rx="0.35" />
+                <rect x="36" y="42.85" width="7.95" height="2.1" rx="0.35" />
+                <rect x="18.75" y="46.1" width="26.5" height="2.05" rx="0.45" />
+                <rect x="18.15" y="49.05" width="27.7" height="1.8" rx="0.4" />
+            </g>
+
+            {/* <--- changed: text block centered under bank mark */}
+            <text
+                x="32"
+                y="51.4"
+                textAnchor="middle"
+                fontSize="7.2"
+                fontWeight="800"
+                letterSpacing="1.65"
+                fill="url(#centraWhiteGradient)"
+                fontFamily="Arial, Helvetica, sans-serif"
+            >
+                CENTRA
+            </text>
+
+            <line
+                x1="20.1"
+                y1="55.0"
+                x2="24.95"
+                y2="55.0"
+                stroke="url(#centraWhiteGradient)"
+                strokeWidth="0.62"
+                strokeLinecap="round"
+            />
+
+            <text
+                x="32"
+                y="56.45"
+                textAnchor="middle"
+                fontSize="4.45"
+                fontWeight="700"
+                letterSpacing="2.9"
+                fill="url(#centraWhiteGradient)"
+                fontFamily="Arial, Helvetica, sans-serif"
+            >
+                BANK
+            </text>
+
+            <line
+                x1="39.05"
+                y1="55.0" x2="43.9"
+                y2="55.0" stroke="url(#centraWhiteGradient)"
+                strokeWidth="0.62"
+                strokeLinecap="round"
+            />
+        </svg>
+    );
+}
+
+
 function IPhoneILearnIconSvg() { // <--- changed
     return (
         <svg
@@ -813,29 +956,6 @@ function IPhoneILearnIconSvg() { // <--- changed
                     <stop offset="55%" stopColor="#f7f7f7" />
                     <stop offset="100%" stopColor="#dadada" />
                 </linearGradient>
-
-                <filter
-                    id="iLearnCapShadow"
-                    x="-35%"
-                    y="-35%"
-                    width="170%"
-                    height="170%"
-                >
-                    <feDropShadow
-                        dx="0"
-                        dy="2.5"
-                        stdDeviation="2.2"
-                        floodColor="#000000"
-                        floodOpacity="0.32"
-                    />
-                    <feDropShadow
-                        dx="0"
-                        dy="-0.45"
-                        stdDeviation="0.35"
-                        floodColor="#ffffff"
-                        floodOpacity="0.65"
-                    />
-                </filter>
             </defs>
 
             <rect
@@ -856,7 +976,7 @@ function IPhoneILearnIconSvg() { // <--- changed
                 fill="url(#iLearnBackgroundGlow)"
             />
 
-            <g filter="url(#iLearnCapShadow)">
+            <g>
                 {/* Lower bowl first */}
                 <path
                     d="M20.1 33.55L31.15 39.8C31.7 40.12 32.3 40.12 32.85 39.8L43.9 33.55V40.05C43.9 43.05 38.55 46.2 32 46.2C25.45 46.2 20.1 43.05 20.1 40.05V33.55Z"
@@ -881,18 +1001,6 @@ function IPhoneILearnIconSvg() { // <--- changed
                 />
 
                 {/* <--- changed: tassel groove/cutout line on top cap */}
-                <path
-                    d="M33.8 29.45L46.45 32.78"
-                    stroke="url(#iLearnBackgroundGradient)"
-                    strokeWidth="1.25"
-                    strokeLinecap="round"
-                />
-                <path
-                    d="M33.8 29.45L46.45 32.78"
-                    stroke="url(#iLearnBackgroundGlow)"
-                    strokeWidth="1.25"
-                    strokeLinecap="round"
-                />
 
                 {/* Tassel cord, redrawn over the cutout groove */}
                 <path
@@ -912,13 +1020,6 @@ function IPhoneILearnIconSvg() { // <--- changed
                 />
 
                 {/* <--- changed: small background ring cutout around the button so it reads like a cap detail */}
-                <circle
-                    cx="32"
-                    cy="30.45"
-                    r="3.15"
-                    stroke="url(#iLearnBackgroundGradient)"
-                    strokeWidth="0.65"
-                />
 
                 <circle
                     cx="48.05"
@@ -933,12 +1034,6 @@ function IPhoneILearnIconSvg() { // <--- changed
                 />
 
                 {/* <--- changed: tassel lower cutout to separate the knot from the hanging piece */}
-                <path
-                    d="M46.55 46.0H49.55"
-                    stroke="url(#iLearnBackgroundGradient)"
-                    strokeWidth="0.95"
-                    strokeLinecap="round"
-                />
             </g>
         </svg>
     );
@@ -983,22 +1078,6 @@ function IPhoneSettingsIconSvg() { // <--- changed
                     <stop offset="48%" stopColor="rgba(255,255,255,0.025)" />
                     <stop offset="100%" stopColor="rgba(255,255,255,0)" />
                 </radialGradient>
-
-                <filter
-                    id="settingsGearShadow"
-                    x="-35%"
-                    y="-35%"
-                    width="170%"
-                    height="170%"
-                >
-                    <feDropShadow
-                        dx="0"
-                        dy="2.2"
-                        stdDeviation="2"
-                        floodColor="#000000"
-                        floodOpacity="0.34"
-                    />
-                </filter>
             </defs>
 
             <rect
@@ -1019,7 +1098,7 @@ function IPhoneSettingsIconSvg() { // <--- changed
                 fill="url(#settingsBackgroundGlow)"
             />
 
-            <g filter="url(#settingsGearShadow)" fill="#a7adb4"> {/* <--- changed: one exact gray fill for both teeth and circular gear body */}
+            <g fill="#a7adb4"> {/* <--- changed: removed gear drop shadow */}
                 {teeth.map((angle) => (
                     <rect
                         key={angle}
@@ -3804,7 +3883,7 @@ export default function TradingGame() {
             glyphStyle: { fontSize: 42 }, // <--- changed
         },
         { name: "iTrade", bg: "linear-gradient(145deg, #ffffff, #d9dde7)" },
-        { name: "Centra", bg: "linear-gradient(145deg, #58f073, #0fbf42)" },
+        { name: "Centra", bg: "transparent" }, // <--- changed
         { name: "Locara", bg: "linear-gradient(145deg, #073d68, #031b31)" },
         { name: "Nest", bg: "linear-gradient(145deg, #ffffff, #f7f7f7)" },
         { name: "Dashly", bg: "linear-gradient(145deg, #eeeeee, #c8c8c8)" },
@@ -3956,6 +4035,8 @@ export default function TradingGame() {
                                                                             <IPhoneSettingsIconSvg />
                                                                         ) : app.name === "iLearn" ? ( // <--- changed
                                                                             <IPhoneILearnIconSvg />
+                                                                        ) : app.name === "Centra" ? ( // <--- changed
+                                                                            <IPhoneCentraIconSvg />
                                                                         ) : (
                                                                             <span style={{ ...styles.phoneHomeAppGlyph, ...app.glyphStyle }}> {/* <--- changed */}
                                                                                 {app.name.slice(0, 1)}
@@ -4550,7 +4631,7 @@ const styles: Record<string, CSSProperties> = {
         width: 34, // <--- changed
         height: 34, // <--- changed
         borderRadius: 12, // <--- changed
-        border: "1px solid rgba(255,255,255,0.16)", // <--- changed
+        border: "none", // <--- changed // <--- changed
         background: "rgba(255,255,255,0.08)", // <--- changed
         color: "#ffffff", // <--- changed
         display: "flex", // <--- changed
@@ -4619,7 +4700,7 @@ const styles: Record<string, CSSProperties> = {
         maxWidth: "calc(100vw - 28px)", // <--- changed
         borderRadius: 22, // <--- changed
         background: "linear-gradient(180deg, rgba(32,32,32,0.98), rgba(12,12,12,0.98))", // <--- changed
-        border: "1px solid rgba(255,255,255,0.12)", // <--- changed
+        border: "none", // <--- changed // <--- changed
         boxShadow: "0 24px 55px rgba(0,0,0,0.72)", // <--- changed
         padding: 16, // <--- changed
         zIndex: 50, // <--- changed
@@ -4661,7 +4742,7 @@ const styles: Record<string, CSSProperties> = {
     settingsSection: {
         borderRadius: 13, // <--- changed
         background: "rgba(255,255,255,0.055)", // <--- changed
-        border: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        border: "none", // <--- changed // <--- changed
         padding: 12, // <--- changed
         marginBottom: 12, // <--- changed
     },
@@ -4710,7 +4791,7 @@ const styles: Record<string, CSSProperties> = {
     timeframeToggle: {
         height: 32, // <--- changed
         borderRadius: 11, // <--- changed
-        border: "1px solid rgba(255,255,255,0.1)", // <--- changed
+        border: "none", // <--- changed // <--- changed
         background: "rgba(255,255,255,0.07)", // <--- changed
         color: "#808080", // <--- changed
         fontSize: 11, // <--- changed
@@ -4745,7 +4826,7 @@ const styles: Record<string, CSSProperties> = {
         width: 44, // <--- changed
         height: 44, // <--- changed
         borderRadius: 13, // <--- changed
-        border: "1px solid rgba(255,255,255,0.14)", // <--- changed
+        border: "none", // <--- changed // <--- changed
         background: "rgba(18,18,18,0.82)", // <--- changed
         boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
         backdropFilter: "blur(10px)", // <--- changed
@@ -4905,7 +4986,7 @@ const styles: Record<string, CSSProperties> = {
         height: HOME_SEARCH_HEIGHT, // <--- changed
         borderRadius: HOME_SEARCH_RADIUS, // <--- changed
         background: "#000000", // <--- changed
-        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)", // <--- changed
+        boxShadow: "none", // <--- changed // <--- changed
         justifySelf: "center", // <--- changed
         alignSelf: "center", // <--- changed
         position: "relative", // <--- changed
@@ -4981,8 +5062,8 @@ const styles: Record<string, CSSProperties> = {
         maxWidth: HOME_APP_SIZE, // <--- changed
         maxHeight: HOME_APP_SIZE, // <--- changed
         borderRadius: 13, // <--- changed
-        boxShadow: "0 8px 18px rgba(0,0,0,0.32), inset 0 1px 1px rgba(255,255,255,0.32)", // <--- changed
-        border: "1px solid rgba(255,255,255,0.14)", // <--- changed
+        boxShadow: "none", // <--- changed // <--- changed
+        border: "none", // <--- changed // <--- changed
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
@@ -5036,7 +5117,7 @@ const styles: Record<string, CSSProperties> = {
         gap: 4, // <--- changed
         fontSize: 11, // <--- changed
         fontWeight: 800, // <--- changed
-        boxShadow: "inset 0 1px 1px rgba(255,255,255,0.16), 0 8px 18px rgba(0,0,0,0.22)", // <--- changed
+        boxShadow: "none", // <--- changed // <--- changed
     },
     phoneSearchIcon: {
         fontSize: 13, // <--- changed
@@ -5052,10 +5133,10 @@ const styles: Record<string, CSSProperties> = {
         bottom: HOME_DOCK_VERTICAL_OFFSET, // <--- changed: dock can move freely up/down
         transform: "translateX(-50%)", // <--- changed
         background: "rgba(255,255,255,0.18)", // <--- changed
-        border: "1px solid rgba(255,255,255,0.14)", // <--- changed
+        border: "none", // <--- changed // <--- changed
         backdropFilter: "blur(18px)", // <--- changed
         WebkitBackdropFilter: "blur(18px)", // <--- changed
-        boxShadow: "inset 0 1px 1px rgba(255,255,255,0.14), 0 14px 34px rgba(0,0,0,0.34)", // <--- changed
+        boxShadow: "none", // <--- changed // <--- changed
         display: "grid", // <--- changed
         gridTemplateColumns: `repeat(${HOME_APP_GRID_COLUMNS}, ${HOME_DOCK_APP_SIZE}px)`, // <--- changed: exact dock app sizing
         columnGap: HOME_DOCK_APP_HORIZONTAL_GAP, // <--- changed: dock horizontal gap knob
@@ -5087,7 +5168,7 @@ const styles: Record<string, CSSProperties> = {
         width: 44, // <--- changed
         height: 44, // <--- changed
         borderRadius: 13, // <--- changed
-        border: "1px solid rgba(255,255,255,0.14)", // <--- changed
+        border: "none", // <--- changed // <--- changed
         background: "rgba(18,18,18,0.82)", // <--- changed
         boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
         backdropFilter: "blur(10px)", // <--- changed
