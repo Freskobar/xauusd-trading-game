@@ -1621,6 +1621,82 @@ function IPhonePhoneApp({ // <--- changed
 
 
 
+function IPhoneSafariApp({ closing }: { closing: boolean }) { // <--- changed
+    const favoriteSites = [ // <--- changed
+        { title: "TradingView", url: "tradingview.com", emoji: "📈" },
+        { title: "Vercel", url: "vercel.com", emoji: "▲" },
+        { title: "GitHub", url: "github.com", emoji: "⌘" },
+        { title: "News", url: "marketwatch.com", emoji: "📰" },
+    ];
+
+    const marketCards = [ // <--- changed
+        { label: "Gold", value: "4,990.20", change: "+0.42%" },
+        { label: "Nasdaq", value: "21,841", change: "+0.18%" },
+        { label: "Dollar", value: "104.12", change: "-0.07%" },
+    ];
+
+    return (
+        <div
+            style={{
+                ...styles.phoneAppPage,
+                ...styles.safariAppPage,
+                ...(closing ? styles.phoneAppPageClosing : {}),
+            }}
+        >
+            <div style={styles.safariTopBar}> {/* <--- changed */}
+                <button type="button" style={styles.safariNavButton} aria-label="Back">‹</button>
+                <div style={styles.safariAddressBar}> {/* <--- changed */}
+                    <span style={styles.safariLockIcon}>⌕</span>
+                    <span style={styles.safariAddressText}>Search or enter website</span>
+                    <span style={styles.safariRefreshIcon}>↻</span>
+                </div>
+                <button type="button" style={styles.safariNavButton} aria-label="Tabs">□</button>
+            </div>
+
+            <div style={styles.safariContent}> {/* <--- changed */}
+                <div style={styles.safariHeroCard}> {/* <--- changed */}
+                    <div style={styles.safariHeroGlow} />
+                    <div style={styles.safariHeroLabel}>Safari</div>
+                    <div style={styles.safariHeroTitle}>Market Browser</div>
+                    <div style={styles.safariHeroText}>Quick links, live-style market cards, and a clean mobile browser layout built for the phone UI.</div>
+                </div>
+
+                <div style={styles.safariSectionHeader}>Favorites</div>
+                <div style={styles.safariFavoritesGrid}> {/* <--- changed */}
+                    {favoriteSites.map((site) => (
+                        <button key={site.title} type="button" style={styles.safariFavoriteCard}>
+                            <span style={styles.safariFavoriteIcon}>{site.emoji}</span>
+                            <span style={styles.safariFavoriteTitle}>{site.title}</span>
+                            <span style={styles.safariFavoriteUrl}>{site.url}</span>
+                        </button>
+                    ))}
+                </div>
+
+                <div style={styles.safariSectionHeader}>Market Snapshot</div>
+                <div style={styles.safariMarketStack}> {/* <--- changed */}
+                    {marketCards.map((card) => (
+                        <div key={card.label} style={styles.safariMarketCard}>
+                            <div>
+                                <div style={styles.safariMarketLabel}>{card.label}</div>
+                                <div style={styles.safariMarketValue}>{card.value}</div>
+                            </div>
+                            <div style={styles.safariMarketChange}>{card.change}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div style={styles.safariBottomToolbar}> {/* <--- changed */}
+                <button type="button" style={styles.safariToolbarButton}>‹</button>
+                <button type="button" style={styles.safariToolbarButton}>›</button>
+                <button type="button" style={styles.safariToolbarButton}>＋</button>
+                <button type="button" style={styles.safariToolbarButton}>☰</button>
+            </div>
+        </div>
+    );
+}
+
+
 function IPhoneNestIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
     return (
         <div
@@ -2633,7 +2709,7 @@ export default function TradingGame() {
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
     const [phoneClosing, setPhoneClosing] = useState(false); // <--- changed
-    const [activePhoneApp, setActivePhoneApp] = useState<"home" | "phone">("home"); // <--- changed
+    const [activePhoneApp, setActivePhoneApp] = useState<"home" | "phone" | "safari">("home"); // <--- changed
     const [phoneAppClosing, setPhoneAppClosing] = useState(false); // <--- changed
     const [dialedPhoneNumber, setDialedPhoneNumber] = useState(""); // <--- changed
     const [homeButtonAnimating, setHomeButtonAnimating] = useState(false); // <--- changed: locks home button while its press/close animation runs
@@ -2861,6 +2937,11 @@ export default function TradingGame() {
     function openFakePhoneApp() { // <--- changed
         setPhoneAppClosing(false); // <--- changed
         setActivePhoneApp("phone"); // <--- changed
+    }
+
+    function openFakeSafariApp() { // <--- changed
+        setPhoneAppClosing(false); // <--- changed
+        setActivePhoneApp("safari"); // <--- changed
     }
 
     function handlePhoneHomePress() { // <--- changed
@@ -5542,9 +5623,9 @@ export default function TradingGame() {
                                                                 <div
                                                                     key={app.name}
                                                                     style={styles.phoneDockSlot}
-                                                                    onClick={app.icon === "phone" ? openFakePhoneApp : undefined}
-                                                                    role={app.icon === "phone" ? "button" : undefined}
-                                                                    aria-label={app.icon === "phone" ? "Open Phone app" : undefined}
+                                                                    onClick={app.icon === "phone" ? openFakePhoneApp : app.icon === "safari" ? openFakeSafariApp : undefined}
+                                                                    role={app.icon === "phone" || app.icon === "safari" ? "button" : undefined}
+                                                                    aria-label={app.icon === "phone" ? "Open Phone app" : app.icon === "safari" ? "Open Safari app" : undefined}
                                                                 >
                                                                     <div
                                                                         style={{
@@ -5583,6 +5664,10 @@ export default function TradingGame() {
                                                         />
                                                     )}
 
+                                                    {activePhoneApp === "safari" && ( // <--- changed
+                                                        <IPhoneSafariApp closing={phoneAppClosing} />
+                                                    )}
+
                                                     <button
                                                         type="button"
                                                         style={{
@@ -5616,7 +5701,7 @@ export default function TradingGame() {
                                                             homeSwipeStartYRef.current = null; // <--- changed
                                                             homeSwipeDidTriggerRef.current = false; // <--- changed
                                                         }}
-                                                        aria-label={activePhoneApp === "phone" ? "Close Phone app" : "Home"}
+                                                        aria-label={activePhoneApp !== "home" ? "Close app" : "Home"}
                                                     >
                                                         <span
                                                             style={{
@@ -7670,6 +7755,7 @@ const styles: Record<string, CSSProperties> = {
         margin: 0, // <--- changed
         cursor: "pointer", // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
+        touchAction: "none", // <--- changed: lets mobile swipe-up on the home bar trigger the app close animation
     },
     phoneHomeBarButtonLocked: { // <--- changed
         pointerEvents: "none", // <--- changed: home button cannot work again until fade-in is finished
