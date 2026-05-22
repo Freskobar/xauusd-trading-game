@@ -1622,18 +1622,103 @@ function IPhonePhoneApp({ // <--- changed
 
 
 function IPhoneSafariApp({ closing }: { closing: boolean }) { // <--- changed
-    const favoriteSites = [ // <--- changed
-        { title: "TradingView", url: "tradingview.com", emoji: "📈" },
-        { title: "Vercel", url: "vercel.com", emoji: "▲" },
-        { title: "GitHub", url: "github.com", emoji: "⌘" },
-        { title: "News", url: "marketwatch.com", emoji: "📰" },
+    const [safariQuery, setSafariQuery] = useState(""); // <--- changed
+    const [safariPageUrl, setSafariPageUrl] = useState(""); // <--- changed: real page URL loaded inside the phone iframe
+    const [safariHistory, setSafariHistory] = useState<string[]>([]); // <--- changed
+    const [safariHistoryIndex, setSafariHistoryIndex] = useState(-1); // <--- changed
+    const [iframeLoadKey, setIframeLoadKey] = useState(0); // <--- changed: forces refresh/reload inside the phone
+
+    const isWebPageOpen = safariPageUrl.length > 0; // <--- changed
+
+    const quickSearches = [ // <--- changed
+        "youtube.com",
+        "github.com",
+        "tradingview.com",
+        "wikipedia.org",
     ];
 
-    const marketCards = [ // <--- changed
-        { label: "Gold", value: "4,990.20", change: "+0.42%" },
-        { label: "Nasdaq", value: "21,841", change: "+0.18%" },
-        { label: "Dollar", value: "104.12", change: "-0.07%" },
-    ];
+    function resolveSafariUrl(value: string) { // <--- changed: turns typed text into a real iframe URL
+        const rawValue = value.trim(); // <--- changed
+        const trimmedValue = rawValue.toLowerCase(); // <--- changed
+
+        if (!rawValue) return ""; // <--- changed
+
+        if (trimmedValue === "youtube" || trimmedValue === "yt") return "https://www.youtube.com"; // <--- changed
+        if (trimmedValue === "google") return "https://www.google.com"; // <--- changed
+        if (trimmedValue === "github") return "https://github.com"; // <--- changed
+        if (trimmedValue === "tradingview") return "https://www.tradingview.com"; // <--- changed
+        if (trimmedValue === "wikipedia") return "https://www.wikipedia.org"; // <--- changed
+
+        const looksLikeUrl =
+            trimmedValue.includes(".") ||
+            trimmedValue.startsWith("http://") ||
+            trimmedValue.startsWith("https://"); // <--- changed
+
+        if (looksLikeUrl) { // <--- changed
+            return trimmedValue.startsWith("http")
+                ? rawValue
+                : `https://${rawValue}`; // <--- changed
+        }
+
+        // Real Google blocks iframe embedding, so DuckDuckGo Lite is used for real in-phone search results. // <--- changed
+        return `https://duckduckgo.com/html/?q=${encodeURIComponent(rawValue)}`; // <--- changed
+    }
+
+    function openSafariPage(pageUrl: string) { // <--- changed
+        if (!pageUrl) return; // <--- changed
+
+        setSafariPageUrl(pageUrl); // <--- changed
+        setSafariQuery(pageUrl); // <--- changed
+        setIframeLoadKey((currentKey) => currentKey + 1); // <--- changed
+
+        setSafariHistory((currentHistory) => { // <--- changed
+            const trimmedHistory = currentHistory.slice(0, safariHistoryIndex + 1); // <--- changed
+            const nextHistory = [...trimmedHistory, pageUrl]; // <--- changed
+            setSafariHistoryIndex(nextHistory.length - 1); // <--- changed
+            return nextHistory; // <--- changed
+        }); // <--- changed
+    }
+
+    function runSafariSearch(value = safariQuery) { // <--- changed
+        const resolvedUrl = resolveSafariUrl(value); // <--- changed
+        openSafariPage(resolvedUrl); // <--- changed: opens the real page inside the fake phone, not a browser tab
+    }
+
+    function goSafariBack() { // <--- changed
+        if (safariHistoryIndex > 0) { // <--- changed
+            const nextIndex = safariHistoryIndex - 1; // <--- changed
+            const nextUrl = safariHistory[nextIndex] ?? ""; // <--- changed
+            setSafariHistoryIndex(nextIndex); // <--- changed
+            setSafariPageUrl(nextUrl); // <--- changed
+            setSafariQuery(nextUrl); // <--- changed
+            setIframeLoadKey((currentKey) => currentKey + 1); // <--- changed
+            return; // <--- changed
+        }
+
+        setSafariPageUrl(""); // <--- changed: returns to the Safari start page inside the phone
+        setSafariQuery(""); // <--- changed
+    }
+
+    function goSafariForward() { // <--- changed
+        const nextIndex = safariHistoryIndex + 1; // <--- changed
+        if (nextIndex >= safariHistory.length) return; // <--- changed
+
+        const nextUrl = safariHistory[nextIndex] ?? ""; // <--- changed
+        setSafariHistoryIndex(nextIndex); // <--- changed
+        setSafariPageUrl(nextUrl); // <--- changed
+        setSafariQuery(nextUrl); // <--- changed
+        setIframeLoadKey((currentKey) => currentKey + 1); // <--- changed
+    }
+
+    function startNewSafariTab() { // <--- changed
+        setSafariQuery(""); // <--- changed
+        setSafariPageUrl(""); // <--- changed
+    }
+
+    function refreshSafariPage() { // <--- changed
+        if (!safariPageUrl) return; // <--- changed
+        setIframeLoadKey((currentKey) => currentKey + 1); // <--- changed
+    }
 
     return (
         <div
@@ -1643,58 +1728,98 @@ function IPhoneSafariApp({ closing }: { closing: boolean }) { // <--- changed
                 ...(closing ? styles.phoneAppPageClosing : {}),
             }}
         >
-            <div style={styles.safariTopBar}> {/* <--- changed */}
-                <button type="button" style={styles.safariNavButton} aria-label="Back">‹</button>
-                <div style={styles.safariAddressBar}> {/* <--- changed */}
-                    <span style={styles.safariLockIcon}>⌕</span>
-                    <span style={styles.safariAddressText}>Search or enter website</span>
-                    <span style={styles.safariRefreshIcon}>↻</span>
-                </div>
-                <button type="button" style={styles.safariNavButton} aria-label="Tabs">□</button>
+            <div style={styles.safariStatusSearchBar}> {/* <--- changed */}
+                <button type="button" style={styles.safariChromeButton} onClick={goSafariBack} aria-label="Back">‹</button>
+                <form
+                    style={styles.safariMiniAddressBar}
+                    onSubmit={(event) => { // <--- changed
+                        event.preventDefault(); // <--- changed
+                        runSafariSearch(); // <--- changed
+                    }}
+                >
+                    <span style={styles.safariMiniSearchIcon}>⌕</span>
+                    <input
+                        value={safariQuery}
+                        onChange={(event) => setSafariQuery(event.target.value)}
+                        placeholder="Search or enter website"
+                        style={styles.safariMiniAddressInput}
+                    />
+                </form>
+                <button type="button" style={styles.safariChromeButton} onClick={refreshSafariPage} aria-label="Refresh">↻</button>
             </div>
 
-            <div style={styles.safariContent}> {/* <--- changed */}
-                <div style={styles.safariHeroCard}> {/* <--- changed */}
-                    <div style={styles.safariHeroGlow} />
-                    <div style={styles.safariHeroLabel}>Safari</div>
-                    <div style={styles.safariHeroTitle}>Market Browser</div>
-                    <div style={styles.safariHeroText}>Quick links, live-style market cards, and a clean mobile browser layout built for the phone UI.</div>
-                </div>
-
-                <div style={styles.safariSectionHeader}>Favorites</div>
-                <div style={styles.safariFavoritesGrid}> {/* <--- changed */}
-                    {favoriteSites.map((site) => (
-                        <button key={site.title} type="button" style={styles.safariFavoriteCard}>
-                            <span style={styles.safariFavoriteIcon}>{site.emoji}</span>
-                            <span style={styles.safariFavoriteTitle}>{site.title}</span>
-                            <span style={styles.safariFavoriteUrl}>{site.url}</span>
-                        </button>
-                    ))}
-                </div>
-
-                <div style={styles.safariSectionHeader}>Market Snapshot</div>
-                <div style={styles.safariMarketStack}> {/* <--- changed */}
-                    {marketCards.map((card) => (
-                        <div key={card.label} style={styles.safariMarketCard}>
-                            <div>
-                                <div style={styles.safariMarketLabel}>{card.label}</div>
-                                <div style={styles.safariMarketValue}>{card.value}</div>
-                            </div>
-                            <div style={styles.safariMarketChange}>{card.change}</div>
+            <div style={styles.safariGoogleContent}> {/* <--- changed */}
+                {isWebPageOpen ? ( // <--- changed
+                    <div style={styles.safariIframeWrap}> {/* <--- changed */}
+                        <iframe
+                            key={`${safariPageUrl}-${iframeLoadKey}`} // <--- changed
+                            title="Fake iPhone Safari Web View" // <--- changed
+                            src={safariPageUrl} // <--- changed: real page loads here inside the phone
+                            style={styles.safariIframe}
+                            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" // <--- changed
+                        />
+                    </div>
+                ) : (
+                    <>
+                        <div style={styles.safariGoogleLogo} aria-label="Fake Google"> {/* <--- changed */}
+                            <span style={{ color: "#4285f4" }}>G</span>
+                            <span style={{ color: "#ea4335" }}>o</span>
+                            <span style={{ color: "#fbbc05" }}>o</span>
+                            <span style={{ color: "#4285f4" }}>g</span>
+                            <span style={{ color: "#34a853" }}>l</span>
+                            <span style={{ color: "#ea4335" }}>e</span>
                         </div>
-                    ))}
-                </div>
+
+                        <form
+                            style={styles.safariMainSearchCard}
+                            onSubmit={(event) => { // <--- changed
+                                event.preventDefault(); // <--- changed
+                                runSafariSearch(); // <--- changed
+                            }}
+                        >
+                            <span style={styles.safariMainSearchIcon}>⌕</span>
+                            <input
+                                value={safariQuery}
+                                onChange={(event) => setSafariQuery(event.target.value)}
+                                placeholder="Search Google or type a URL"
+                                style={styles.safariMainSearchInput}
+                            />
+                            <button type="submit" style={styles.safariSearchSubmitButton}>Go</button>
+                        </form>
+
+                        <div style={styles.safariQuickGrid}> {/* <--- changed */}
+                            {quickSearches.map((item) => (
+                                <button
+                                    key={item}
+                                    type="button"
+                                    style={styles.safariQuickChip}
+                                    onClick={() => runSafariSearch(item)}
+                                >
+                                    {item}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div style={styles.safariStartCard}> {/* <--- changed */}
+                            <div style={styles.safariStartTitle}>Safari Web View</div>
+                            <div style={styles.safariStartText}>
+                                Pages now load inside this phone screen with an iframe. Some websites block iframe embedding, so those may show a browser security refusal instead of the page.
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
 
             <div style={styles.safariBottomToolbar}> {/* <--- changed */}
-                <button type="button" style={styles.safariToolbarButton}>‹</button>
-                <button type="button" style={styles.safariToolbarButton}>›</button>
-                <button type="button" style={styles.safariToolbarButton}>＋</button>
-                <button type="button" style={styles.safariToolbarButton}>☰</button>
+                <button type="button" style={styles.safariToolbarButton} onClick={goSafariBack}>‹</button>
+                <button type="button" style={styles.safariToolbarButton} onClick={goSafariForward}>›</button>
+                <button type="button" style={styles.safariToolbarButton} onClick={startNewSafariTab}>＋</button>
+                <button type="button" style={styles.safariToolbarButton}>□</button>
             </div>
         </div>
     );
 }
+
 
 
 function IPhoneNestIconSvg() { // <--- changed: fixed app square with PNG-size knob only affecting top image
@@ -6027,6 +6152,23 @@ export default function TradingGame() {
 }
 
 const styles: Record<string, CSSProperties> = {
+    safariIframeWrap: { // <--- changed
+        flex: 1,
+        width: "100%",
+        minHeight: 0,
+        overflow: "hidden",
+        borderRadius: 0,
+        background: "#ffffff",
+        display: "flex",
+    },
+    safariIframe: { // <--- changed
+        width: "100%",
+        height: "100%",
+        flex: 1,
+        border: "none",
+        background: "#ffffff",
+        display: "block",
+    },
     app: {
         width: "100%",
         height: "100dvh", // <--- changed
@@ -7703,6 +7845,324 @@ const styles: Record<string, CSSProperties> = {
         fontWeight: 850, // <--- changed
         padding: "0 10px", // <--- changed
         boxSizing: "border-box", // <--- changed
+    },
+
+    safariAppPage: { // <--- changed
+        background: "#ffffff", // <--- changed
+        color: "#111111", // <--- changed
+        overflow: "hidden", // <--- changed
+    },
+    safariStatusSearchBar: { // <--- changed
+        position: "absolute", // <--- changed
+        top: 44, // <--- changed
+        left: 0, // <--- changed
+        right: 0, // <--- changed
+        height: 54, // <--- changed
+        padding: "7px 12px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "32px 1fr 32px", // <--- changed
+        gap: 8, // <--- changed
+        alignItems: "center", // <--- changed
+        background: "rgba(255,255,255,0.92)", // <--- changed
+        borderBottom: "1px solid rgba(0,0,0,0.08)", // <--- changed
+        backdropFilter: "blur(18px)", // <--- changed
+        zIndex: 4, // <--- changed
+    },
+    safariChromeButton: { // <--- changed
+        width: 32, // <--- changed
+        height: 32, // <--- changed
+        border: "none", // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "rgba(0,0,0,0.055)", // <--- changed
+        color: "#1d1d1f", // <--- changed
+        fontSize: 24, // <--- changed
+        fontWeight: 750, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        cursor: "pointer", // <--- changed
+        padding: 0, // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    safariMiniAddressBar: { // <--- changed
+        height: 36, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "#f1f3f4", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 7, // <--- changed
+        padding: "0 10px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        minWidth: 0, // <--- changed
+        boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.05)", // <--- changed
+    },
+    safariMiniSearchIcon: { // <--- changed
+        color: "#6b7280", // <--- changed
+        fontSize: 18, // <--- changed
+        fontWeight: 900, // <--- changed
+        transform: "translateY(-0.5px)", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    safariMiniAddressInput: { // <--- changed
+        flex: 1, // <--- changed
+        minWidth: 0, // <--- changed
+        height: "100%", // <--- changed
+        border: "none", // <--- changed
+        outline: "none", // <--- changed
+        background: "transparent", // <--- changed
+        color: "#202124", // <--- changed
+        fontSize: 12.5, // <--- changed
+        fontWeight: 650, // <--- changed
+        fontFamily: "Arial, sans-serif", // <--- changed
+    },
+    safariGoogleContent: { // <--- changed
+        position: "absolute", // <--- changed
+        top: 98, // <--- changed
+        left: 0, // <--- changed
+        right: 0, // <--- changed
+        bottom: 76, // <--- changed: matches the Phone app bottom bar height
+        overflowY: "auto", // <--- changed
+        WebkitOverflowScrolling: "touch", // <--- changed
+        padding: "30px 17px 24px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        background: "linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)", // <--- changed
+    },
+    safariGoogleLogo: { // <--- changed
+        display: "flex", // <--- changed
+        justifyContent: "center", // <--- changed
+        alignItems: "center", // <--- changed
+        fontSize: 43, // <--- changed
+        lineHeight: 1, // <--- changed
+        fontWeight: 800, // <--- changed
+        letterSpacing: -3.1, // <--- changed
+        fontFamily: "Arial, sans-serif", // <--- changed
+        marginBottom: 21, // <--- changed
+        userSelect: "none", // <--- changed
+    },
+    safariMainSearchCard: { // <--- changed
+        width: "100%", // <--- changed
+        minHeight: 50, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "#ffffff", // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "22px 1fr auto", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 8, // <--- changed
+        padding: "7px 8px 7px 15px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        boxShadow: "0 8px 28px rgba(60,64,67,0.18), inset 0 0 0 1px rgba(60,64,67,0.11)", // <--- changed
+    },
+    safariMainSearchIcon: { // <--- changed
+        color: "#5f6368", // <--- changed
+        fontSize: 20, // <--- changed
+        fontWeight: 900, // <--- changed
+    },
+    safariMainSearchInput: { // <--- changed
+        minWidth: 0, // <--- changed
+        border: "none", // <--- changed
+        outline: "none", // <--- changed
+        background: "transparent", // <--- changed
+        color: "#202124", // <--- changed
+        fontSize: 14, // <--- changed
+        fontWeight: 650, // <--- changed
+        fontFamily: "Arial, sans-serif", // <--- changed
+    },
+    safariSearchSubmitButton: { // <--- changed
+        height: 35, // <--- changed
+        border: "none", // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "#1a73e8", // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 850, // <--- changed
+        padding: "0 12px", // <--- changed
+        cursor: "pointer", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    safariQuickGrid: { // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "1fr 1fr", // <--- changed
+        gap: 9, // <--- changed
+        marginTop: 21, // <--- changed
+    },
+    safariQuickChip: { // <--- changed
+        minHeight: 42, // <--- changed
+        border: "1px solid rgba(60,64,67,0.12)", // <--- changed
+        borderRadius: 16, // <--- changed
+        background: "#ffffff", // <--- changed
+        color: "#202124", // <--- changed
+        fontSize: 12.5, // <--- changed
+        fontWeight: 750, // <--- changed
+        textAlign: "left", // <--- changed
+        padding: "0 12px", // <--- changed
+        boxShadow: "0 5px 16px rgba(60,64,67,0.09)", // <--- changed
+        cursor: "pointer", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    safariStartCard: { // <--- changed
+        marginTop: 17, // <--- changed
+        borderRadius: 24, // <--- changed
+        background: "linear-gradient(145deg, rgba(66,133,244,0.10), rgba(52,168,83,0.08))", // <--- changed
+        border: "1px solid rgba(66,133,244,0.14)", // <--- changed
+        padding: 17, // <--- changed
+        boxSizing: "border-box", // <--- changed
+    },
+    safariStartTitle: { // <--- changed
+        color: "#202124", // <--- changed
+        fontSize: 17, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: -0.2, // <--- changed
+        marginBottom: 6, // <--- changed
+    },
+    safariStartText: { // <--- changed
+        color: "#5f6368", // <--- changed
+        fontSize: 12.5, // <--- changed
+        fontWeight: 650, // <--- changed
+        lineHeight: 1.42, // <--- changed
+    },
+    safariResultsPanel: { // <--- changed
+        marginTop: 19, // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        gap: 11, // <--- changed
+    },
+    safariResultsMeta: { // <--- changed
+        color: "#70757a", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 650, // <--- changed
+        padding: "0 3px", // <--- changed
+    },
+    safariResultCard: { // <--- changed
+        display: "block", // <--- changed
+        width: "100%", // <--- changed
+        textAlign: "left", // <--- changed
+        border: "none", // <--- changed
+        textDecoration: "none", // <--- changed
+        borderRadius: 19, // <--- changed
+        background: "#ffffff", // <--- changed
+        boxShadow: "0 7px 20px rgba(60,64,67,0.10)", // <--- changed
+        padding: "13px 14px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    safariResultDisplayUrl: { // <--- changed
+        color: "#188038", // <--- changed
+        fontSize: 11.5, // <--- changed
+        fontWeight: 750, // <--- changed
+        marginBottom: 4, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    safariResultTitle: { // <--- changed
+        color: "#1a0dab", // <--- changed
+        fontSize: 16, // <--- changed
+        fontWeight: 760, // <--- changed
+        lineHeight: 1.18, // <--- changed
+        marginBottom: 5, // <--- changed
+    },
+    safariResultText: { // <--- changed
+        color: "#4d5156", // <--- changed
+        fontSize: 12.4, // <--- changed
+        fontWeight: 600, // <--- changed
+        lineHeight: 1.35, // <--- changed
+    },
+    safariBottomToolbar: { // <--- changed
+        position: "absolute", // <--- changed
+        left: 0, // <--- changed
+        right: 0, // <--- changed
+        bottom: 0, // <--- changed
+        height: 76, // <--- changed: exact same bottom bar height as the Phone app
+        display: "grid", // <--- changed
+        gridTemplateColumns: "repeat(4, 1fr)", // <--- changed
+        alignItems: "start", // <--- changed: matches Phone app tab spacing
+        paddingTop: 8, // <--- changed: matches Phone app top spacing
+        paddingBottom: 20, // <--- changed: matches Phone app bottom safe spacing
+        boxSizing: "border-box", // <--- changed
+        background: "rgba(248,248,248,0.96)", // <--- changed
+        borderTop: "1px solid rgba(0,0,0,0.08)", // <--- changed
+        backdropFilter: "blur(18px)", // <--- changed
+        zIndex: 5, // <--- changed
+        transform: "translateZ(0)", // <--- changed
+        willChange: "transform", // <--- changed
+    },
+    safariToolbarButton: { // <--- changed
+        height: 52, // <--- changed: exact same tab item box as Phone app tabs
+        border: "none", // <--- changed
+        background: "transparent", // <--- changed
+        color: "#1a73e8", // <--- changed
+        fontSize: 25, // <--- changed
+        fontWeight: 850, // <--- changed
+        cursor: "pointer", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        padding: 0, // <--- changed
+        WebkitAppearance: "none", // <--- changed
+        appearance: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+        lineHeight: 1, // <--- changed
+    },
+    safariFakeWebPage: { // <--- changed
+        minHeight: "100%", // <--- changed
+        paddingTop: 4, // <--- changed
+        boxSizing: "border-box", // <--- changed
+    },
+    safariFakePageTopLine: { // <--- changed
+        color: "#188038", // <--- changed
+        fontSize: 11.5, // <--- changed
+        fontWeight: 760, // <--- changed
+        marginBottom: 11, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    safariFakePageTitle: { // <--- changed
+        color: "#202124", // <--- changed
+        fontSize: 29, // <--- changed
+        lineHeight: 1.05, // <--- changed
+        fontWeight: 950, // <--- changed
+        letterSpacing: -1.2, // <--- changed
+        marginBottom: 7, // <--- changed
+    },
+    safariFakePageSearchTerm: { // <--- changed
+        color: "#5f6368", // <--- changed
+        fontSize: 14, // <--- changed
+        fontWeight: 750, // <--- changed
+        marginBottom: 18, // <--- changed
+    },
+    safariFakeBrowserCard: { // <--- changed
+        borderRadius: 24, // <--- changed
+        background: "linear-gradient(145deg, rgba(66,133,244,0.12), rgba(52,168,83,0.10))", // <--- changed
+        border: "1px solid rgba(66,133,244,0.14)", // <--- changed
+        padding: 18, // <--- changed
+        boxShadow: "0 10px 28px rgba(60,64,67,0.10)", // <--- changed
+        boxSizing: "border-box", // <--- changed
+    },
+    safariFakeBrowserCardTitle: { // <--- changed
+        color: "#202124", // <--- changed
+        fontSize: 17, // <--- changed
+        fontWeight: 900, // <--- changed
+        marginBottom: 7, // <--- changed
+    },
+    safariFakeBrowserCardText: { // <--- changed
+        color: "#5f6368", // <--- changed
+        fontSize: 12.5, // <--- changed
+        fontWeight: 650, // <--- changed
+        lineHeight: 1.42, // <--- changed
+    },
+    safariFakeContentStack: { // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        gap: 10, // <--- changed
+        marginTop: 21, // <--- changed
+    },
+    safariFakeContentBlock: { // <--- changed
+        width: "100%", // <--- changed
+        height: 16, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "rgba(60,64,67,0.10)", // <--- changed
     },
 
     phonePlaceholderPage: { // <--- changed
