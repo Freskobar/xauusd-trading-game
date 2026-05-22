@@ -2576,6 +2576,8 @@ export default function TradingGame() {
     const phoneIconPreloadPromiseRef = useRef<Promise<void> | null>(null); // <--- changed
     const phoneIconsPreloadedRef = useRef(false); // <--- changed
     const phoneOpeningAfterPreloadRef = useRef(false); // <--- changed
+    const homeSwipeStartYRef = useRef<number | null>(null); // <--- changed: real mobile swipe-up start position for home bar
+    const homeSwipeDidTriggerRef = useRef(false); // <--- changed: stops one swipe from firing multiple times
     const appStartRef = useRef(Date.now());
     const fallbackMarketSessionStartRef = useRef(new Date("2026-05-18T08:30:00-04:00").getTime()); // <--- changed
     const csvCandlesRef = useRef<CsvCandle[]>([]);
@@ -5587,7 +5589,33 @@ export default function TradingGame() {
                                                             ...styles.phoneHomeBarButton,
                                                             ...(homeButtonAnimating ? styles.phoneHomeBarButtonLocked : {}), // <--- changed
                                                         }}
-                                                        onClick={handlePhoneHomePress}
+                                                        onPointerDown={(event) => { // <--- changed: starts swipe-up detection on mobile and desktop
+                                                            homeSwipeStartYRef.current = event.clientY; // <--- changed
+                                                            homeSwipeDidTriggerRef.current = false; // <--- changed
+                                                        }}
+                                                        onPointerMove={(event) => { // <--- changed: swipe up on the home bar triggers the same animation
+                                                            const startY = homeSwipeStartYRef.current; // <--- changed
+                                                            if (startY === null || homeSwipeDidTriggerRef.current) return; // <--- changed
+
+                                                            const swipeUpDistance = startY - event.clientY; // <--- changed
+                                                            if (swipeUpDistance >= 18) { // <--- changed: low threshold so phone swipe feels responsive
+                                                                homeSwipeDidTriggerRef.current = true; // <--- changed
+                                                                handlePhoneHomePress(); // <--- changed
+                                                            }
+                                                        }}
+                                                        onPointerUp={() => { // <--- changed: tap still works, swipe does not double-fire
+                                                            const didSwipe = homeSwipeDidTriggerRef.current; // <--- changed
+                                                            homeSwipeStartYRef.current = null; // <--- changed
+                                                            homeSwipeDidTriggerRef.current = false; // <--- changed
+
+                                                            if (!didSwipe) { // <--- changed
+                                                                handlePhoneHomePress(); // <--- changed
+                                                            } // <--- changed
+                                                        }}
+                                                        onPointerCancel={() => { // <--- changed
+                                                            homeSwipeStartYRef.current = null; // <--- changed
+                                                            homeSwipeDidTriggerRef.current = false; // <--- changed
+                                                        }}
                                                         aria-label={activePhoneApp === "phone" ? "Close Phone app" : "Home"}
                                                     >
                                                         <span
@@ -5926,7 +5954,6 @@ const styles: Record<string, CSSProperties> = {
         userSelect: "none", // <--- changed
         WebkitUserSelect: "none", // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
-        touchAction: "none", // <--- changed
     },
     phoneIconPreloadCache: { // <--- changed
         position: "fixed", // <--- changed
@@ -5991,7 +6018,6 @@ const styles: Record<string, CSSProperties> = {
         userSelect: "none", // <--- changed
         WebkitUserSelect: "none", // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
-        touchAction: "none", // <--- changed
     },
     topPanel: {
         background: "#181818",
