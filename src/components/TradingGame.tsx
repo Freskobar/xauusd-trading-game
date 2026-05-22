@@ -6,6 +6,7 @@ import {
     type CSSProperties,
     type MouseEvent as ReactMouseEvent,
     type TouchEvent as ReactTouchEvent,
+    type ReactNode,
 } from "react";
 import centraBankIcon from "../assets/centra-bank-icon.png";
 import nestIcon from "../assets/nest-icon.png";
@@ -19,6 +20,32 @@ import vaulteIcon from "../assets/vaulte-icon.png";
 import vantaIcon from "../assets/vanta-icon.png";
 import ilearnIcon from "../assets/ilearn-icon.png";
 import itradeIcon from "../assets/itrade-icon.png";
+
+const PHONE_HOME_ICON_PRELOAD_PATHS = [ // <--- changed: preloads PNG app icons before the fake phone opens
+    centraBankIcon, // <--- changed
+    nestIcon, // <--- changed
+    settingsIcon, // <--- changed
+    dashlyIcon, // <--- changed
+    appHubIcon, // <--- changed
+    titanGymIcon, // <--- changed
+    locaraIcon, // <--- changed
+    throttleIcon, // <--- changed
+    vaulteIcon, // <--- changed
+    vantaIcon, // <--- changed
+    ilearnIcon, // <--- changed
+    itradeIcon, // <--- changed
+];
+
+function preloadImageAsset(src: string) { // <--- changed
+    return new Promise<void>((resolve) => { // <--- changed
+        const image = new Image(); // <--- changed
+        image.onload = () => resolve(); // <--- changed
+        image.onerror = () => resolve(); // <--- changed: never block the phone forever if one asset is missing
+        image.decoding = "async"; // <--- changed
+        image.loading = "eager"; // <--- changed
+        image.src = src; // <--- changed
+    }); // <--- changed
+}
 
 type Candle = {
     open: number;
@@ -1120,6 +1147,7 @@ function IPhonePhoneApp({ // <--- changed
     onCall: () => void;
 }) {
     const [pressedDialKey, setPressedDialKey] = useState<string | null>(null); // <--- changed: tracks the exact keypad button being pressed
+    const [phoneActiveTab, setPhoneActiveTab] = useState<"calls" | "contacts" | "keypad" | "search">("keypad"); // <--- changed: lets the bottom Phone tabs open separate pages
     const pressedDialKeyTimeoutRef = useRef<number | null>(null); // <--- changed: keeps every press visible briefly
 
     function pressDialKey(value: string) { // <--- changed: starts the light-gray press immediately on first touch/click
@@ -1178,6 +1206,387 @@ function IPhonePhoneApp({ // <--- changed
         ],
     ];
 
+    const recentCalls = [ // <--- changed: premium-looking fake call history content for the new Calls page
+        { name: "Jayden", type: "mobile", time: "Today", missed: false, initials: "J" },
+        { name: "Unknown Caller", type: "No Caller ID", time: "Yesterday", missed: true, initials: "?" },
+        { name: "Mia", type: "iPhone", time: "Sunday", missed: false, initials: "M" },
+        { name: "Odyssey Support", type: "outgoing", time: "Friday", missed: false, initials: "O" },
+        { name: "Alex", type: "mobile", time: "Thursday", missed: true, initials: "A" },
+    ];
+
+    const favoriteContacts = [ // <--- changed: polished fake contact content for the new Contacts page
+        { name: "Jayden", label: "Mobile", initials: "J", accent: "blue" },
+        { name: "Mia", label: "iPhone", initials: "M", accent: "pink" },
+        { name: "Odyssey Support", label: "Business", initials: "O", accent: "green" },
+    ];
+
+    const contactGroups = [ // <--- changed: grouped contacts make the third Phone page feel real instead of empty
+        {
+            letter: "A", contacts: [
+                { name: "Alex Rivera", label: "mobile", initials: "AR", accent: "orange" },
+                { name: "Avery Stone", label: "iPhone", initials: "AS", accent: "purple" },
+            ]
+        },
+        {
+            letter: "J", contacts: [
+                { name: "Jayden Brooks", label: "mobile", initials: "JB", accent: "blue" },
+                { name: "Jordan Lee", label: "work", initials: "JL", accent: "gray" },
+            ]
+        },
+        {
+            letter: "M", contacts: [
+                { name: "Mia Carter", label: "iPhone", initials: "MC", accent: "pink" },
+                { name: "Mom", label: "home", initials: "M", accent: "green" },
+            ]
+        },
+        {
+            letter: "O", contacts: [
+                { name: "Odyssey Support", label: "business", initials: "OS", accent: "green" },
+            ]
+        },
+    ];
+
+    const searchQuickActions = [ // <--- changed: polished quick actions for the fourth Phone page
+        { label: "Missed", value: "2", tone: "red" },
+        { label: "Favorites", value: "3", tone: "blue" },
+        { label: "Business", value: "1", tone: "green" },
+    ];
+
+    const searchSuggestions = [ // <--- changed: realistic unified search results
+        { title: "Jayden Brooks", subtitle: "Contact • mobile", initials: "JB", accent: "blue" },
+        { title: "Mia Carter", subtitle: "Contact • iPhone", initials: "MC", accent: "pink" },
+        { title: "Odyssey Support", subtitle: "Business • recent call", initials: "OS", accent: "green" },
+        { title: "Unknown Caller", subtitle: "Recent missed call", initials: "?", accent: "red" },
+    ];
+
+    const tabs: Array<{ id: "calls" | "contacts" | "keypad" | "search"; icon: ReactNode; label: string }> = [
+        { id: "calls", icon: <PhoneCallsTabIcon />, label: "Calls" }, // <--- changed: now opens the Calls page
+        { id: "contacts", icon: <PhoneContactsTabIcon />, label: "Contacts" },
+        { id: "keypad", icon: <PhoneKeypadTabIcon />, label: "Keypad" },
+        { id: "search", icon: <PhoneSearchTabIcon />, label: "Search" },
+    ];
+
+    function renderCallsPage() { // <--- changed: second page shown when clicking Calls
+        return (
+            <div style={styles.phoneCallsPage}>
+                <div style={styles.phoneCallsHeader}>
+                    <div style={styles.phoneCallsEditText}>Edit</div>
+                    <div style={styles.phoneCallsTitle}>Calls</div>
+                    <button
+                        type="button"
+                        style={styles.phoneCallsPlusButton}
+                        aria-label="Add call"
+                    >
+                        +
+                    </button>
+                </div>
+
+                <div style={styles.phoneCallsSegment}>
+                    <button type="button" style={{ ...styles.phoneCallsSegmentButton, ...styles.phoneCallsSegmentButtonActive }}>
+                        All
+                    </button>
+                    <button type="button" style={styles.phoneCallsSegmentButton}>
+                        Missed
+                    </button>
+                </div>
+
+                <div style={styles.phoneCallsSummaryCard}>
+                    <div style={styles.phoneCallsSummaryIcon}>
+                        <PhoneCallsTabIcon />
+                    </div>
+                    <div style={styles.phoneCallsSummaryTextWrap}>
+                        <div style={styles.phoneCallsSummaryTitle}>Recent Activity</div>
+                        <div style={styles.phoneCallsSummarySub}>5 calls this week • 2 missed</div>
+                    </div>
+                </div>
+
+                <div style={styles.phoneCallsList}>
+                    <div style={styles.phoneCallsSectionTitle}>Recents</div>
+
+                    {recentCalls.map((call, index) => (
+                        <button
+                            key={`${call.name}-${index}`}
+                            type="button"
+                            style={styles.phoneCallRow}
+                        >
+                            <div
+                                style={{
+                                    ...styles.phoneCallAvatar,
+                                    ...(call.missed ? styles.phoneCallAvatarMissed : {}),
+                                }}
+                            >
+                                {call.initials}
+                            </div>
+
+                            <div style={styles.phoneCallRowText}>
+                                <div
+                                    style={{
+                                        ...styles.phoneCallName,
+                                        ...(call.missed ? styles.phoneCallNameMissed : {}),
+                                    }}
+                                >
+                                    {call.name}
+                                </div>
+                                <div style={styles.phoneCallType}>{call.type}</div>
+                            </div>
+
+                            <div style={styles.phoneCallMeta}>
+                                <span style={styles.phoneCallTime}>{call.time}</span>
+                                <span style={styles.phoneCallInfo}>i</span>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    function getContactAvatarStyle(accent: string) { // <--- changed: gives contact avatars a clean iOS-like colorful polish
+        const avatarGradients: Record<string, string> = {
+            blue: "linear-gradient(145deg, #5ac8fa, #0a84ff)",
+            pink: "linear-gradient(145deg, #ff8ad8, #ff2d55)",
+            green: "linear-gradient(145deg, #52d273, #30d158)",
+            orange: "linear-gradient(145deg, #ffb340, #ff9f0a)",
+            purple: "linear-gradient(145deg, #bf8cff, #7d5fff)",
+            gray: "linear-gradient(145deg, #6f6f73, #3a3a3c)",
+        };
+
+        return {
+            ...styles.phoneContactAvatar,
+            background: avatarGradients[accent] ?? avatarGradients.gray,
+        };
+    }
+
+    function getSearchActionStyle(tone: string) { // <--- changed: gives the Search page cards colorful iOS-style accents
+        const actionGradients: Record<string, string> = {
+            red: "linear-gradient(145deg, rgba(255,69,58,0.26), rgba(255,69,58,0.08))",
+            blue: "linear-gradient(145deg, rgba(10,132,255,0.28), rgba(10,132,255,0.08))",
+            green: "linear-gradient(145deg, rgba(48,209,88,0.24), rgba(48,209,88,0.08))",
+        };
+
+        return {
+            ...styles.phoneSearchQuickCard,
+            background: actionGradients[tone] ?? actionGradients.blue,
+        };
+    }
+
+    function renderContactsPage() { // <--- changed: third page shown when clicking Contacts
+        return (
+            <div style={styles.phoneContactsPage}>
+                <div style={styles.phoneContactsHeader}>
+                    <div style={styles.phoneContactsTitleBlock}>
+                        <div style={styles.phoneContactsTitle}>Contacts</div>
+                        <div style={styles.phoneContactsCount}>8 saved contacts</div>
+                    </div>
+                    <button
+                        type="button"
+                        style={styles.phoneContactsPlusButton}
+                        aria-label="Add contact"
+                    >
+                        +
+                    </button>
+                </div>
+
+                <div style={styles.phoneContactsSearchBar}>
+                    <PhoneSearchTabIcon />
+                    <span style={styles.phoneContactsSearchText}>Search contacts</span>
+                </div>
+
+                <div style={styles.phoneContactsMeCard}>
+                    <div style={styles.phoneContactsMeAvatar}>JA</div>
+                    <div style={styles.phoneContactsMeText}>
+                        <div style={styles.phoneContactsMeName}>Juan Acosta</div>
+                        <div style={styles.phoneContactsMeSub}>My Card • iPhone</div>
+                    </div>
+                    <div style={styles.phoneContactsChevron}>›</div>
+                </div>
+
+                <div style={styles.phoneContactsFavoritesStrip}>
+                    <div style={styles.phoneContactsSectionHeader}>Favorites</div>
+                    <div style={styles.phoneContactsFavoriteRow}>
+                        {favoriteContacts.map((contact) => (
+                            <button
+                                key={contact.name}
+                                type="button"
+                                style={styles.phoneContactsFavoriteCard}
+                            >
+                                <div style={getContactAvatarStyle(contact.accent)}>
+                                    {contact.initials}
+                                </div>
+                                <div style={styles.phoneContactsFavoriteName}>{contact.name}</div>
+                                <div style={styles.phoneContactsFavoriteLabel}>{contact.label}</div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div style={styles.phoneContactsList}>
+                    {contactGroups.map((group) => (
+                        <div key={group.letter} style={styles.phoneContactsGroup}>
+                            <div style={styles.phoneContactsLetter}>{group.letter}</div>
+                            {group.contacts.map((contact) => (
+                                <button
+                                    key={contact.name}
+                                    type="button"
+                                    style={styles.phoneContactRow}
+                                >
+                                    <div style={getContactAvatarStyle(contact.accent)}>
+                                        {contact.initials}
+                                    </div>
+                                    <div style={styles.phoneContactText}>
+                                        <div style={styles.phoneContactName}>{contact.name}</div>
+                                        <div style={styles.phoneContactLabel}>{contact.label}</div>
+                                    </div>
+                                    <div style={styles.phoneContactsChevron}>›</div>
+                                </button>
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    function renderSearchPage() { // <--- changed: fourth page shown when clicking Search
+        return (
+            <div style={styles.phoneSearchPage}>
+                <div style={styles.phoneSearchHeader}>
+                    <div style={styles.phoneSearchTitle}>Search</div>
+                    <div style={styles.phoneSearchSubtitle}>Find contacts, calls, and numbers</div>
+                </div>
+
+                <div style={styles.phoneSearchInputWrap}>
+                    <span style={styles.phoneSearchInputIcon}>
+                        <PhoneSearchTabIcon />
+                    </span>
+                    <span style={styles.phoneSearchInputText}>Name, phone number, or business</span>
+                </div>
+
+                <div style={styles.phoneSearchHeroCard}>
+                    <div style={styles.phoneSearchHeroGlow} />
+                    <div style={styles.phoneSearchHeroIcon}>
+                        <PhoneSearchTabIcon />
+                    </div>
+                    <div style={styles.phoneSearchHeroText}>
+                        <div style={styles.phoneSearchHeroTitle}>Smart Lookup</div>
+                        <div style={styles.phoneSearchHeroSub}>Instantly search your fake phone history, saved contacts, and quick call shortcuts.</div>
+                    </div>
+                </div>
+
+                <div style={styles.phoneSearchQuickGrid}>
+                    {searchQuickActions.map((action) => (
+                        <button
+                            key={action.label}
+                            type="button"
+                            style={getSearchActionStyle(action.tone)}
+                        >
+                            <div style={styles.phoneSearchQuickValue}>{action.value}</div>
+                            <div style={styles.phoneSearchQuickLabel}>{action.label}</div>
+                        </button>
+                    ))}
+                </div>
+
+                <div style={styles.phoneSearchResultsCard}>
+                    <div style={styles.phoneSearchSectionHeader}>Suggested Results</div>
+
+                    {searchSuggestions.map((item) => (
+                        <button
+                            key={item.title}
+                            type="button"
+                            style={styles.phoneSearchResultRow}
+                        >
+                            <div style={getContactAvatarStyle(item.accent)}>
+                                {item.initials}
+                            </div>
+                            <div style={styles.phoneSearchResultText}>
+                                <div style={styles.phoneSearchResultTitle}>{item.title}</div>
+                                <div style={styles.phoneSearchResultSub}>{item.subtitle}</div>
+                            </div>
+                            <div style={styles.phoneSearchResultAction}>Call</div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    function renderKeypadPage() { // <--- changed: keeps the original keypad page intact
+        return (
+            <>
+                <div style={styles.phoneAppTopSpacer} />
+
+                <div style={styles.phoneDialerDisplayWrap}>
+                    <div style={styles.phoneDialerNumber}>
+                        {formatDialedPhoneNumber(dialedNumber) || ""}
+                    </div>
+                    <button style={styles.phoneDialerAddNumber} type="button">
+                        + Add Number
+                    </button>
+                </div>
+
+                <div style={styles.phoneDialerKeypad}>
+                    {keypadRows.flat().map((key) => (
+                        <button
+                            key={`${key.main}-${key.sub}`}
+                            type="button"
+                            style={{
+                                ...styles.phoneDialerKey,
+                                ...(pressedDialKey === key.main ? styles.phoneDialerKeyPressed : {}), // <--- changed: light gray only while actively pressed
+                            }}
+                            onPointerDown={() => { // <--- changed: press feedback starts immediately on every click/tap
+                                pressDialKey(key.main); // <--- changed
+                            }} // <--- changed
+                            onPointerUp={() => releaseDialKey(key.main)} // <--- changed
+                            onPointerLeave={() => releaseDialKey(key.main)} // <--- changed
+                            onPointerCancel={() => releaseDialKey(key.main)} // <--- changed
+                            onClick={() => onDigit(key.main)}
+                        >
+                            <span
+                                style={{
+                                    ...styles.phoneDialerKeyMain,
+                                    ...(!key.sub ? styles.phoneDialerKeyMainCentered : {}), // <--- changed: centers *, #, and 1 when there is no letter row
+                                    ...(key.main === "*" ? styles.phoneDialerKeyAsterisk : {}), // <--- changed: makes * match # size and visual center
+                                }}
+                            >
+                                {key.main}
+                            </span>
+                            {key.sub ? (
+                                <span style={styles.phoneDialerKeySub}>{key.sub}</span>
+                            ) : null}
+                        </button>
+                    ))}
+                </div>
+
+                <div style={styles.phoneDialerActions}>
+                    <div style={styles.phoneDialerSideAction} />
+
+                    <button
+                        type="button"
+                        style={styles.phoneDialerCallButton}
+                        onClick={onCall}
+                        aria-label="Fake call"
+                    >
+                        <IPhonePhoneIconSvg />
+                    </button>
+
+                    <button
+                        type="button"
+                        style={{
+                            ...styles.phoneDialerDelete,
+                            opacity: dialedNumber ? 1 : 0,
+                            pointerEvents: dialedNumber ? "auto" : "none",
+                        }}
+                        onClick={onDelete}
+                        aria-label="Delete number"
+                    >
+                        <PhoneBackspaceIcon />
+                    </button>
+                </div>
+            </>
+        );
+    }
+
+
     return (
         <div
             style={{
@@ -1185,93 +1594,25 @@ function IPhonePhoneApp({ // <--- changed
                 ...(closing ? styles.phoneAppPageClosing : {}),
             }}
         >
-            <div style={styles.phoneAppTopSpacer} />
-
-            <div style={styles.phoneDialerDisplayWrap}>
-                <div style={styles.phoneDialerNumber}>
-                    {formatDialedPhoneNumber(dialedNumber) || ""}
-                </div>
-                <button style={styles.phoneDialerAddNumber} type="button">
-                    + Add Number
-                </button>
-            </div>
-
-            <div style={styles.phoneDialerKeypad}>
-                {keypadRows.flat().map((key) => (
-                    <button
-                        key={`${key.main}-${key.sub}`}
-                        type="button"
-                        style={{
-                            ...styles.phoneDialerKey,
-                            ...(pressedDialKey === key.main ? styles.phoneDialerKeyPressed : {}), // <--- changed: light gray only while actively pressed
-                        }}
-                        onPointerDown={() => { // <--- changed: press feedback starts immediately on every click/tap
-                            pressDialKey(key.main); // <--- changed
-                        }} // <--- changed
-                        onPointerUp={() => releaseDialKey(key.main)} // <--- changed
-                        onPointerLeave={() => releaseDialKey(key.main)} // <--- changed
-                        onPointerCancel={() => releaseDialKey(key.main)} // <--- changed
-                        onClick={() => onDigit(key.main)}
-                    >
-                        <span
-                            style={{
-                                ...styles.phoneDialerKeyMain,
-                                ...(!key.sub ? styles.phoneDialerKeyMainCentered : {}), // <--- changed: centers *, #, and 1 when there is no letter row
-                                ...(key.main === "*" ? styles.phoneDialerKeyAsterisk : {}), // <--- changed: makes * match # size and visual center
-                            }}
-                        >
-                            {key.main}
-                        </span>
-                        {key.sub ? (
-                            <span style={styles.phoneDialerKeySub}>{key.sub}</span>
-                        ) : null}
-                    </button>
-                ))}
-            </div>
-
-            <div style={styles.phoneDialerActions}>
-                <div style={styles.phoneDialerSideAction} />
-
-                <button
-                    type="button"
-                    style={styles.phoneDialerCallButton}
-                    onClick={onCall}
-                    aria-label="Fake call"
-                >
-                    <IPhonePhoneIconSvg />
-                </button>
-
-                <button
-                    type="button"
-                    style={{
-                        ...styles.phoneDialerDelete,
-                        opacity: dialedNumber ? 1 : 0,
-                        pointerEvents: dialedNumber ? "auto" : "none",
-                    }}
-                    onClick={onDelete}
-                    aria-label="Delete number"
-                >
-                    <PhoneBackspaceIcon />
-                </button>
-            </div>
+            {phoneActiveTab === "calls" ? renderCallsPage() : null}
+            {phoneActiveTab === "keypad" ? renderKeypadPage() : null}
+            {phoneActiveTab === "contacts" ? renderContactsPage() : null}
+            {phoneActiveTab === "search" ? renderSearchPage() : null}
 
             <div style={styles.phoneDialerTabs}>
-                {[
-                    { id: "calls", icon: <PhoneCallsTabIcon />, label: "Calls" }, // <--- changed: SVG sized to match the other tab icons
-                    { id: "contacts", icon: <PhoneContactsTabIcon />, label: "Contacts" }, // <--- changed: profile/head-and-shoulders icon
-                    { id: "keypad", icon: <PhoneKeypadTabIcon />, label: "Keypad" }, // <--- changed: 3x3 keypad dots instead of one dot
-                    { id: "search", icon: <PhoneSearchTabIcon />, label: "Search" }, // <--- changed: SVG magnifying glass sized to match the other tab icons
-                ].map((tab) => (
-                    <div
-                        key={tab.id} // <--- changed: always a clean string key, fixes TypeScript key error
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id} // <--- changed: tab is now clickable
+                        type="button"
                         style={{
                             ...styles.phoneDialerTab,
-                            ...(tab.id === "keypad" ? styles.phoneDialerTabActive : {}),
+                            ...(tab.id === phoneActiveTab ? styles.phoneDialerTabActive : {}),
                         }}
+                        onClick={() => setPhoneActiveTab(tab.id)}
                     >
                         <span style={styles.phoneDialerTabIcon}>{tab.icon}</span>
-                        <span style={styles.phoneDialerTabLabel}>{tab.label}</span> {/* <--- changed: fixed label box prevents icon/text vertical settling */}
-                    </div>
+                        <span style={styles.phoneDialerTabLabel}>{tab.label}</span>
+                    </button>
                 ))}
             </div>
         </div>
@@ -2232,6 +2573,9 @@ export default function TradingGame() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const phoneUnlockSoundRef = useRef<HTMLAudioElement | null>(null); // <--- changed
     const phoneLockSoundRef = useRef<HTMLAudioElement | null>(null); // <--- changed
+    const phoneIconPreloadPromiseRef = useRef<Promise<void> | null>(null); // <--- changed
+    const phoneIconsPreloadedRef = useRef(false); // <--- changed
+    const phoneOpeningAfterPreloadRef = useRef(false); // <--- changed
     const appStartRef = useRef(Date.now());
     const fallbackMarketSessionStartRef = useRef(new Date("2026-05-18T08:30:00-04:00").getTime()); // <--- changed
     const csvCandlesRef = useRef<CsvCandle[]>([]);
@@ -2266,6 +2610,14 @@ export default function TradingGame() {
             phoneLockSoundRef.current.preload = "auto"; // <--- changed
             phoneLockSoundRef.current.load(); // <--- changed
         }
+    }, []); // <--- changed
+
+    useEffect(() => { // <--- changed: starts loading all home-screen PNG icons as soon as the game mounts
+        phoneIconPreloadPromiseRef.current = Promise.all(
+            PHONE_HOME_ICON_PRELOAD_PATHS.map((src) => preloadImageAsset(src))
+        ).then(() => { // <--- changed
+            phoneIconsPreloadedRef.current = true; // <--- changed
+        }); // <--- changed
     }, []); // <--- changed
 
     const [balance, setBalance] = useState(5000); // <--- changed
@@ -2469,13 +2821,24 @@ export default function TradingGame() {
     }, [position, price, takeProfit, stopLoss]);
 
     function openPhonePanel() {
-        if (phoneOpen) return; // <--- changed
+        if (phoneOpen || phoneOpeningAfterPreloadRef.current) return; // <--- changed
 
-        playPhoneSound(phoneUnlockSoundRef); // <--- changed
-        setPhoneClosing(false); // <--- changed
-        setActivePhoneApp("home"); // <--- changed
-        setPhoneAppClosing(false); // <--- changed
-        setPhoneOpen(true); // <--- changed
+        const showPhonePanel = () => { // <--- changed
+            phoneOpeningAfterPreloadRef.current = false; // <--- changed
+            playPhoneSound(phoneUnlockSoundRef); // <--- changed
+            setPhoneClosing(false); // <--- changed
+            setActivePhoneApp("home"); // <--- changed
+            setPhoneAppClosing(false); // <--- changed
+            setPhoneOpen(true); // <--- changed
+        }; // <--- changed
+
+        if (!phoneIconsPreloadedRef.current && phoneIconPreloadPromiseRef.current) { // <--- changed: prevents visible icon pop-in on first open
+            phoneOpeningAfterPreloadRef.current = true; // <--- changed
+            phoneIconPreloadPromiseRef.current.then(showPhonePanel); // <--- changed
+            return; // <--- changed
+        }
+
+        showPhonePanel(); // <--- changed
     }
 
     function closePhonePanel() {
@@ -2483,6 +2846,7 @@ export default function TradingGame() {
 
         playPhoneSound(phoneLockSoundRef); // <--- changed
         setPhoneClosing(true); // <--- changed
+        phoneOpeningAfterPreloadRef.current = false; // <--- changed
 
         window.setTimeout(() => {
             setPhoneOpen(false); // <--- changed
@@ -4984,6 +5348,12 @@ export default function TradingGame() {
 
     return (
         <div style={styles.app}>
+            <div style={styles.phoneIconPreloadCache} aria-hidden="true"> {/* <--- changed: browser decodes the app PNGs before the phone is opened */}
+                {PHONE_HOME_ICON_PRELOAD_PATHS.map((src) => ( // <--- changed
+                    <img key={src} src={src} alt="" draggable={false} loading="eager" decoding="async" /> // <--- changed
+                ))}
+            </div>
+
             <style>
                 {`
                     @keyframes phoneSlideBounceIn {
@@ -5557,6 +5927,16 @@ const styles: Record<string, CSSProperties> = {
         WebkitUserSelect: "none", // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
         touchAction: "none", // <--- changed
+    },
+    phoneIconPreloadCache: { // <--- changed
+        position: "fixed", // <--- changed
+        left: -9999, // <--- changed
+        top: -9999, // <--- changed
+        width: 1, // <--- changed
+        height: 1, // <--- changed
+        overflow: "hidden", // <--- changed
+        opacity: 0, // <--- changed
+        pointerEvents: "none", // <--- changed
     },
     orientationBlocker: {
         position: "fixed", // <--- changed
@@ -6469,6 +6849,13 @@ const styles: Record<string, CSSProperties> = {
         willChange: "transform", // <--- changed
     },
     phoneDialerTab: { // <--- changed
+        border: "none", // <--- changed: removes default button border now that tabs are clickable
+        background: "transparent", // <--- changed: removes default button fill now that tabs are clickable
+        padding: 0, // <--- changed: keeps tab alignment identical after switching divs to buttons
+        WebkitAppearance: "none", // <--- changed
+        appearance: "none", // <--- changed
+        cursor: "pointer", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
         color: "rgba(255,255,255,0.48)", // <--- changed
         width: "100%", // <--- changed
         height: 52, // <--- changed: exact same tab item box for every tab
@@ -6508,6 +6895,740 @@ const styles: Record<string, CSSProperties> = {
         fontWeight: 600, // <--- changed
         whiteSpace: "nowrap", // <--- changed
         transform: "translateY(0)", // <--- changed
+    },
+    phoneCallsPage: { // <--- changed
+        width: "100%", // <--- changed
+        height: "100%", // <--- changed
+        padding: "10px 18px 92px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "stretch", // <--- changed
+        overflow: "hidden", // <--- changed
+    },
+    phoneCallsHeader: { // <--- changed
+        height: 66, // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "64px 1fr 64px", // <--- changed
+        alignItems: "center", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneCallsEditText: { // <--- changed
+        color: "#0a84ff", // <--- changed
+        fontSize: 16, // <--- changed
+        fontWeight: 500, // <--- changed
+        justifySelf: "start", // <--- changed
+    },
+    phoneCallsTitle: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 28, // <--- changed
+        fontWeight: 800, // <--- changed
+        letterSpacing: -0.7, // <--- changed
+        justifySelf: "center", // <--- changed
+    },
+    phoneCallsPlusButton: { // <--- changed
+        width: 34, // <--- changed
+        height: 34, // <--- changed
+        borderRadius: 999, // <--- changed
+        border: "none", // <--- changed
+        background: "rgba(10,132,255,0.18)", // <--- changed
+        color: "#0a84ff", // <--- changed
+        fontSize: 27, // <--- changed
+        fontWeight: 400, // <--- changed
+        lineHeight: "32px", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        justifySelf: "end", // <--- changed
+        padding: 0, // <--- changed
+        cursor: "pointer", // <--- changed
+        WebkitAppearance: "none", // <--- changed
+        appearance: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    phoneCallsSegment: { // <--- changed
+        height: 34, // <--- changed
+        padding: 3, // <--- changed
+        borderRadius: 10, // <--- changed
+        background: "rgba(118,118,128,0.26)", // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "1fr 1fr", // <--- changed
+        gap: 3, // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneCallsSegmentButton: { // <--- changed
+        border: "none", // <--- changed
+        borderRadius: 8, // <--- changed
+        background: "transparent", // <--- changed
+        color: "rgba(255,255,255,0.66)", // <--- changed
+        fontSize: 13, // <--- changed
+        fontWeight: 700, // <--- changed
+        cursor: "pointer", // <--- changed
+        WebkitAppearance: "none", // <--- changed
+        appearance: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    phoneCallsSegmentButtonActive: { // <--- changed
+        background: "rgba(255,255,255,0.18)", // <--- changed
+        color: "#ffffff", // <--- changed
+        boxShadow: "0 1px 6px rgba(0,0,0,0.22)", // <--- changed
+    },
+    phoneCallsSummaryCard: { // <--- changed
+        marginTop: 16, // <--- changed
+        minHeight: 76, // <--- changed
+        borderRadius: 22, // <--- changed
+        background: "linear-gradient(135deg, rgba(10,132,255,0.28), rgba(52,199,89,0.16))", // <--- changed
+        border: "1px solid rgba(255,255,255,0.1)", // <--- changed
+        boxShadow: "0 14px 32px rgba(0,0,0,0.3)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 12, // <--- changed
+        padding: "12px 14px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneCallsSummaryIcon: { // <--- changed
+        width: 44, // <--- changed
+        height: 44, // <--- changed
+        borderRadius: 999, // <--- changed
+        color: "#ffffff", // <--- changed
+        background: "rgba(255,255,255,0.16)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneCallsSummaryTextWrap: { // <--- changed
+        minWidth: 0, // <--- changed
+        flex: 1, // <--- changed
+    },
+    phoneCallsSummaryTitle: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 16, // <--- changed
+        fontWeight: 800, // <--- changed
+        letterSpacing: -0.2, // <--- changed
+    },
+    phoneCallsSummarySub: { // <--- changed
+        marginTop: 3, // <--- changed
+        color: "rgba(255,255,255,0.62)", // <--- changed
+        fontSize: 12.5, // <--- changed
+        fontWeight: 600, // <--- changed
+    },
+    phoneCallsList: { // <--- changed
+        marginTop: 18, // <--- changed
+        borderRadius: 24, // <--- changed
+        background: "rgba(28,28,30,0.88)", // <--- changed
+        border: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        overflow: "hidden", // <--- changed
+        flex: 1, // <--- changed
+        minHeight: 0, // <--- changed
+    },
+    phoneCallsSectionTitle: { // <--- changed
+        padding: "14px 14px 7px", // <--- changed
+        color: "rgba(255,255,255,0.48)", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 800, // <--- changed
+        letterSpacing: 0.8, // <--- changed
+        textTransform: "uppercase", // <--- changed
+    },
+    phoneCallRow: { // <--- changed
+        width: "100%", // <--- changed
+        minHeight: 64, // <--- changed
+        border: "none", // <--- changed
+        borderTop: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        background: "transparent", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "42px 1fr auto", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 10, // <--- changed
+        padding: "8px 12px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        cursor: "pointer", // <--- changed
+        textAlign: "left", // <--- changed
+        WebkitAppearance: "none", // <--- changed
+        appearance: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    phoneCallAvatar: { // <--- changed
+        width: 38, // <--- changed
+        height: 38, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "linear-gradient(145deg, #3a3a3c, #1c1c1e)", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        fontSize: 15, // <--- changed
+        fontWeight: 800, // <--- changed
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1)", // <--- changed
+    },
+    phoneCallAvatarMissed: { // <--- changed
+        background: "rgba(255,59,48,0.18)", // <--- changed
+        color: "#ff453a", // <--- changed
+    },
+    phoneCallRowText: { // <--- changed
+        minWidth: 0, // <--- changed
+    },
+    phoneCallName: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 15.5, // <--- changed
+        fontWeight: 700, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    phoneCallNameMissed: { // <--- changed
+        color: "#ff453a", // <--- changed
+    },
+    phoneCallType: { // <--- changed
+        marginTop: 3, // <--- changed
+        color: "rgba(255,255,255,0.45)", // <--- changed
+        fontSize: 12.5, // <--- changed
+        fontWeight: 600, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    phoneCallMeta: { // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 8, // <--- changed
+        color: "rgba(255,255,255,0.42)", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 700, // <--- changed
+    },
+    phoneCallTime: { // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+    },
+    phoneCallInfo: { // <--- changed
+        width: 18, // <--- changed
+        height: 18, // <--- changed
+        borderRadius: 999, // <--- changed
+        border: "1px solid rgba(10,132,255,0.9)", // <--- changed
+        color: "#0a84ff", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 800, // <--- changed
+        fontFamily: "Georgia, serif", // <--- changed
+        lineHeight: "18px", // <--- changed
+    },
+    phoneContactsPage: { // <--- changed
+        width: "100%", // <--- changed
+        height: "100%", // <--- changed
+        padding: "14px 16px 92px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        overflow: "hidden", // <--- changed
+    },
+    phoneContactsHeader: { // <--- changed
+        height: 70, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "space-between", // <--- changed
+        gap: 14, // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneContactsTitleBlock: { // <--- changed
+        minWidth: 0, // <--- changed
+    },
+    phoneContactsTitle: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 32, // <--- changed
+        fontWeight: 850, // <--- changed
+        letterSpacing: -1.1, // <--- changed
+        lineHeight: "36px", // <--- changed
+    },
+    phoneContactsCount: { // <--- changed
+        marginTop: 2, // <--- changed
+        color: "rgba(255,255,255,0.46)", // <--- changed
+        fontSize: 12.5, // <--- changed
+        fontWeight: 700, // <--- changed
+    },
+    phoneContactsPlusButton: { // <--- changed
+        width: 36, // <--- changed
+        height: 36, // <--- changed
+        borderRadius: 999, // <--- changed
+        border: "none", // <--- changed
+        background: "rgba(10,132,255,0.18)", // <--- changed
+        color: "#0a84ff", // <--- changed
+        fontSize: 29, // <--- changed
+        fontWeight: 400, // <--- changed
+        lineHeight: "34px", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        padding: 0, // <--- changed
+        cursor: "pointer", // <--- changed
+        flexShrink: 0, // <--- changed
+        WebkitAppearance: "none", // <--- changed
+        appearance: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    phoneContactsSearchBar: { // <--- changed
+        height: 38, // <--- changed
+        borderRadius: 13, // <--- changed
+        background: "rgba(118,118,128,0.24)", // <--- changed
+        color: "rgba(255,255,255,0.42)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 7, // <--- changed
+        padding: "0 12px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneContactsSearchText: { // <--- changed
+        color: "rgba(255,255,255,0.42)", // <--- changed
+        fontSize: 15, // <--- changed
+        fontWeight: 650, // <--- changed
+    },
+    phoneContactsMeCard: { // <--- changed
+        marginTop: 14, // <--- changed
+        minHeight: 72, // <--- changed
+        borderRadius: 24, // <--- changed
+        background: "linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06))", // <--- changed
+        border: "1px solid rgba(255,255,255,0.1)", // <--- changed
+        boxShadow: "0 14px 34px rgba(0,0,0,0.24)", // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "50px 1fr auto", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 12, // <--- changed
+        padding: "11px 13px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneContactsMeAvatar: { // <--- changed
+        width: 50, // <--- changed
+        height: 50, // <--- changed
+        borderRadius: 18, // <--- changed
+        background: "linear-gradient(145deg, #0a84ff, #64d2ff)", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        fontSize: 17, // <--- changed
+        fontWeight: 900, // <--- changed
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.28), 0 8px 18px rgba(10,132,255,0.24)", // <--- changed
+    },
+    phoneContactsMeText: { // <--- changed
+        minWidth: 0, // <--- changed
+    },
+    phoneContactsMeName: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 16.5, // <--- changed
+        fontWeight: 850, // <--- changed
+        letterSpacing: -0.2, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    phoneContactsMeSub: { // <--- changed
+        marginTop: 4, // <--- changed
+        color: "rgba(255,255,255,0.48)", // <--- changed
+        fontSize: 12.5, // <--- changed
+        fontWeight: 700, // <--- changed
+    },
+    phoneContactsChevron: { // <--- changed
+        color: "rgba(255,255,255,0.34)", // <--- changed
+        fontSize: 26, // <--- changed
+        fontWeight: 300, // <--- changed
+        lineHeight: "26px", // <--- changed
+        transform: "translateY(-1px)", // <--- changed
+    },
+    phoneContactsFavoritesStrip: { // <--- changed
+        marginTop: 16, // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneContactsSectionHeader: { // <--- changed
+        padding: "0 2px 8px", // <--- changed
+        color: "rgba(255,255,255,0.48)", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 850, // <--- changed
+        letterSpacing: 0.7, // <--- changed
+        textTransform: "uppercase", // <--- changed
+    },
+    phoneContactsFavoriteRow: { // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "repeat(3, 1fr)", // <--- changed
+        gap: 9, // <--- changed
+    },
+    phoneContactsFavoriteCard: { // <--- changed
+        minHeight: 104, // <--- changed
+        border: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        borderRadius: 22, // <--- changed
+        background: "rgba(28,28,30,0.84)", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        padding: "10px 6px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        cursor: "pointer", // <--- changed
+        WebkitAppearance: "none", // <--- changed
+        appearance: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    phoneContactsFavoriteName: { // <--- changed
+        marginTop: 8, // <--- changed
+        maxWidth: "100%", // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 12.5, // <--- changed
+        fontWeight: 800, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    phoneContactsFavoriteLabel: { // <--- changed
+        marginTop: 2, // <--- changed
+        color: "rgba(255,255,255,0.42)", // <--- changed
+        fontSize: 10.5, // <--- changed
+        fontWeight: 700, // <--- changed
+    },
+    phoneContactsList: { // <--- changed
+        marginTop: 16, // <--- changed
+        borderRadius: 24, // <--- changed
+        background: "rgba(28,28,30,0.88)", // <--- changed
+        border: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        overflowX: "hidden", // <--- changed
+        overflowY: "auto", // <--- changed
+        flex: 1, // <--- changed
+        minHeight: 0, // <--- changed
+        WebkitOverflowScrolling: "touch", // <--- changed
+    },
+    phoneContactsGroup: { // <--- changed
+        width: "100%", // <--- changed
+    },
+    phoneContactsLetter: { // <--- changed
+        height: 26, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        padding: "0 14px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        color: "rgba(255,255,255,0.44)", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: 0.7, // <--- changed
+        background: "rgba(0,0,0,0.14)", // <--- changed
+    },
+    phoneContactRow: { // <--- changed
+        width: "100%", // <--- changed
+        minHeight: 60, // <--- changed
+        border: "none", // <--- changed
+        borderTop: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        background: "transparent", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "40px 1fr auto", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 10, // <--- changed
+        padding: "8px 12px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        textAlign: "left", // <--- changed
+        cursor: "pointer", // <--- changed
+        WebkitAppearance: "none", // <--- changed
+        appearance: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    phoneContactAvatar: { // <--- changed
+        width: 38, // <--- changed
+        height: 38, // <--- changed
+        borderRadius: 14, // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        fontSize: 13, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: -0.2, // <--- changed
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.24)", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneContactText: { // <--- changed
+        minWidth: 0, // <--- changed
+    },
+    phoneContactName: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 15, // <--- changed
+        fontWeight: 800, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    phoneContactLabel: { // <--- changed
+        marginTop: 3, // <--- changed
+        color: "rgba(255,255,255,0.42)", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 650, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    phoneSearchPage: { // <--- changed
+        width: "100%", // <--- changed
+        height: "100%", // <--- changed
+        padding: "18px 18px 92px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "stretch", // <--- changed
+        overflow: "hidden", // <--- changed
+    },
+    phoneSearchHeader: { // <--- changed
+        paddingTop: 12, // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneSearchTitle: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 34, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: -1.2, // <--- changed
+        lineHeight: "38px", // <--- changed
+    },
+    phoneSearchSubtitle: { // <--- changed
+        marginTop: 3, // <--- changed
+        color: "rgba(255,255,255,0.46)", // <--- changed
+        fontSize: 13, // <--- changed
+        fontWeight: 650, // <--- changed
+    },
+    phoneSearchInputWrap: { // <--- changed
+        marginTop: 16, // <--- changed
+        height: 42, // <--- changed
+        borderRadius: 16, // <--- changed
+        background: "rgba(118,118,128,0.26)", // <--- changed
+        border: "1px solid rgba(255,255,255,0.06)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 8, // <--- changed
+        padding: "0 12px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneSearchInputIcon: { // <--- changed
+        width: 22, // <--- changed
+        height: 22, // <--- changed
+        color: "rgba(255,255,255,0.45)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        transform: "scale(0.8)", // <--- changed
+        transformOrigin: "center", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneSearchInputText: { // <--- changed
+        color: "rgba(255,255,255,0.42)", // <--- changed
+        fontSize: 14, // <--- changed
+        fontWeight: 650, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    phoneSearchHeroCard: { // <--- changed
+        position: "relative", // <--- changed
+        marginTop: 16, // <--- changed
+        minHeight: 112, // <--- changed
+        borderRadius: 28, // <--- changed
+        background: "linear-gradient(135deg, rgba(10,132,255,0.24), rgba(191,90,242,0.16), rgba(255,255,255,0.06))", // <--- changed
+        border: "1px solid rgba(255,255,255,0.1)", // <--- changed
+        boxShadow: "0 18px 38px rgba(0,0,0,0.32)", // <--- changed
+        overflow: "hidden", // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "52px 1fr", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 13, // <--- changed
+        padding: "16px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneSearchHeroGlow: { // <--- changed
+        position: "absolute", // <--- changed
+        right: -24, // <--- changed
+        top: -30, // <--- changed
+        width: 98, // <--- changed
+        height: 98, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "rgba(100,210,255,0.22)", // <--- changed
+        filter: "blur(10px)", // <--- changed
+        pointerEvents: "none", // <--- changed
+    },
+    phoneSearchHeroIcon: { // <--- changed
+        width: 52, // <--- changed
+        height: 52, // <--- changed
+        borderRadius: 18, // <--- changed
+        background: "rgba(255,255,255,0.16)", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        position: "relative", // <--- changed
+        zIndex: 1, // <--- changed
+    },
+    phoneSearchHeroText: { // <--- changed
+        minWidth: 0, // <--- changed
+        position: "relative", // <--- changed
+        zIndex: 1, // <--- changed
+    },
+    phoneSearchHeroTitle: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 17, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: -0.25, // <--- changed
+    },
+    phoneSearchHeroSub: { // <--- changed
+        marginTop: 5, // <--- changed
+        color: "rgba(255,255,255,0.58)", // <--- changed
+        fontSize: 12.2, // <--- changed
+        fontWeight: 650, // <--- changed
+        lineHeight: "17px", // <--- changed
+    },
+    phoneSearchQuickGrid: { // <--- changed
+        marginTop: 14, // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "repeat(3, 1fr)", // <--- changed
+        gap: 9, // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    phoneSearchQuickCard: { // <--- changed
+        minHeight: 74, // <--- changed
+        border: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        borderRadius: 20, // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        padding: "8px 4px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        cursor: "pointer", // <--- changed
+        WebkitAppearance: "none", // <--- changed
+        appearance: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    phoneSearchQuickValue: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 23, // <--- changed
+        fontWeight: 950, // <--- changed
+        letterSpacing: -0.6, // <--- changed
+        lineHeight: "25px", // <--- changed
+    },
+    phoneSearchQuickLabel: { // <--- changed
+        marginTop: 5, // <--- changed
+        color: "rgba(255,255,255,0.54)", // <--- changed
+        fontSize: 10.5, // <--- changed
+        fontWeight: 800, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+    },
+    phoneSearchResultsCard: { // <--- changed
+        marginTop: 16, // <--- changed
+        borderRadius: 24, // <--- changed
+        background: "rgba(28,28,30,0.88)", // <--- changed
+        border: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        overflowX: "hidden", // <--- changed
+        overflowY: "auto", // <--- changed
+        flex: 1, // <--- changed
+        minHeight: 0, // <--- changed
+        WebkitOverflowScrolling: "touch", // <--- changed
+    },
+    phoneSearchSectionHeader: { // <--- changed
+        padding: "14px 14px 7px", // <--- changed
+        color: "rgba(255,255,255,0.48)", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 850, // <--- changed
+        letterSpacing: 0.7, // <--- changed
+        textTransform: "uppercase", // <--- changed
+    },
+    phoneSearchResultRow: { // <--- changed
+        width: "100%", // <--- changed
+        minHeight: 62, // <--- changed
+        border: "none", // <--- changed
+        borderTop: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        background: "transparent", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "40px 1fr auto", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 10, // <--- changed
+        padding: "8px 12px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        textAlign: "left", // <--- changed
+        cursor: "pointer", // <--- changed
+        WebkitAppearance: "none", // <--- changed
+        appearance: "none", // <--- changed
+        WebkitTapHighlightColor: "transparent", // <--- changed
+    },
+    phoneSearchResultText: { // <--- changed
+        minWidth: 0, // <--- changed
+    },
+    phoneSearchResultTitle: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 15, // <--- changed
+        fontWeight: 850, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    phoneSearchResultSub: { // <--- changed
+        marginTop: 3, // <--- changed
+        color: "rgba(255,255,255,0.42)", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 650, // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+    },
+    phoneSearchResultAction: { // <--- changed
+        minWidth: 42, // <--- changed
+        height: 27, // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "rgba(10,132,255,0.16)", // <--- changed
+        color: "#0a84ff", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 850, // <--- changed
+        padding: "0 10px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+    },
+
+    phonePlaceholderPage: { // <--- changed
+        width: "100%", // <--- changed
+        height: "100%", // <--- changed
+        padding: "70px 28px 92px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        textAlign: "center", // <--- changed
+    },
+    phonePlaceholderIcon: { // <--- changed
+        width: 72, // <--- changed
+        height: 72, // <--- changed
+        borderRadius: 24, // <--- changed
+        background: "rgba(255,255,255,0.08)", // <--- changed
+        color: "rgba(255,255,255,0.78)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        marginBottom: 18, // <--- changed
+    },
+    phonePlaceholderTitle: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 24, // <--- changed
+        fontWeight: 800, // <--- changed
+        letterSpacing: -0.4, // <--- changed
+    },
+    phonePlaceholderSub: { // <--- changed
+        marginTop: 7, // <--- changed
+        maxWidth: 230, // <--- changed
+        color: "rgba(255,255,255,0.48)", // <--- changed
+        fontSize: 13.5, // <--- changed
+        fontWeight: 600, // <--- changed
+        lineHeight: "19px", // <--- changed
     },
     phoneHomeBarButton: { // <--- changed
         position: "absolute", // <--- changed
