@@ -283,7 +283,7 @@ const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage h
 const MOBILE_STAGE_SAFE_WIDTH_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame left/right
 const MOBILE_STAGE_SAFE_HEIGHT_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame top/bottom
 const MOBILE_STAGE_SCALE_TWEAK = 1; // <--- changed: restores full Safari-frame fill after login
-const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 76; // <--- changed: extra vertical room only when saved to iPhone Home Screen/PWA so top Ticker/Balance never sits under the status area
+const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 58; // <--- changed: slightly less PWA safe padding so Balance/Open P-L/Ticker/timeframes sit higher while still clearing the iPhone status bar
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -8420,7 +8420,7 @@ export default function TradingGame() {
                             />
                         </div>
 
-                        <div style={styles.tradePanel}>
+                        <div style={{ ...styles.tradePanel, ...(isIosStandaloneApp ? styles.tradePanelStandaloneBottomFill : {}) }}>
                             <input
                                 style={styles.input}
                                 value={quantity}
@@ -11035,6 +11035,11 @@ const styles: Record<string, CSSProperties> = {
         justifyItems: "stretch",
         width: "100%",
         boxSizing: "border-box",
+    } as CSSProperties,
+
+    tradePanelStandaloneBottomFill: { // <--- changed: Home Screen/PWA only; keeps the dark gray trade panel visually extended all the way to the bottom edge
+        paddingBottom: 46, // <--- changed: gives the lower control area more dark-gray depth toward the iPhone bottom edge
+        boxShadow: "0 140px 0 #1b1b1b", // <--- changed: fills any remaining PWA bottom gap with the same dark gray panel color
     } as CSSProperties,
 
     input: { // <--- restored
