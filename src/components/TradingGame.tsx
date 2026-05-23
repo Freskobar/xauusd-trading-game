@@ -6880,28 +6880,23 @@ export default function TradingGame() {
         const preventContextMenu = (event: Event) => event.preventDefault();
 
         const updateOrientationState = () => {
-            const viewportWidth = window.visualViewport?.width ?? window.innerWidth; // <--- changed: mobile Safari-safe width
-            const viewportHeight = window.visualViewport?.height ?? window.innerHeight; // <--- changed: mobile Safari-safe height
             const isPhoneSizedScreen =
-                Math.min(viewportWidth, viewportHeight) <= 768; // <--- changed
-
-            const mobileSafeWidth = Math.max(1, viewportWidth - MOBILE_STAGE_SAFE_WIDTH_PADDING); // <--- changed
-            const mobileSafeHeight = Math.max(1, viewportHeight - MOBILE_STAGE_SAFE_HEIGHT_PADDING); // <--- changed
+                Math.min(window.innerWidth, window.innerHeight) <= 768; // <--- changed
 
             const nextAppScale = Math.min(
-                mobileSafeWidth / GAME_BASE_WIDTH,
-                mobileSafeHeight / GAME_BASE_HEIGHT,
+                window.innerWidth / GAME_BASE_WIDTH,
+                window.innerHeight / GAME_BASE_HEIGHT,
                 1
-            ) * (isPhoneSizedScreen ? MOBILE_STAGE_SCALE_TWEAK : 1); // <--- changed: logged-in chart stage no longer feels zoomed in on mobile Safari
+            ); // <--- changed: restored original pre-sign-in sizing behavior
 
             setAppScale(nextAppScale); // <--- changed
             setMobilePhoneScale(1.11); // <--- changed: phone remains PC-perfect inside the scaled app stage
 
             setIsLandscape(
-                isPhoneSizedScreen && viewportWidth > viewportHeight
+                isPhoneSizedScreen && window.innerWidth > window.innerHeight
             ); // <--- changed: desktop PC should never show rotate blocker
 
-            setIsDesktopStatusRender(true); // <--- changed: keep PC-perfect status bar styling; the full app now scales as one object
+            setIsDesktopStatusRender(true); // <--- changed: keep PC-perfect status bar styling; the full app scales as one object
         };
 
         document.documentElement.style.overflow = "hidden";
@@ -6913,8 +6908,6 @@ export default function TradingGame() {
         window.addEventListener("contextmenu", preventContextMenu);
         window.addEventListener("resize", updateOrientationState); // <--- changed
         window.addEventListener("orientationchange", updateOrientationState); // <--- changed
-        window.visualViewport?.addEventListener("resize", updateOrientationState); // <--- changed: Safari toolbar open/close keeps the app fitted
-        window.visualViewport?.addEventListener("scroll", updateOrientationState); // <--- changed: Safari viewport shifts keep the stage centered
 
         updateOrientationState(); // <--- changed
 
@@ -6936,8 +6929,6 @@ export default function TradingGame() {
             window.removeEventListener("contextmenu", preventContextMenu);
             window.removeEventListener("resize", updateOrientationState); // <--- changed
             window.removeEventListener("orientationchange", updateOrientationState); // <--- changed
-            window.visualViewport?.removeEventListener("resize", updateOrientationState); // <--- changed
-            window.visualViewport?.removeEventListener("scroll", updateOrientationState); // <--- changed
         };
     }, []);
 
@@ -8570,7 +8561,7 @@ const styles: Record<string, CSSProperties> = {
     authModeButton: { // <--- changed
         height: 38, // <--- changed
         border: "none", // <--- changed
-        borderRadius: 12, // <--- changed
+        borderRadius: 13, // <--- changed: restored original pre-sign-in button radius
         background: "transparent", // <--- changed
         color: "rgba(255,255,255,0.62)", // <--- changed
         fontSize: 13, // <--- changed
@@ -8678,11 +8669,9 @@ const styles: Record<string, CSSProperties> = {
         display: "block",
     },
     app: {
-        position: "fixed", // <--- changed: locks the game to the visible Safari viewport instead of document flow
-        inset: 0, // <--- changed
-        width: "100vw", // <--- changed
-        height: "100svh", // <--- changed: stable mobile Safari height so the game sits like before
-        minHeight: "100svh", // <--- changed
+        width: "100%",
+        height: "100dvh", // <--- changed: restored original pre-sign-in mobile Safari sizing
+        minHeight: "100dvh", // <--- changed: restored original pre-sign-in mobile Safari sizing
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -8691,7 +8680,6 @@ const styles: Record<string, CSSProperties> = {
         userSelect: "none", // <--- changed
         WebkitUserSelect: "none", // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
-        touchAction: "none", // <--- changed: prevents Safari page movement from shifting the fitted stage
     },
     phoneIconPreloadCache: { // <--- changed
         position: "fixed", // <--- changed
@@ -8760,11 +8748,11 @@ const styles: Record<string, CSSProperties> = {
     topPanel: {
         background: "#181818",
         borderBottom: "1px solid #2a2a2a",
-        padding: "12px 22px 10px", // <--- changed: shorter top panel after moving account row to chart controls
+        padding: "18px 24px 16px", // <--- changed: restored original pre-sign-in height
         display: "grid",
         gridTemplateColumns: "1fr 1fr 1fr",
         alignItems: "center", // <--- changed
-        minHeight: 58, // <--- changed: top no longer feels too tall on mobile Safari
+        minHeight: 74, // <--- changed: restored original pre-sign-in height
     },
     topMetric: {
         minHeight: 40, // <--- changed
@@ -8801,7 +8789,7 @@ const styles: Record<string, CSSProperties> = {
     },
     timeframes: {
         background: "#181818",
-        padding: "8px 12px 9px", // <--- changed: reduces vertical height above the chart
+        padding: "12px 12px 14px", // <--- changed: restored original pre-sign-in spacing
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(56px, 1fr))", // <--- changed
         gap: 8,
@@ -8812,8 +8800,8 @@ const styles: Record<string, CSSProperties> = {
         color: "#ffffff",
         border: "none",
         borderRadius: 6,
-        height: 30, // <--- changed: shorter top controls
-        fontSize: 17, // <--- changed
+        height: 34, // <--- changed: restored original pre-sign-in height
+        fontSize: 20, // <--- changed: restored original pre-sign-in size
         fontWeight: 700,
         cursor: "pointer",
     },
@@ -8822,7 +8810,7 @@ const styles: Record<string, CSSProperties> = {
         color: "#111111",
         border: "none",
         borderRadius: 6,
-        height: 30, // <--- changed: shorter top controls
+        height: 34, // <--- changed: restored original pre-sign-in height
         fontSize: 16,
         fontWeight: 700,
         cursor: "pointer",
@@ -8831,7 +8819,7 @@ const styles: Record<string, CSSProperties> = {
         position: "relative", // <--- changed
         background: "transparent", // <--- changed
         border: "none", // <--- changed
-        padding: "5px 62px 4px", // <--- changed: shorter market-time strip above chart
+        padding: "8px 62px 6px", // <--- changed: restored original pre-sign-in spacing
         marginTop: "0px", // <--- changed
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
@@ -8918,7 +8906,7 @@ const styles: Record<string, CSSProperties> = {
     settingsButton: {
         width: 34, // <--- changed
         height: 34, // <--- changed
-        borderRadius: 12, // <--- changed
+        borderRadius: 13, // <--- changed: restored original pre-sign-in button radius
         border: "none", // <--- changed // <--- changed
         background: "rgba(255,255,255,0.08)", // <--- changed
         color: "#ffffff", // <--- changed
@@ -9066,7 +9054,7 @@ const styles: Record<string, CSSProperties> = {
         width: 44, // <--- changed
         height: 34, // <--- changed
         border: "none", // <--- changed
-        borderRadius: 12, // <--- changed
+        borderRadius: 13, // <--- changed: restored original pre-sign-in button radius
         background: "transparent", // <--- changed
         cursor: "pointer", // <--- changed
         padding: 0, // <--- changed
@@ -9112,8 +9100,8 @@ const styles: Record<string, CSSProperties> = {
     phoneButton: {
         position: "relative", // <--- changed
         width: 44, // <--- changed
-        height: 40, // <--- changed: compact row so it does not cover too much chart
-        borderRadius: 12, // <--- changed
+        height: 44, // <--- changed: restored original pre-sign-in button size
+        borderRadius: 13, // <--- changed: restored original pre-sign-in button radius
         border: "none", // <--- changed // <--- changed
         background: "rgba(18,18,18,0.82)", // <--- changed
         boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
@@ -10265,7 +10253,7 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        fontSize: 17, // <--- changed
+        fontSize: 20, // <--- changed: restored original pre-sign-in size
         fontWeight: 900, // <--- changed
         boxShadow: "inset 0 1px 0 rgba(255,255,255,0.28), 0 8px 18px rgba(10,132,255,0.24)", // <--- changed
     },
@@ -10529,7 +10517,7 @@ const styles: Record<string, CSSProperties> = {
     },
     phoneSearchHeroTitle: { // <--- changed
         color: "#ffffff", // <--- changed
-        fontSize: 17, // <--- changed
+        fontSize: 20, // <--- changed: restored original pre-sign-in size
         fontWeight: 900, // <--- changed
         letterSpacing: -0.25, // <--- changed
     },
@@ -11212,8 +11200,8 @@ const styles: Record<string, CSSProperties> = {
         left: 10, // <--- changed: reaches closer to the Safari frame edge
         bottom: 12, // <--- changed: aligns lower in the chart control area
         maxWidth: "calc(100% - 68px)", // <--- changed: fills wider while staying clear of the play/pause button
-        height: 40, // <--- changed: compact row so it does not cover too much chart
-        borderRadius: 12, // <--- changed
+        height: 44, // <--- changed: restored original pre-sign-in button size
+        borderRadius: 13, // <--- changed: restored original pre-sign-in button radius
         border: "1px solid rgba(255,255,255,0.08)", // <--- changed
         background: "rgba(18,18,18,0.82)", // <--- changed
         boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
@@ -11242,8 +11230,8 @@ const styles: Record<string, CSSProperties> = {
         right: 16, // <--- changed
         bottom: 18, // <--- changed
         width: 44, // <--- changed
-        height: 40, // <--- changed: compact row so it does not cover too much chart
-        borderRadius: 12, // <--- changed
+        height: 44, // <--- changed: restored original pre-sign-in button size
+        borderRadius: 13, // <--- changed: restored original pre-sign-in button radius
         border: "none", // <--- changed // <--- changed
         background: "rgba(18,18,18,0.82)", // <--- changed
         boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
