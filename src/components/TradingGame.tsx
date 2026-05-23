@@ -283,7 +283,7 @@ const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage h
 const MOBILE_STAGE_SAFE_WIDTH_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame left/right
 const MOBILE_STAGE_SAFE_HEIGHT_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame top/bottom
 const MOBILE_STAGE_SCALE_TWEAK = 1; // <--- changed: restores full Safari-frame fill after login
-const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 50; // <--- changed: PWA top content sits slightly higher while the dark header color still reaches the very top
+const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 18; // <--- changed: PWA top stack moves way higher while the dark header color still reaches the very top
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -8319,7 +8319,7 @@ export default function TradingGame() {
                             </div>
                         </div>
 
-                        <div style={styles.timeframes}>
+                        <div style={{ ...styles.timeframes, ...(isIosStandaloneApp ? styles.timeframesStandaloneHigher : {}) }}>
                             {["15m", "30m", "1h", "4h", "Daily"]
                                 .filter((tf) => visibleTimeframes[tf])
                                 .map((tf) => (
@@ -8337,7 +8337,7 @@ export default function TradingGame() {
                                 ))}
                         </div>
 
-                        <div style={styles.marketTimeBlock}> {/* <--- changed */}
+                        <div style={{ ...styles.marketTimeBlock, ...(isIosStandaloneApp ? styles.marketTimeBlockStandaloneHigher : {}) }}> {/* <--- changed */}
                             <div style={styles.phoneInlineAnchor}> {/* <--- changed */}
                                 {playerLevel >= PHONE_UNLOCK_LEVEL && ( // <--- changed: phone is hidden until Level 1
                                     <button
@@ -8932,6 +8932,9 @@ const styles: Record<string, CSSProperties> = {
         gap: 8,
         borderBottom: "1px solid #1f1f1f",
     },
+    timeframesStandaloneHigher: {
+        padding: "10px 12px 12px", // <--- changed: PWA-only tighter row so the top/header stack sits higher
+    } as CSSProperties,
     tfButton: {
         background: "#222222",
         color: "#ffffff",
@@ -8969,6 +8972,10 @@ const styles: Record<string, CSSProperties> = {
         width: "100%", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
+    marketTimeBlockStandaloneHigher: {
+        padding: "5px 62px 2px", // <--- changed: PWA-only pulls market text and side buttons higher without rescaling the app
+        marginTop: -2, // <--- changed
+    } as CSSProperties,
     marketTimeCenterColumn: {
         display: "flex", // <--- changed
         flexDirection: "column", // <--- changed
