@@ -6889,8 +6889,12 @@ export default function TradingGame() {
                 window.matchMedia?.("(display-mode: standalone)").matches ||
                 (window.navigator as Navigator & { standalone?: boolean }).standalone === true; // <--- changed
 
-            const viewportWidth = window.visualViewport?.width ?? window.innerWidth; // <--- changed: Safari/PWA visible width, not the old layout width
-            const viewportHeight = window.visualViewport?.height ?? window.innerHeight; // <--- changed: Safari/PWA visible height between browser bars
+            const layoutViewportWidth = document.documentElement.clientWidth || window.innerWidth; // <--- changed: prevents the scaled stage from becoming wider than the real page
+            const layoutViewportHeight = document.documentElement.clientHeight || window.innerHeight; // <--- changed: prevents the scaled stage from becoming taller than the real page
+            const visualViewportWidth = window.visualViewport?.width ?? layoutViewportWidth; // <--- changed
+            const visualViewportHeight = window.visualViewport?.height ?? layoutViewportHeight; // <--- changed
+            const viewportWidth = Math.floor(Math.min(visualViewportWidth, layoutViewportWidth)); // <--- changed: no horizontal overflow/side scrolling on iPhone
+            const viewportHeight = Math.floor(Math.min(visualViewportHeight, layoutViewportHeight)); // <--- changed: no vertical overflow/page scrolling on iPhone
             const verticalSafePadding = isIosHomeScreenApp && isPhoneSizedScreen
                 ? IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING
                 : 0; // <--- changed: Home Screen/PWA header content safe offset
@@ -6923,9 +6927,17 @@ export default function TradingGame() {
         document.documentElement.style.overflow = "hidden";
         document.documentElement.style.margin = "0"; // <--- changed: removes any browser default gap around the game
         document.documentElement.style.padding = "0"; // <--- changed
+        document.documentElement.style.width = "100%"; // <--- changed: prevents accidental horizontal document growth
+        document.documentElement.style.height = "100%"; // <--- changed: keeps the root locked to the viewport
+        document.documentElement.style.overscrollBehavior = "none"; // <--- changed: stops iPhone rubber-band/page drifting
         document.body.style.overflow = "hidden";
         document.body.style.margin = "0"; // <--- changed: lets Safari content touch the viewport edges
         document.body.style.padding = "0"; // <--- changed
+        document.body.style.width = "100%"; // <--- changed: prevents accidental horizontal document growth
+        document.body.style.height = "100%"; // <--- changed: keeps body from becoming taller than the app
+        document.body.style.position = "fixed"; // <--- changed: hard-locks the page so only the game canvas receives gestures
+        document.body.style.inset = "0"; // <--- changed
+        document.body.style.overscrollBehavior = "none"; // <--- changed
         document.body.style.userSelect = "none";
         document.body.style.webkitUserSelect = "none";
         document.body.style.setProperty("-webkit-tap-highlight-color", "transparent"); // <--- changed
@@ -6948,7 +6960,15 @@ export default function TradingGame() {
 
         return () => {
             document.documentElement.style.overflow = "";
+            document.documentElement.style.width = ""; // <--- changed
+            document.documentElement.style.height = ""; // <--- changed
+            document.documentElement.style.overscrollBehavior = ""; // <--- changed
             document.body.style.overflow = "";
+            document.body.style.width = ""; // <--- changed
+            document.body.style.height = ""; // <--- changed
+            document.body.style.position = ""; // <--- changed
+            document.body.style.inset = ""; // <--- changed
+            document.body.style.overscrollBehavior = ""; // <--- changed
             document.body.style.userSelect = "";
             document.body.style.webkitUserSelect = "";
             document.body.style.removeProperty("-webkit-tap-highlight-color"); // <--- changed
@@ -7885,8 +7905,8 @@ export default function TradingGame() {
             <div
                 style={{
                     ...styles.appScaleFrame,
-                    width: GAME_BASE_WIDTH * appScale.x, // <--- changed: reserves the horizontally filled full-app footprint
-                    height: GAME_BASE_HEIGHT * appScale.y, // <--- changed: reserves the vertically filled full-app footprint
+                    width: "100%", // <--- changed: locks the reserved footprint to the real viewport so the page cannot scroll sideways
+                    height: "100%", // <--- changed: locks the reserved footprint to the real viewport so the page cannot scroll vertically
                 }}
             >
                 <div
@@ -8698,9 +8718,11 @@ const styles: Record<string, CSSProperties> = {
     app: {
         position: "fixed", // <--- changed: locks the game to the real visible viewport instead of a centered page box
         inset: 0, // <--- changed
-        width: "100vw",
+        width: "100dvw", // <--- changed: avoids 100vw causing tiny horizontal scroll on iPhone Safari/PWA
+        maxWidth: "100dvw", // <--- changed
         height: "100dvh", // <--- changed: Safari visible viewport height
         minHeight: "100dvh", // <--- changed
+        maxHeight: "100dvh", // <--- changed: no vertical page scroll
         display: "flex",
         justifyContent: "center",
         alignItems: "flex-start", // <--- changed: no vertical centering gap; the game starts at the top of the usable Safari area
@@ -8747,10 +8769,13 @@ const styles: Record<string, CSSProperties> = {
         color: "#a0a0a0", // <--- changed
     },
     appScaleFrame: {
-        width: GAME_BASE_WIDTH, // <--- changed
-        height: GAME_BASE_HEIGHT, // <--- changed
+        width: "100%", // <--- changed: viewport-locked frame prevents horizontal scroll
+        height: "100%", // <--- changed: viewport-locked frame prevents vertical scroll
         position: "relative", // <--- changed
         flexShrink: 0, // <--- changed
+        overflow: "hidden", // <--- changed: clips any standalone-only lower controls without creating page scroll
+        maxWidth: "100%", // <--- changed
+        maxHeight: "100%", // <--- changed
     },
     appScaleObject: {
         width: GAME_BASE_WIDTH, // <--- changed
@@ -11037,9 +11062,11 @@ const styles: Record<string, CSSProperties> = {
         boxSizing: "border-box",
     } as CSSProperties,
 
-    tradePanelStandaloneBottomFill: { // <--- changed: Home Screen/PWA only; pushes the bottom controls lower and fills the remaining bottom edge with dark gray
-        padding: "38px 22px 66px", // <--- changed: moves Buy/Sell/Pending controls down while keeping the panel extended to the iPhone bottom
-        boxShadow: "0 240px 0 #1b1b1b", // <--- changed: hard-fills any remaining PWA bottom gap with the exact same dark gray panel color
+    tradePanelStandaloneBottomFill: { // <--- changed: Home Screen/PWA only; moves the real dark gray button panel lower as one unit
+        padding: "50px 22px 82px", // <--- changed: the button grid itself sits lower inside the actual dark gray panel
+        marginTop: -30, // <--- changed: panel grows upward so its bottom still stays locked to the screen bottom without causing page scroll
+        background: "#1b1b1b", // <--- changed: guarantees the full lower area stays the same dark gray
+        borderRadius: "24px 24px 0 0", // <--- changed
     } as CSSProperties,
 
     input: { // <--- restored
@@ -11263,9 +11290,9 @@ const styles: Record<string, CSSProperties> = {
         textOverflow: "ellipsis", // <--- changed
     } as CSSProperties,
 
-    chartAccountChipStandaloneLower: { // <--- changed: Home Screen/PWA only; lowers Lv/XP/user chip closer to the bottom controls
-        bottom: -8, // <--- changed
-        transform: "translateY(8px)", // <--- changed: moves with the lower PWA bottom layout without affecting Safari
+    chartAccountChipStandaloneLower: { // <--- changed: Home Screen/PWA only; lowers Lv/XP/user chip without creating page overflow
+        bottom: 2, // <--- changed: lower than Safari, but still inside the clipped game viewport
+        transform: "none", // <--- changed: no translate overflow/scroll side effects
     } as CSSProperties,
 
     pauseButton: {
@@ -11288,9 +11315,9 @@ const styles: Record<string, CSSProperties> = {
         WebkitTapHighlightColor: "transparent", // <--- changed
     },
 
-    pauseButtonStandaloneLower: { // <--- changed: Home Screen/PWA only; lowers play/pause button with the Lv/XP chip
-        bottom: -2, // <--- changed
-        transform: "translateY(8px)", // <--- changed
+    pauseButtonStandaloneLower: { // <--- changed: Home Screen/PWA only; lowers play/pause button without creating page overflow
+        bottom: 8, // <--- changed: follows the lowered Lv/XP chip while staying inside the viewport
+        transform: "none", // <--- changed: no translate overflow/scroll side effects
     } as CSSProperties,
 
     playIcon: {
