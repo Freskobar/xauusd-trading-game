@@ -4,10 +4,12 @@ import {
     useRef,
     useState,
     type CSSProperties,
+    type FormEvent as ReactFormEvent,
     type MouseEvent as ReactMouseEvent,
     type TouchEvent as ReactTouchEvent,
     type ReactNode,
 } from "react";
+import { createClient } from "@supabase/supabase-js"; // <--- changed: Supabase cloud auth + save system
 import centraBankIcon from "../assets/centra-bank-icon.png";
 import nestIcon from "../assets/nest-icon.png";
 import settingsIcon from "../assets/settings-icon.png";
@@ -85,6 +87,10 @@ type Position = {
     side: "long" | "short";
     entry: number;
     quantity: number;
+    tradeId?: string; // <--- changed: used for one-time partial XP tracking
+    startingQuantity?: number; // <--- changed: original size for trade/story progression
+    partialXpAwarded?: boolean; // <--- changed: first partial XP only once per trade
+    realizedPnlSoFar?: number; // <--- changed: lets final win/loss use the full trade result after partials
 };
 
 type PendingOrder = {
@@ -136,6 +142,7 @@ const RAW_DISPLAY_BASE = 49.90;
 const GOLD_DISPLAY_BASE = 4990.00;
 const GOLD_TICK_SIZE = 0.10;
 const CONTRACT_VALUE = 100;
+const STARTING_BALANCE = 5000; // <--- changed: one source of truth so balance/profit/PnL never drift
 
 const CSV_PATH = "/data/xagusd_15m_from_ctf_clean.csv";
 
@@ -1732,27 +1739,142 @@ function IPhonePhoneApp({ // <--- changed
 
 
 
-function IPhoneMessagesApp({ closing }: { closing: boolean }) { // <--- changed: polished fake Messages app
-    const pinnedThreads = [
-        { name: "Mia", initials: "M", preview: "That actually looks clean 😂", time: "9:42 AM", gradient: "linear-gradient(145deg, #ff8ad8, #ff2d55)" },
-        { name: "Jayden", initials: "J", preview: "Send me the link when it is done", time: "8:18 AM", gradient: "linear-gradient(145deg, #5ac8fa, #0a84ff)" },
-        { name: "Mom", initials: "M", preview: "Call me when you get a chance", time: "Yesterday", gradient: "linear-gradient(145deg, #52d273, #30d158)" },
+type MessageContactThread = { // <--- changed: Messages now builds from public/data/Contacts.txt
+    name: string;
+    initials: string;
+    preview: string;
+    time: string;
+    unread: number;
+    gradient: string;
+};
+
+const MESSAGES_CONTACTS_PATHS = ["/data/Contacts.txt", "/data/contact.txt"]; // <--- changed: supports your exact public/data/Contacts.txt file, with lowercase fallback
+
+const MESSAGE_CONTACT_GRADIENTS = [ // <--- changed: reusable pro-looking avatar colors for imported contacts
+    "linear-gradient(145deg, #5ac8fa, #0a84ff)",
+    "linear-gradient(145deg, #ff8ad8, #ff2d55)",
+    "linear-gradient(145deg, #52d273, #30d158)",
+    "linear-gradient(145deg, #ffb340, #ff9f0a)",
+    "linear-gradient(145deg, #bf8cff, #7d5fff)",
+    "linear-gradient(145deg, #64d2ff, #5856d6)",
+    "linear-gradient(145deg, #ff375f, #af52de)",
+    "linear-gradient(145deg, #8e8e93, #3a3a3c)",
+];
+
+function getContactInitialsFromName(name: string) { // <--- changed
+    const words = name
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (words.length === 0) return "?";
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+
+    return `${words[0][0] ?? ""}${words[words.length - 1][0] ?? ""}`.toUpperCase();
+}
+
+function parseMessagesContactText(text: string) { // <--- changed: supports lines like "1 Mom" or "2 Tony Montana"
+    const cleanedText = text.trim(); // <--- changed
+
+    // Vite can return index.html when /data/contact.txt is missing.
+    // Do NOT turn HTML tags into contacts. Show the empty-state UI instead. // <--- changed
+    if (
+        !cleanedText ||
+        /^<!doctype\s+html/i.test(cleanedText) ||
+        /^<html[\s>]/i.test(cleanedText) ||
+        cleanedText.includes('<script type="module"') ||
+        cleanedText.includes('/src/main')
+    ) {
+        return []; // <--- changed
+    }
+
+    return cleanedText
+        .replace(/\r/g, "") // <--- changed: normalize Windows CRLF safely before splitting
+        .split("\n") // <--- changed: avoids broken multi-line regex issues
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => line.replace(/^\d+[.)\-:]?\s*/, "").trim()) // <--- changed: removes labels like 1, 1., 1), 1-, 1:
+        .filter((name) => {
+            if (!name) return false; // <--- changed
+            if (/^</.test(name)) return false; // <--- changed: rejects accidental HTML fallback lines
+            if (/[<>]/.test(name)) return false; // <--- changed
+            return true; // <--- changed
+        });
+}
+
+function buildMessageThreadsFromContacts(names: string[]): MessageContactThread[] { // <--- changed
+    const previewOptions = [
+        "Tap to open the conversation.",
+        "New contact imported from Contacts.txt.",
+        "Ready for your next message.",
+        "Saved to your fake Messages list.",
     ];
 
-    const messageThreads = [
-        { name: "Odyssey Support", initials: "OS", preview: "Your appointment is confirmed for tomorrow.", time: "10:12 AM", unread: 2, gradient: "linear-gradient(145deg, #30d158, #0a84ff)" },
-        { name: "Alex Rivera", initials: "AR", preview: "I can help test it on mobile later.", time: "9:03 AM", unread: 0, gradient: "linear-gradient(145deg, #ffb340, #ff9f0a)" },
-        { name: "Mia Carter", initials: "MC", preview: "The animation feels way smoother now.", time: "Yesterday", unread: 1, gradient: "linear-gradient(145deg, #ff8ad8, #ff2d55)" },
-        { name: "Jayden Brooks", initials: "JB", preview: "Make the messages app look like iPhone.", time: "Sunday", unread: 0, gradient: "linear-gradient(145deg, #64d2ff, #5856d6)" },
-        { name: "Everybody Eats", initials: "EE", preview: "Trial button copy is ready to review.", time: "Fri", unread: 0, gradient: "linear-gradient(145deg, #bf8cff, #7d5fff)" },
-        { name: "Futures Control", initials: "FC", preview: "The chart panel changes are pushed.", time: "Thu", unread: 0, gradient: "linear-gradient(145deg, #5e5ce6, #0a84ff)" }, // <--- changed
-        { name: "Safari App Test", initials: "SA", preview: "Search animation is ready for another pass.", time: "Wed", unread: 0, gradient: "linear-gradient(145deg, #64d2ff, #0a84ff)" }, // <--- changed
-        { name: "Music App", initials: "MA", preview: "Viewport fix stayed untouched.", time: "Tue", unread: 0, gradient: "linear-gradient(145deg, #ff375f, #af52de)" }, // <--- changed
-        { name: "Design Notes", initials: "DN", preview: "Recent box now scrolls inside the card.", time: "Mon", unread: 0, gradient: "linear-gradient(145deg, #ffd60a, #ff9f0a)" }, // <--- changed
-        { name: "Home Screen", initials: "HS", preview: "Dock animation stayed untouched.", time: "Sun", unread: 0, gradient: "linear-gradient(145deg, #8e8e93, #3a3a3c)" }, // <--- changed: extra row confirms internal scrolling
-        { name: "UI Review", initials: "UR", preview: "Recent section extends lower now.", time: "Sat", unread: 0, gradient: "linear-gradient(145deg, #00c7be, #0a84ff)" }, // <--- changed: extra row confirms internal scrolling
-        { name: "Mobile Test", initials: "MT", preview: "Swipe inside the Recent card to scroll.", time: "Fri", unread: 0, gradient: "linear-gradient(145deg, #ff453a, #ff9f0a)" }, // <--- changed: extra row confirms internal scrolling
-    ];
+    const timeOptions = ["Now", "Today", "Yesterday", "Sun", "Fri", "Thu"];
+
+    return names.map((name, index) => ({
+        name,
+        initials: getContactInitialsFromName(name),
+        preview: previewOptions[index % previewOptions.length],
+        time: timeOptions[index % timeOptions.length],
+        unread: 0,
+        gradient: MESSAGE_CONTACT_GRADIENTS[index % MESSAGE_CONTACT_GRADIENTS.length],
+    }));
+}
+
+function IPhoneMessagesApp({ closing, contactsUnlocked, playerLevel }: { closing: boolean; contactsUnlocked: boolean; playerLevel: number }) { // <--- changed: polished fake Messages app
+    const [messageThreads, setMessageThreads] = useState<MessageContactThread[]>([]); // <--- changed
+    const [contactsLoaded, setContactsLoaded] = useState(false); // <--- changed
+
+    useEffect(() => { // <--- changed: loads names from public/data/Contacts.txt every time the Messages app mounts
+        let cancelled = false;
+
+        async function loadMessageContacts() {
+            try {
+                let contactNames: string[] = []; // <--- changed
+
+                for (const contactsPath of MESSAGES_CONTACTS_PATHS) { // <--- changed: try Contacts.txt first, then contact.txt
+                    try {
+                        const response = await fetch(`${contactsPath}?v=${Date.now()}`, { cache: "no-store" }); // <--- changed: cache-busts so edits appear immediately
+                        const contentType = response.headers.get("content-type") ?? ""; // <--- changed
+                        const text = response.ok && !contentType.toLowerCase().includes("text/html") ? await response.text() : ""; // <--- changed
+                        const parsedNames = parseMessagesContactText(text); // <--- changed
+
+                        if (parsedNames.length > 0) { // <--- changed
+                            contactNames = parsedNames; // <--- changed
+                            break; // <--- changed
+                        }
+                    } catch {
+                        // Try the next possible filename. // <--- changed
+                    }
+                }
+
+                if (!cancelled) {
+                    setMessageThreads(buildMessageThreadsFromContacts(contactNames));
+                    setContactsLoaded(true);
+                }
+            } catch {
+                if (!cancelled) {
+                    setMessageThreads([]);
+                    setContactsLoaded(true);
+                }
+            }
+        }
+
+        if (contactsUnlocked) { // <--- changed
+            loadMessageContacts(); // <--- changed
+        } else { // <--- changed
+            setMessageThreads([]); // <--- changed
+            setContactsLoaded(true); // <--- changed
+        } // <--- changed
+
+        return () => {
+            cancelled = true;
+        };
+    }, [contactsUnlocked]);
+
+    const pinnedThreads = messageThreads.slice(0, 3); // <--- changed: pinned cards also come from contact.txt
+    const hasContacts = messageThreads.length > 0; // <--- changed
 
     return (
         <div
@@ -1775,44 +1897,76 @@ function IPhoneMessagesApp({ closing }: { closing: boolean }) { // <--- changed:
                 <span style={styles.messagesSearchText}>Search</span>
             </div>
 
-            <div style={styles.messagesPinnedSection}>
-                {pinnedThreads.map((thread) => (
-                    <button key={thread.name} type="button" style={styles.messagesPinnedCard}>
-                        <div style={{ ...styles.messagesPinnedAvatar, background: thread.gradient }}>
-                            {thread.initials}
-                        </div>
-                        <div style={styles.messagesPinnedName}>{thread.name}</div>
-                        <div style={styles.messagesPinnedPreview}>{thread.preview}</div>
-                    </button>
-                ))}
-            </div>
-
-            <div style={styles.messagesListCard}>
-                <div style={styles.messagesListTitle}>Recent</div>
-
-                <div style={styles.messagesThreadScroll}> {/* <--- changed: only the Recent box contents scroll, not the whole Messages app */}
-                    {messageThreads.map((thread) => (
-                        <button key={thread.name} type="button" style={styles.messagesThreadRow}>
-                            <div style={{ ...styles.messagesThreadAvatar, background: thread.gradient }}>
+            {hasContacts ? ( // <--- changed: hide pinned cards completely when contact.txt has no names
+                <div style={styles.messagesPinnedSection}>
+                    {pinnedThreads.map((thread) => (
+                        <button key={thread.name} type="button" style={styles.messagesPinnedCard}>
+                            <div style={{ ...styles.messagesPinnedAvatar, background: thread.gradient }}>
                                 {thread.initials}
                             </div>
-
-                            <div style={styles.messagesThreadBody}>
-                                <div style={styles.messagesThreadTopLine}>
-                                    <span style={styles.messagesThreadName}>{thread.name}</span>
-                                    <span style={styles.messagesThreadTime}>{thread.time}</span>
-                                </div>
-                                <div style={styles.messagesThreadPreview}>{thread.preview}</div>
-                            </div>
-
-                            {thread.unread > 0 ? (
-                                <div style={styles.messagesUnreadBadge}>{thread.unread}</div>
-                            ) : (
-                                <div style={styles.messagesChevron}>›</div>
-                            )}
+                            <div style={styles.messagesPinnedName}>{thread.name}</div>
+                            <div style={styles.messagesPinnedPreview}>{thread.preview}</div>
                         </button>
                     ))}
                 </div>
+            ) : null}
+
+            <div style={styles.messagesListCard}>
+                <div style={styles.messagesListTitle}>{hasContacts ? "Recent" : "Contacts"}</div>
+
+                {contactsLoaded && !hasContacts ? ( // <--- changed: polished empty/locked state
+                    <div style={styles.messagesEmptyState}>
+                        <div style={styles.messagesEmptyIconWrap}>
+                            <IPhoneMessagesIconSvg />
+                        </div>
+                        <div style={styles.messagesEmptyTitle}>{contactsUnlocked ? "No Contacts Yet" : "Contacts Locked"}</div>
+                        <div style={styles.messagesEmptyText}>
+                            {contactsUnlocked ? (
+                                <>Add names to <span style={styles.messagesEmptyCode}>public/data/Contacts.txt</span> using lines like <span style={styles.messagesEmptyCode}>1 Mom</span>.</>
+                            ) : (
+                                <>Reach <span style={styles.messagesEmptyCode}>Level {CONTACTS_UNLOCK_LEVEL}</span> to unlock story contacts. Current level: <span style={styles.messagesEmptyCode}>{playerLevel}</span>.</>
+                            )}
+                        </div>
+                    </div>
+                ) : null}
+
+                {!contactsLoaded ? ( // <--- changed: small loading state while the text file is fetched
+                    <div style={styles.messagesEmptyState}>
+                        <div style={styles.messagesEmptyIconWrap}>
+                            <IPhoneMessagesIconSvg />
+                        </div>
+                        <div style={styles.messagesEmptyTitle}>Loading Contacts</div>
+                        <div style={styles.messagesEmptyText}>Reading your message contacts from contact.txt.</div>
+                    </div>
+                ) : null}
+
+                {contactsLoaded && hasContacts ? ( // <--- changed: all message rows come from contact.txt
+                    <div style={styles.messagesThreadScroll}> {/* <--- changed: only the Recent box contents scroll, not the whole Messages app */}
+                        {messageThreads.map((thread) => (
+                            <button key={thread.name} type="button" style={styles.messagesThreadRow}>
+                                <div style={{ ...styles.messagesThreadAvatar, background: thread.gradient }}>
+                                    {thread.initials}
+                                </div>
+
+                                <div style={styles.messagesThreadBody}>
+                                    <div style={styles.messagesThreadTopLine}>
+                                        <span style={styles.messagesThreadName}>{thread.name}</span>
+                                    </div>
+                                    <div style={styles.messagesThreadPreview}>{thread.preview}</div>
+                                </div>
+
+                                <div style={styles.messagesThreadMeta}> {/* <--- changed: keeps the time and arrow vertically aligned together */}
+                                    <span style={styles.messagesThreadTime}>{thread.time}</span>
+                                    {thread.unread > 0 ? (
+                                        <div style={styles.messagesUnreadBadge}>{thread.unread}</div>
+                                    ) : (
+                                        <div style={styles.messagesChevron}>›</div>
+                                    )}
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                ) : null}
             </div>
         </div>
     );
@@ -4008,6 +4162,403 @@ function playPhoneSound(audioRef: React.RefObject<HTMLAudioElement | null>) { //
     }); // <--- changed
 }
 
+
+type SavedGameProfile = { // <--- changed: Supabase profile save data only, never localStorage
+    startingBalance?: number; // <--- changed: saved so future story modes can change the starting bankroll safely
+    balance?: number;
+    timeframe?: string;
+    quantity?: number;
+    market?: MarketState;
+    price?: number;
+    position?: Position | null;
+    pendingOrder?: PendingOrder | null;
+    takeProfit?: ExitLine | null;
+    stopLoss?: ExitLine | null;
+    dialedPhoneNumber?: string;
+    activePhoneApp?: FakePhoneAppName;
+    phoneOpen?: boolean;
+    bullCandleColor?: string;
+    bearCandleColor?: string;
+    visibleTimeframes?: Record<string, boolean>;
+    simulationPaused?: boolean;
+    realizedPnlTotal?: number; // <--- changed
+    lastTradePnl?: number; // <--- changed
+    tradeCount?: number; // <--- changed
+    winningTrades?: number; // <--- changed
+    losingTrades?: number; // <--- changed
+    playerXp?: number; // <--- changed
+    playerLevel?: number; // <--- changed
+    xpHistory?: PlayerXpEvent[]; // <--- changed
+    savedAt?: number;
+};
+
+type SavedGameUser = { // <--- changed: this is the safe public user object returned from Supabase
+    username: string;
+    displayName: string;
+    profile: SavedGameProfile;
+    createdAt: number;
+    updatedAt: number;
+};
+
+type GameApiResponse = { // <--- changed
+    ok: boolean;
+    message?: string;
+    user?: SavedGameUser;
+};
+
+type PlayerXpEvent = { // <--- changed: stored in Supabase so level progress survives reloads
+    id: string;
+    amount: number;
+    reason: string;
+    timestamp: number;
+};
+
+const LEVEL_XP_REQUIREMENTS = [50, 125, 250, 450, 700, 1000, 1400, 1900, 2500, 3200]; // <--- changed
+const CONTACTS_UNLOCK_LEVEL = 2; // <--- changed: story contacts stay hidden until the story unlock level
+const PHONE_UNLOCK_LEVEL = 1; // <--- changed: phone button stays hidden until Level 1
+const BASE_MAX_CONTRACTS = 5; // <--- changed: Level 0+ starter cap until a later unlock is added
+
+function calculatePlayerLevelFromXp(totalXp: number) { // <--- changed
+    let level = 0;
+    let remainingXp = Math.max(0, Math.floor(totalXp));
+
+    for (const requiredXp of LEVEL_XP_REQUIREMENTS) {
+        if (remainingXp < requiredXp) break;
+        remainingXp -= requiredXp;
+        level += 1;
+    }
+
+    return level;
+}
+
+function getCurrentLevelXp(totalXp: number) { // <--- changed
+    let remainingXp = Math.max(0, Math.floor(totalXp));
+
+    for (const requiredXp of LEVEL_XP_REQUIREMENTS) {
+        if (remainingXp < requiredXp) return remainingXp;
+        remainingXp -= requiredXp;
+    }
+
+    return remainingXp;
+}
+
+function getXpNeededForLevel(level: number) { // <--- changed
+    return LEVEL_XP_REQUIREMENTS[level] ?? Math.round(LEVEL_XP_REQUIREMENTS[LEVEL_XP_REQUIREMENTS.length - 1] * 1.25);
+}
+
+function getProfitXpBonus(realizedTradePnl: number) { // <--- changed
+    if (realizedTradePnl >= 2500) return 35;
+    if (realizedTradePnl >= 1000) return 20;
+    if (realizedTradePnl >= 500) return 10;
+    if (realizedTradePnl >= 100) return 5;
+    return 0;
+}
+
+function createTradeId() { // <--- changed
+    return `trade_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function getMaxContractsForLevel(level: number) { // <--- changed: keeps early-game contract sizing capped for progression
+    const safeLevel = Math.max(0, Math.floor(level)); // <--- changed: intentionally uses level so TS does not flag the parameter while future unlocks are mapped
+
+    // Later unlocks can raise this, example: if (safeLevel >= 5) return 10;
+    if (safeLevel >= 9999) return BASE_MAX_CONTRACTS; // <--- changed: placeholder branch keeps the level parameter live without changing today's cap
+
+    return BASE_MAX_CONTRACTS; // <--- changed
+}
+
+function clampContractQuantity(value: number, level: number) { // <--- changed
+    const maxContracts = getMaxContractsForLevel(level); // <--- changed
+    return Math.max(1, Math.min(Math.floor(value || 1), maxContracts)); // <--- changed
+}
+
+function getRealizedPnlFromBalance(balanceValue: number, startingBalanceValue = STARTING_BALANCE) { // <--- changed: keeps displayed/saved realized PnL synced to actual account balance
+    return Number((balanceValue - startingBalanceValue).toFixed(2)); // <--- changed
+}
+
+function catchUpSavedMarketState(savedMarket: MarketState, savedAt: number | undefined, data: CsvCandle[]) { // <--- changed: advances saved candles by real time passed while the player was away
+    if (!savedMarket.loaded || !savedMarket.plannedCandle || data.length === 0) { // <--- changed
+        return { market: savedMarket, leftoverMs: 0 }; // <--- changed
+    } // <--- changed
+
+    const offlineMs = Math.max(0, Date.now() - (typeof savedAt === "number" ? savedAt : Date.now())); // <--- changed
+    const candleDurationMs = TIMEFRAME_SECONDS["15m"] * 1000; // <--- changed
+    const maxCatchUpCandles = 500; // <--- changed: safety cap so an old save cannot freeze the browser
+    const candlesToClose = Math.min(Math.floor(offlineMs / candleDurationMs), maxCatchUpCandles); // <--- changed
+    const leftoverMs = offlineMs % candleDurationMs; // <--- changed
+
+    let closedCandles = [...savedMarket.closedCandles]; // <--- changed
+    let currentPlan = savedMarket.plannedCandle; // <--- changed
+    let dataIndex = savedMarket.dataIndex; // <--- changed
+    let active15mIndex = savedMarket.active15mIndex; // <--- changed
+    let activeCandleTimeMs = savedMarket.activeCandleTimeMs; // <--- changed
+
+    for (let i = 0; i < candlesToClose; i++) { // <--- changed
+        const finished: Candle = { // <--- changed
+            open: currentPlan.open, // <--- changed
+            high: currentPlan.high, // <--- changed
+            low: currentPlan.low, // <--- changed
+            close: currentPlan.close, // <--- changed
+        }; // <--- changed
+
+        closedCandles = [...closedCandles, finished]; // <--- changed
+        if (closedCandles.length > MAX_BASE_CANDLES) { // <--- changed
+            closedCandles.splice(0, TRIM_BASE_CANDLES); // <--- changed
+        } // <--- changed
+
+        dataIndex += 1; // <--- changed
+        if (dataIndex >= data.length) dataIndex = 0; // <--- changed
+
+        const nextRaw = data[dataIndex]; // <--- changed
+        const nextCandleTimeMs = parseCsvTimestamp(nextRaw.time); // <--- changed
+        if (nextCandleTimeMs !== null) { // <--- changed
+            activeCandleTimeMs = nextCandleTimeMs; // <--- changed
+            active15mIndex = getActive15mIndexFromTimestamp(nextCandleTimeMs); // <--- changed
+        } else { // <--- changed
+            active15mIndex += 1; // <--- changed
+            activeCandleTimeMs = activeCandleTimeMs === null ? null : activeCandleTimeMs + 15 * 60 * 1000; // <--- changed
+        } // <--- changed
+
+        currentPlan = createActivePlan(applyRealCandleShape(nextRaw, finished.close)); // <--- changed
+    } // <--- changed
+
+    const progress = clamp(leftoverMs / candleDurationMs, 0, 1); // <--- changed
+    const activeCandle = candleFromPlanAtProgress(currentPlan, progress); // <--- changed
+
+    return { // <--- changed
+        market: { // <--- changed
+            ...savedMarket, // <--- changed
+            closedCandles, // <--- changed
+            activeCandle, // <--- changed
+            plannedCandle: currentPlan, // <--- changed
+            dataIndex, // <--- changed
+            active15mIndex, // <--- changed
+            activeCandleTimeMs, // <--- changed
+        }, // <--- changed
+        leftoverMs, // <--- changed
+    }; // <--- changed
+}
+
+function normalizeSavedGameProfile(profile: SavedGameProfile): SavedGameProfile { // <--- changed: repairs old/mismatched saves before loading or saving
+    const startingBalance = typeof profile.startingBalance === "number" ? profile.startingBalance : STARTING_BALANCE; // <--- changed
+    const balance = typeof profile.balance === "number" ? profile.balance : startingBalance; // <--- changed
+    const correctedRealizedPnlTotal = getRealizedPnlFromBalance(balance, startingBalance); // <--- changed
+    const playerXp = typeof profile.playerXp === "number" ? Math.max(0, Math.floor(profile.playerXp)) : 0; // <--- changed
+
+    return { // <--- changed
+        ...profile, // <--- changed
+        startingBalance, // <--- changed
+        balance, // <--- changed
+        realizedPnlTotal: correctedRealizedPnlTotal, // <--- changed: prevents balance/profit mismatch for every player
+        playerXp, // <--- changed
+        playerLevel: calculatePlayerLevelFromXp(playerXp), // <--- changed: level is always recalculated from XP, never trusted separately
+        xpHistory: Array.isArray(profile.xpHistory) ? profile.xpHistory : [], // <--- changed
+    }; // <--- changed
+}
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined; // <--- changed: put this in your .env file
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined; // <--- changed: put this in your .env file
+const SUPABASE_READY = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY); // <--- changed
+
+const supabase = SUPABASE_READY // <--- changed: browser-side Supabase client
+    ? createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, { // <--- changed
+        auth: { // <--- changed
+            persistSession: false, // <--- changed: does not keep auth/session locally; reloads require sign-in
+            autoRefreshToken: true, // <--- changed
+            detectSessionInUrl: true, // <--- changed
+        }, // <--- changed
+    }) // <--- changed
+    : null; // <--- changed
+
+function normalizeGameUsername(value: string) { // <--- changed
+    return value.trim().toLowerCase().replace(/[^a-z0-9_]/g, ""); // <--- changed: Supabase usernames stay unique + URL/email safe
+}
+
+function makeGameAuthEmail(username: string) { // <--- changed
+    return `${username}@xauusdgame.com`; // <--- changed: valid auth email domain generated from username
+}
+
+function toSavedGameUser(row: any, fallbackProfile?: SavedGameProfile): SavedGameUser | null { // <--- changed
+    if (!row?.username) return null; // <--- changed
+
+    return { // <--- changed
+        username: row.username, // <--- changed
+        displayName: row.display_name || row.username, // <--- changed
+        profile: normalizeSavedGameProfile((row.save_data || fallbackProfile || makeDefaultSavedGameProfile()) as SavedGameProfile), // <--- changed
+        createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(), // <--- changed
+        updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : Date.now(), // <--- changed
+    }; // <--- changed
+}
+
+async function getCurrentSupabaseUserProfile(): Promise<GameApiResponse> { // <--- changed
+    if (!supabase) { // <--- changed
+        return { ok: false, message: "Supabase is not connected yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file." }; // <--- changed
+    } // <--- changed
+
+    const { data: authData, error: authError } = await supabase.auth.getUser(); // <--- changed
+
+    if (authError || !authData.user) { // <--- changed
+        return { ok: false, message: "No active Supabase session." }; // <--- changed
+    } // <--- changed
+
+    const { data: profileRow, error: profileError } = await supabase // <--- changed
+        .from("game_profiles") // <--- changed
+        .select("id, username, display_name, save_data, created_at, updated_at") // <--- changed
+        .eq("id", authData.user.id) // <--- changed
+        .single(); // <--- changed
+
+    if (profileError || !profileRow) { // <--- changed
+        return { ok: false, message: "Your Supabase account exists, but the game profile row was not found." }; // <--- changed
+    } // <--- changed
+
+    const user = toSavedGameUser(profileRow); // <--- changed
+    return user ? { ok: true, user } : { ok: false, message: "Could not load your Supabase game profile." }; // <--- changed
+}
+
+async function callGameApi(path: string, body?: unknown): Promise<GameApiResponse> { // <--- changed: Supabase-owned save system, no localStorage and no temporary Node backend
+    if (!supabase) { // <--- changed
+        return { ok: false, message: "Supabase is not connected yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file." }; // <--- changed
+    } // <--- changed
+
+    const payload = (body || {}) as { username?: string; password?: string; displayName?: string; profile?: SavedGameProfile }; // <--- changed
+
+    try { // <--- changed
+        if (path === "/me") { // <--- changed
+            return await getCurrentSupabaseUserProfile(); // <--- changed
+        } // <--- changed
+
+        if (path === "/signup") { // <--- changed
+            const username = normalizeGameUsername(payload.username || ""); // <--- changed
+            const password = payload.password || ""; // <--- changed
+            const profile = normalizeSavedGameProfile(payload.profile || makeDefaultSavedGameProfile()); // <--- changed
+
+            if (!username || !password) return { ok: false, message: "Enter a username and password." }; // <--- changed
+            if (username.length < 3) return { ok: false, message: "Username must be at least 3 characters." }; // <--- changed
+            if (password.length < 6) return { ok: false, message: "Password must be at least 6 characters." }; // <--- changed
+
+            const { data: usernameTaken } = await supabase // <--- changed
+                .from("game_profiles") // <--- changed
+                .select("username") // <--- changed
+                .eq("username", username) // <--- changed
+                .maybeSingle(); // <--- changed
+
+            if (usernameTaken) { // <--- changed
+                return { ok: false, message: "That username is already taken." }; // <--- changed
+            } // <--- changed
+
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ // <--- changed
+                email: makeGameAuthEmail(username), // <--- changed
+                password, // <--- changed
+                options: { // <--- changed
+                    data: { username, display_name: payload.displayName || username }, // <--- changed
+                }, // <--- changed
+            }); // <--- changed
+
+            if (signUpError || !signUpData.user) { // <--- changed
+                return { ok: false, message: signUpError?.message || "Could not create Supabase account." }; // <--- changed
+            } // <--- changed
+
+            const { data: insertedProfile, error: insertError } = await supabase // <--- changed
+                .from("game_profiles") // <--- changed
+                .insert({ // <--- changed
+                    id: signUpData.user.id, // <--- changed
+                    username, // <--- changed
+                    display_name: payload.displayName || username, // <--- changed
+                    save_data: profile, // <--- changed
+                }) // <--- changed
+                .select("id, username, display_name, save_data, created_at, updated_at") // <--- changed
+                .single(); // <--- changed
+
+            if (insertError || !insertedProfile) { // <--- changed
+                await supabase.auth.signOut(); // <--- changed
+                return { ok: false, message: insertError?.message?.includes("duplicate") ? "That username is already taken." : insertError?.message || "Could not create the game profile row." }; // <--- changed
+            } // <--- changed
+
+            const user = toSavedGameUser(insertedProfile, profile); // <--- changed
+            return user ? { ok: true, user } : { ok: false, message: "Signup worked, but the profile could not be loaded." }; // <--- changed
+        } // <--- changed
+
+        if (path === "/signin") { // <--- changed
+            const username = normalizeGameUsername(payload.username || ""); // <--- changed
+            const password = payload.password || ""; // <--- changed
+
+            const { error: signInError } = await supabase.auth.signInWithPassword({ // <--- changed
+                email: makeGameAuthEmail(username), // <--- changed
+                password, // <--- changed
+            }); // <--- changed
+
+            if (signInError) { // <--- changed
+                return { ok: false, message: "That username or password is wrong." }; // <--- changed
+            } // <--- changed
+
+            return await getCurrentSupabaseUserProfile(); // <--- changed
+        } // <--- changed
+
+        if (path === "/save") { // <--- changed
+            const profile = normalizeSavedGameProfile(payload.profile || makeDefaultSavedGameProfile()); // <--- changed
+            const { data: authData, error: authError } = await supabase.auth.getUser(); // <--- changed
+
+            if (authError || !authData.user) { // <--- changed
+                return { ok: false, message: "You are signed out. Sign in again to save." }; // <--- changed
+            } // <--- changed
+
+            const { data: savedRow, error: saveError } = await supabase // <--- changed
+                .from("game_profiles") // <--- changed
+                .update({ save_data: profile, updated_at: new Date().toISOString() }) // <--- changed
+                .eq("id", authData.user.id) // <--- changed
+                .select("id, username, display_name, save_data, created_at, updated_at") // <--- changed
+                .single(); // <--- changed
+
+            if (saveError || !savedRow) { // <--- changed
+                return { ok: false, message: saveError?.message || "Supabase could not save your game." }; // <--- changed
+            } // <--- changed
+
+            const user = toSavedGameUser(savedRow, profile); // <--- changed
+            return user ? { ok: true, user } : { ok: false, message: "Saved, but the profile could not be reloaded." }; // <--- changed
+        } // <--- changed
+
+        if (path === "/logout") { // <--- changed
+            await supabase.auth.signOut(); // <--- changed
+            return { ok: true }; // <--- changed
+        } // <--- changed
+
+        return { ok: false, message: "Unknown Supabase game action." }; // <--- changed
+    } catch (error) { // <--- changed
+        const message = error instanceof Error ? error.message : "Supabase request failed."; // <--- changed
+        return { ok: false, message }; // <--- changed
+    } // <--- changed
+}
+
+function makeDefaultSavedGameProfile(): SavedGameProfile { // <--- changed
+    return { // <--- changed
+        startingBalance: STARTING_BALANCE, // <--- changed
+        balance: STARTING_BALANCE, // <--- changed
+        timeframe: "15m", // <--- changed
+        quantity: 1, // <--- changed
+        price: 25, // <--- changed
+        position: null, // <--- changed
+        pendingOrder: null, // <--- changed
+        takeProfit: null, // <--- changed
+        stopLoss: null, // <--- changed
+        dialedPhoneNumber: "", // <--- changed
+        activePhoneApp: "home", // <--- changed
+        phoneOpen: false, // <--- changed
+        bullCandleColor: GREEN, // <--- changed
+        bearCandleColor: RED, // <--- changed
+        visibleTimeframes: { "15m": true, "30m": true, "1h": true, "4h": true, Daily: true }, // <--- changed
+        simulationPaused: false, // <--- changed
+        realizedPnlTotal: 0, // <--- changed
+        lastTradePnl: 0, // <--- changed
+        tradeCount: 0, // <--- changed
+        winningTrades: 0, // <--- changed
+        losingTrades: 0, // <--- changed
+        playerXp: 0, // <--- changed
+        playerLevel: 0, // <--- changed
+        xpHistory: [], // <--- changed
+        savedAt: Date.now(), // <--- changed
+    }; // <--- changed
+}
+
 export default function TradingGame() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const phoneUnlockSoundRef = useRef<HTMLAudioElement | null>(null); // <--- changed
@@ -4022,6 +4573,14 @@ export default function TradingGame() {
     const csvCandlesRef = useRef<CsvCandle[]>([]);
     const pauseStartedAtRef = useRef<number | null>(null); // <--- changed
     const totalPausedMsRef = useRef(0); // <--- changed
+    const saveHydratedRef = useRef(false); // <--- changed: prevents the blank/default game from overwriting a saved profile before login loads
+    const [authMode, setAuthMode] = useState<"signin" | "signup">("signin"); // <--- changed
+    const [authUsername, setAuthUsername] = useState(""); // <--- changed
+    const [authPassword, setAuthPassword] = useState(""); // <--- changed
+    const [authMessage, setAuthMessage] = useState(""); // <--- changed
+    const [authLoading, setAuthLoading] = useState(false); // <--- changed
+    const [authBooting, setAuthBooting] = useState(true); // <--- changed: checks the server session when the game first opens
+    const [currentGameUser, setCurrentGameUser] = useState<SavedGameUser | null>(null); // <--- changed: no localStorage user/profile cache
 
     function getSimElapsedMs() {
         const currentPauseDuration =
@@ -4061,7 +4620,15 @@ export default function TradingGame() {
         }); // <--- changed
     }, []); // <--- changed
 
-    const [balance, setBalance] = useState(5000); // <--- changed
+    const [balance, setBalance] = useState(STARTING_BALANCE); // <--- changed
+    const [realizedPnlTotal, setRealizedPnlTotal] = useState(0); // <--- changed
+    const [lastTradePnl, setLastTradePnl] = useState(0); // <--- changed
+    const [tradeCount, setTradeCount] = useState(0); // <--- changed
+    const [winningTrades, setWinningTrades] = useState(0); // <--- changed
+    const [losingTrades, setLosingTrades] = useState(0); // <--- changed
+    const [playerXp, setPlayerXp] = useState(0); // <--- changed
+    const [playerLevel, setPlayerLevel] = useState(0); // <--- changed
+    const [xpHistory, setXpHistory] = useState<PlayerXpEvent[]>([]); // <--- changed
     const [timeframe, setTimeframe] = useState("15m");
     const [quantity, setQuantity] = useState(1);
     const [now, setNow] = useState(Date.now());
@@ -4095,6 +4662,18 @@ export default function TradingGame() {
         "4h": true,
         Daily: true,
     });
+
+    useEffect(() => { // <--- changed: if a save/profile ever loads with Level 0, force the locked phone closed
+        if (playerLevel >= PHONE_UNLOCK_LEVEL) return; // <--- changed
+        setPhoneOpen(false); // <--- changed
+        setPhoneClosing(false); // <--- changed
+        setActivePhoneApp("home"); // <--- changed
+        setPhoneAppClosing(false); // <--- changed
+    }, [playerLevel]); // <--- changed
+
+    useEffect(() => { // <--- changed: keep saved quantity inside the current level cap
+        setQuantity((prev) => clampContractQuantity(prev, playerLevel)); // <--- changed
+    }, [playerLevel]); // <--- changed
 
     const [market, setMarket] = useState<MarketState>(() => ({
         loaded: false,
@@ -4131,6 +4710,188 @@ export default function TradingGame() {
     const slTrashHitBoxRef = useRef<HitBox | null>(null);
     const [takeProfit, setTakeProfit] = useState<ExitLine | null>(null);
     const [stopLoss, setStopLoss] = useState<ExitLine | null>(null);
+
+    function applySavedGameProfile(profile?: SavedGameProfile) { // <--- changed
+        if (!profile) return; // <--- changed
+        const normalizedProfile = normalizeSavedGameProfile(profile); // <--- changed
+        setBalance(normalizedProfile.balance ?? STARTING_BALANCE); // <--- changed
+        setRealizedPnlTotal(normalizedProfile.realizedPnlTotal ?? 0); // <--- changed
+        if (typeof normalizedProfile.lastTradePnl === "number") setLastTradePnl(normalizedProfile.lastTradePnl); // <--- changed
+        if (typeof normalizedProfile.tradeCount === "number") setTradeCount(normalizedProfile.tradeCount); // <--- changed
+        if (typeof normalizedProfile.winningTrades === "number") setWinningTrades(normalizedProfile.winningTrades); // <--- changed
+        if (typeof normalizedProfile.losingTrades === "number") setLosingTrades(normalizedProfile.losingTrades); // <--- changed
+        if (typeof normalizedProfile.playerXp === "number") { // <--- changed
+            setPlayerXp(normalizedProfile.playerXp); // <--- changed
+            setPlayerLevel(calculatePlayerLevelFromXp(normalizedProfile.playerXp)); // <--- changed
+        } // <--- changed
+        if (Array.isArray(normalizedProfile.xpHistory)) setXpHistory(normalizedProfile.xpHistory); // <--- changed
+        if (typeof normalizedProfile.timeframe === "string") setTimeframe(normalizedProfile.timeframe); // <--- changed
+        if (typeof normalizedProfile.quantity === "number") setQuantity(normalizedProfile.quantity); // <--- changed
+        if (normalizedProfile.market?.loaded) { // <--- changed
+            const caughtUp = catchUpSavedMarketState(normalizedProfile.market, normalizedProfile.savedAt, csvCandlesRef.current); // <--- changed: market advances while the player was logged out
+            appStartRef.current = Date.now() - caughtUp.leftoverMs; // <--- changed: keeps the reloaded active candle at the correct progress point
+            totalPausedMsRef.current = 0; // <--- changed
+            pauseStartedAtRef.current = null; // <--- changed
+            setMarket(caughtUp.market); // <--- changed
+            setPrice(caughtUp.market.activeCandle.close); // <--- changed
+        } else if (typeof normalizedProfile.price === "number") { // <--- changed
+            setPrice(normalizedProfile.price); // <--- changed
+        } // <--- changed
+        if ("position" in normalizedProfile) setPosition(normalizedProfile.position ?? null); // <--- changed
+        if ("pendingOrder" in normalizedProfile) setPendingOrder(normalizedProfile.pendingOrder ?? null); // <--- changed
+        if ("takeProfit" in normalizedProfile) setTakeProfit(normalizedProfile.takeProfit ?? null); // <--- changed
+        if ("stopLoss" in normalizedProfile) setStopLoss(normalizedProfile.stopLoss ?? null); // <--- changed
+        if (typeof normalizedProfile.dialedPhoneNumber === "string") setDialedPhoneNumber(normalizedProfile.dialedPhoneNumber); // <--- changed
+        if (normalizedProfile.activePhoneApp) setActivePhoneApp(normalizedProfile.activePhoneApp); // <--- changed
+        if (typeof normalizedProfile.phoneOpen === "boolean") setPhoneOpen(normalizedProfile.phoneOpen); // <--- changed
+        if (typeof normalizedProfile.bullCandleColor === "string") setBullCandleColor(normalizedProfile.bullCandleColor); // <--- changed
+        if (typeof normalizedProfile.bearCandleColor === "string") setBearCandleColor(normalizedProfile.bearCandleColor); // <--- changed
+        if (normalizedProfile.visibleTimeframes) setVisibleTimeframes(normalizedProfile.visibleTimeframes); // <--- changed
+        if (typeof normalizedProfile.simulationPaused === "boolean") { // <--- changed
+            setSimulationPaused(normalizedProfile.simulationPaused); // <--- changed
+            simulationPausedRef.current = normalizedProfile.simulationPaused; // <--- changed
+            pauseStartedAtRef.current = normalizedProfile.simulationPaused ? Date.now() : null; // <--- changed
+        } // <--- changed
+    }
+
+    function buildCurrentGameProfile(): SavedGameProfile { // <--- changed
+        return { // <--- changed
+            startingBalance: STARTING_BALANCE, // <--- changed
+            balance, // <--- changed
+            realizedPnlTotal: getRealizedPnlFromBalance(balance), // <--- changed: always derived from balance
+            lastTradePnl, // <--- changed
+            tradeCount, // <--- changed
+            winningTrades, // <--- changed
+            losingTrades, // <--- changed
+            playerXp, // <--- changed
+            playerLevel, // <--- changed
+            xpHistory, // <--- changed
+            timeframe, // <--- changed
+            quantity, // <--- changed
+            market, // <--- changed
+            price, // <--- changed
+            position, // <--- changed
+            pendingOrder, // <--- changed
+            takeProfit, // <--- changed
+            stopLoss, // <--- changed
+            dialedPhoneNumber, // <--- changed
+            activePhoneApp, // <--- changed
+            phoneOpen, // <--- changed
+            bullCandleColor, // <--- changed
+            bearCandleColor, // <--- changed
+            visibleTimeframes, // <--- changed
+            simulationPaused, // <--- changed
+            savedAt: Date.now(), // <--- changed
+        }; // <--- changed
+    }
+
+    async function handleGameAuthSubmit(event: ReactFormEvent<HTMLFormElement>) { // <--- changed
+        event.preventDefault(); // <--- changed
+
+        const username = normalizeGameUsername(authUsername); // <--- changed
+        const password = authPassword; // <--- changed
+
+        if (!username || !password) { // <--- changed
+            setAuthMessage("Enter a username and password."); // <--- changed
+            return; // <--- changed
+        } // <--- changed
+
+        setAuthLoading(true); // <--- changed
+        setAuthMessage(authMode === "signin" ? "Checking your saved profile..." : "Creating your Supabase profile..."); // <--- changed
+
+        const result = authMode === "signin" // <--- changed
+            ? await callGameApi("/signin", { username, password }) // <--- changed
+            : await callGameApi("/signup", { username, password, displayName: authUsername.trim(), profile: makeDefaultSavedGameProfile() }); // <--- changed
+
+        setAuthLoading(false); // <--- changed
+
+        if (!result.ok || !result.user) { // <--- changed
+            setAuthMessage(result.message || (authMode === "signin" ? "That username or password is wrong." : "That username already exists.")); // <--- changed
+            return; // <--- changed
+        } // <--- changed
+
+        saveHydratedRef.current = true; // <--- changed
+        setCurrentGameUser(result.user); // <--- changed
+        applySavedGameProfile(result.user.profile); // <--- changed
+        setAuthUsername(result.user.displayName || result.user.username); // <--- changed
+        setAuthPassword(""); // <--- changed
+        setAuthMessage(""); // <--- changed
+    }
+
+    async function handleGameLogout() { // <--- changed
+        await persistCurrentGameProfile(); // <--- changed
+        await callGameApi("/logout", {}); // <--- changed
+        saveHydratedRef.current = false; // <--- changed
+        setCurrentGameUser(null); // <--- changed
+        setAuthPassword(""); // <--- changed
+        setAuthMode("signin"); // <--- changed
+    }
+
+    async function persistCurrentGameProfile() { // <--- changed
+        if (!currentGameUser || !saveHydratedRef.current) return; // <--- changed
+
+        const profile = buildCurrentGameProfile(); // <--- changed
+        const result = await callGameApi("/save", { profile: normalizeSavedGameProfile(profile) }); // <--- changed
+
+        if (result.ok && result.user) { // <--- changed
+            setCurrentGameUser(result.user); // <--- changed
+            return; // <--- changed
+        } // <--- changed
+
+        if (!result.ok && result.message) { // <--- changed
+            setAuthMessage(result.message); // <--- changed
+        } // <--- changed
+    }
+
+    async function persistGameProfileSnapshot(profile: SavedGameProfile) { // <--- changed: saves the exact post-trade values instead of waiting for React state to settle
+        if (!currentGameUser || !saveHydratedRef.current) return; // <--- changed
+
+        const result = await callGameApi("/save", { profile: normalizeSavedGameProfile(profile) }); // <--- changed
+
+        if (result.ok && result.user) { // <--- changed
+            setCurrentGameUser(result.user); // <--- changed
+            return; // <--- changed
+        } // <--- changed
+
+        if (!result.ok && result.message) { // <--- changed
+            setAuthMessage(result.message); // <--- changed
+        } // <--- changed
+    }
+
+    useEffect(() => { // <--- changed: loads the secure Supabase auth session on game start, not localStorage
+        let cancelled = false; // <--- changed
+
+        async function loadServerSession() { // <--- changed
+            const result = await callGameApi("/me"); // <--- changed
+
+            if (cancelled) return; // <--- changed
+
+            if (result.ok && result.user) { // <--- changed
+                saveHydratedRef.current = true; // <--- changed
+                setCurrentGameUser(result.user); // <--- changed
+                setAuthUsername(result.user.displayName || result.user.username); // <--- changed
+                applySavedGameProfile(result.user.profile); // <--- changed
+            } // <--- changed
+
+            setAuthBooting(false); // <--- changed
+        } // <--- changed
+
+        loadServerSession(); // <--- changed
+
+        return () => { // <--- changed
+            cancelled = true; // <--- changed
+        }; // <--- changed
+    }, []); // <--- changed
+
+    useEffect(() => { // <--- changed: auto-save to Supabase after login/sign-up
+        if (!currentGameUser || !saveHydratedRef.current) return; // <--- changed
+        const saveTimer = window.setTimeout(() => { // <--- changed
+            void persistCurrentGameProfile(); // <--- changed
+        }, 450); // <--- changed: debounce server writes so the market can save without hammering the backend
+
+        return () => window.clearTimeout(saveTimer); // <--- changed
+    }, [currentGameUser?.username, balance, realizedPnlTotal, lastTradePnl, tradeCount, winningTrades, losingTrades, playerXp, playerLevel, xpHistory, timeframe, quantity, market, price, position, pendingOrder, takeProfit, stopLoss, dialedPhoneNumber, activePhoneApp, phoneOpen, bullCandleColor, bearCandleColor, visibleTimeframes, simulationPaused]); // <--- changed
+
 
     const dragModeRef = useRef<"pending" | "tp" | "sl" | "create-exit" | null>(null);
     const createExitMovedRef = useRef(false); // <--- changed
@@ -4226,14 +4987,15 @@ export default function TradingGame() {
                 position.side
             );
 
-            setBalance((prev) =>
-                Math.max(0, Number((prev + projectedPnl).toFixed(2)))
-            );
+            const nextBalance = Math.max(0, Number((balance + projectedPnl).toFixed(2))); // <--- changed
+            setBalance(nextBalance); // <--- changed
 
             setPosition(null);
             setTakeProfit(null);
             setStopLoss(null);
             hidePositionControls(); // <--- changed
+            const totalTradePnl = Number(((position.realizedPnlSoFar ?? 0) + projectedPnl).toFixed(2)); // <--- changed
+            recordRealizedTradeAndSave(projectedPnl, nextBalance, null, null, null, { totalTradePnl }); // <--- changed
             return;
         }
 
@@ -4253,18 +5015,20 @@ export default function TradingGame() {
                 position.side
             );
 
-            setBalance((prev) =>
-                Math.max(0, Number((prev + projectedPnl).toFixed(2)))
-            );
+            const nextBalance = Math.max(0, Number((balance + projectedPnl).toFixed(2))); // <--- changed
+            setBalance(nextBalance); // <--- changed
 
             setPosition(null);
             setTakeProfit(null);
             setStopLoss(null);
             hidePositionControls(); // <--- changed
+            const totalTradePnl = Number(((position.realizedPnlSoFar ?? 0) + projectedPnl).toFixed(2)); // <--- changed
+            recordRealizedTradeAndSave(projectedPnl, nextBalance, null, null, null, { totalTradePnl }); // <--- changed
         }
-    }, [position, price, takeProfit, stopLoss]);
+    }, [position, price, takeProfit, stopLoss, balance, realizedPnlTotal, tradeCount, winningTrades, losingTrades]); // <--- changed
 
     function openPhonePanel() {
+        if (playerLevel < PHONE_UNLOCK_LEVEL) return; // <--- changed: Level 0 cannot open/see the phone yet
         if (phoneOpen || phoneOpeningAfterPreloadRef.current) return; // <--- changed
 
         const showPhonePanel = () => { // <--- changed
@@ -4473,10 +5237,16 @@ export default function TradingGame() {
     function handleBuy() {
         if (!canPlaceTrade()) return; // <--- changed
 
+        const openedQuantity = clampContractQuantity(quantity, playerLevel); // <--- changed: starter contract cap
+
         setPosition({
             side: "long",
             entry: price,
-            quantity: Math.max(1, quantity || 1),
+            quantity: openedQuantity,
+            tradeId: createTradeId(), // <--- changed
+            startingQuantity: openedQuantity, // <--- changed
+            partialXpAwarded: false, // <--- changed
+            realizedPnlSoFar: 0, // <--- changed
         });
 
         setPendingOrder(null); // <--- changed: market order cancels pending setup
@@ -4491,10 +5261,16 @@ export default function TradingGame() {
     function handleSell() {
         if (!canPlaceTrade()) return; // <--- changed
 
+        const openedQuantity = clampContractQuantity(quantity, playerLevel); // <--- changed: starter contract cap
+
         setPosition({
             side: "short",
             entry: price,
-            quantity: Math.max(1, quantity || 1),
+            quantity: openedQuantity,
+            tradeId: createTradeId(), // <--- changed
+            startingQuantity: openedQuantity, // <--- changed
+            partialXpAwarded: false, // <--- changed
+            realizedPnlSoFar: 0, // <--- changed
         });
 
         setTakeProfit(null); // <--- changed
@@ -4502,6 +5278,110 @@ export default function TradingGame() {
         isDraggingExitLineRef.current = false; // <--- changed
         setShowPositionControls(false); // <--- changed
         setPositionControlsOpacity(0); // <--- changed
+    }
+
+    function buildXpAwardEvents(realizedTradePnl: number, includeFullCloseXp: boolean, includePartialXp: boolean) { // <--- changed
+        const events: Array<{ amount: number; reason: string }> = []; // <--- changed
+
+        if (includePartialXp) { // <--- changed
+            events.push({
+                amount: realizedTradePnl > 0 ? 10 : 5,
+                reason: realizedTradePnl > 0 ? "First partial on winning trade" : "First partial on losing trade",
+            });
+        }
+
+        if (includeFullCloseXp) { // <--- changed
+            events.push({ amount: 5, reason: "Closed trade" });
+
+            if (realizedTradePnl > 0) {
+                events.push({ amount: 15, reason: "Closed winning trade" });
+
+                const profitBonus = getProfitXpBonus(realizedTradePnl);
+                if (profitBonus > 0) {
+                    events.push({ amount: profitBonus, reason: `Profit bonus ${formatMoney(realizedTradePnl)}` });
+                }
+            }
+        }
+
+        return events;
+    }
+
+    function applyXpAwardsAndSave( // <--- changed
+        xpEvents: Array<{ amount: number; reason: string }>,
+        snapshotBase: SavedGameProfile
+    ) {
+        if (xpEvents.length === 0) {
+            void persistGameProfileSnapshot(snapshotBase);
+            return;
+        }
+
+        const awardedAmount = xpEvents.reduce((total, event) => total + event.amount, 0);
+        const nextPlayerXp = Math.max(0, playerXp + awardedAmount);
+        const nextPlayerLevel = calculatePlayerLevelFromXp(nextPlayerXp);
+        const timestamp = Date.now();
+        const newHistoryEvents: PlayerXpEvent[] = xpEvents.map((event, index) => ({
+            id: `xp_${timestamp}_${index}_${Math.random().toString(36).slice(2, 7)}`,
+            amount: event.amount,
+            reason: event.reason,
+            timestamp,
+        }));
+        const nextXpHistory = [...newHistoryEvents, ...xpHistory].slice(0, 40);
+
+        setPlayerXp(nextPlayerXp);
+        setPlayerLevel(nextPlayerLevel);
+        setXpHistory(nextXpHistory);
+
+        void persistGameProfileSnapshot({
+            ...snapshotBase,
+            playerXp: nextPlayerXp,
+            playerLevel: nextPlayerLevel,
+            xpHistory: nextXpHistory,
+            savedAt: Date.now(),
+        });
+    }
+
+    function recordRealizedTradeAndSave( // <--- changed
+        realizedPnl: number,
+        nextBalance: number,
+        nextPosition: Position | null,
+        nextTakeProfit: ExitLine | null,
+        nextStopLoss: ExitLine | null,
+        options: {
+            countAsClosedTrade?: boolean;
+            totalTradePnl?: number;
+            awardFirstPartialXp?: boolean;
+        } = {}
+    ) {
+        const countAsClosedTrade = options.countAsClosedTrade !== false; // <--- changed
+        const totalTradePnl = Number((options.totalTradePnl ?? realizedPnl).toFixed(2)); // <--- changed
+        const nextRealizedPnlTotal = getRealizedPnlFromBalance(nextBalance); // <--- changed: balance is the source of truth for realized P/L
+        const nextTradeCount = countAsClosedTrade ? tradeCount + 1 : tradeCount; // <--- changed
+        const nextWinningTrades = countAsClosedTrade && totalTradePnl > 0 ? winningTrades + 1 : winningTrades; // <--- changed
+        const nextLosingTrades = countAsClosedTrade && totalTradePnl < 0 ? losingTrades + 1 : losingTrades; // <--- changed
+
+        setRealizedPnlTotal(nextRealizedPnlTotal); // <--- changed
+        setLastTradePnl(Number((countAsClosedTrade ? totalTradePnl : realizedPnl).toFixed(2))); // <--- changed
+        setTradeCount(nextTradeCount); // <--- changed
+        setWinningTrades(nextWinningTrades); // <--- changed
+        setLosingTrades(nextLosingTrades); // <--- changed
+
+        const snapshot: SavedGameProfile = { // <--- changed
+            ...buildCurrentGameProfile(), // <--- changed
+            startingBalance: STARTING_BALANCE, // <--- changed
+            balance: nextBalance, // <--- changed
+            position: nextPosition, // <--- changed
+            takeProfit: nextTakeProfit, // <--- changed
+            stopLoss: nextStopLoss, // <--- changed
+            realizedPnlTotal: nextRealizedPnlTotal, // <--- changed
+            lastTradePnl: Number((countAsClosedTrade ? totalTradePnl : realizedPnl).toFixed(2)), // <--- changed
+            tradeCount: nextTradeCount, // <--- changed
+            winningTrades: nextWinningTrades, // <--- changed
+            losingTrades: nextLosingTrades, // <--- changed
+            savedAt: Date.now(), // <--- changed
+        }; // <--- changed
+
+        const xpEvents = buildXpAwardEvents(totalTradePnl, countAsClosedTrade, Boolean(options.awardFirstPartialXp)); // <--- changed
+        applyXpAwardsAndSave(xpEvents, snapshot); // <--- changed
     }
 
     function handleClosePosition() {
@@ -4517,16 +5397,16 @@ export default function TradingGame() {
 
         const realizedPnl = difference * position.quantity * CONTRACT_VALUE;
 
-        setBalance((prev) => {
-            const nextBalance = prev + realizedPnl;
-            return Math.max(0, Number(nextBalance.toFixed(2)));
-        });
+        const nextBalance = Math.max(0, Number((balance + realizedPnl).toFixed(2))); // <--- changed
 
+        setBalance(nextBalance); // <--- changed
         setPosition(null);
         setTakeProfit(null); // <--- changed
         setStopLoss(null); // <--- changed
         setShowPositionControls(false); // <--- changed
         setPositionControlsOpacity(0); // <--- changed
+        const totalTradePnl = Number(((position.realizedPnlSoFar ?? 0) + realizedPnl).toFixed(2)); // <--- changed
+        recordRealizedTradeAndSave(realizedPnl, nextBalance, null, null, null, { totalTradePnl }); // <--- changed
     }
 
     function handleClosePartials() {
@@ -4547,10 +5427,8 @@ export default function TradingGame() {
 
         const realizedPnl = difference * contractsToClose * CONTRACT_VALUE;
 
-        setBalance((prev) => {
-            const nextBalance = prev + realizedPnl;
-            return Math.max(0, Number(nextBalance.toFixed(2)));
-        });
+        const nextBalance = Math.max(0, Number((balance + realizedPnl).toFixed(2))); // <--- changed
+        setBalance(nextBalance); // <--- changed
 
         const remainingQuantity = position.quantity - contractsToClose;
 
@@ -4559,13 +5437,22 @@ export default function TradingGame() {
             setTakeProfit(null);
             setStopLoss(null);
             hidePositionControls();
+            const totalTradePnl = Number(((position.realizedPnlSoFar ?? 0) + realizedPnl).toFixed(2)); // <--- changed
+            recordRealizedTradeAndSave(realizedPnl, nextBalance, null, null, null, { totalTradePnl }); // <--- changed
             return;
         }
 
-        setPosition({
+        const shouldAwardFirstPartialXp = !position.partialXpAwarded; // <--- changed
+
+        const nextPosition = {
             ...position,
             quantity: remainingQuantity,
-        });
+            partialXpAwarded: true, // <--- changed
+            realizedPnlSoFar: Number(((position.realizedPnlSoFar ?? 0) + realizedPnl).toFixed(2)), // <--- changed
+        }; // <--- changed
+
+        setPosition(nextPosition);
+        recordRealizedTradeAndSave(realizedPnl, nextBalance, nextPosition, takeProfit, stopLoss, { countAsClosedTrade: false, totalTradePnl: realizedPnl, awardFirstPartialXp: shouldAwardFirstPartialXp }); // <--- changed
     }
 
     function handleMoveStopToBreakeven() {
@@ -4736,7 +5623,7 @@ export default function TradingGame() {
 
         pendingSideSwipeTimerRef.current = window.setInterval(() => {
             cyclePendingOrderSideOnce(); // <--- changed: holding continues cycling
-        }, 350); // <--- changed
+        }, 50); // <--- changed: save between market ticks so live candle/market time persists
     }
 
     function handlePendingOrderButton() {
@@ -4761,7 +5648,7 @@ export default function TradingGame() {
         setPendingOrder({
             price: startingPrice,
             side: getPendingSide(startingPrice),
-            quantity: Math.max(1, quantity || 1),
+            quantity: clampContractQuantity(quantity, playerLevel), // <--- changed: starter contract cap
             confirmed: false,
             showControls: true,
             controlsOpacity: 1, // <--- added
@@ -4779,7 +5666,7 @@ export default function TradingGame() {
 
             return {
                 ...prev,
-                quantity: Math.max(1, quantity || 1),
+                quantity: clampContractQuantity(quantity, playerLevel), // <--- changed: starter contract cap
                 confirmed: true,
                 showControls: false, // <--- changed: fade starts immediately
                 controlsOpacity: 0, // <--- changed: fade starts immediately
@@ -5836,6 +6723,7 @@ export default function TradingGame() {
                 }
 
                 if (cancelled) return;
+                if (saveHydratedRef.current && currentGameUser?.profile?.market?.loaded) return; // <--- changed: do not overwrite a restored saved market after sign in
 
                 csvCandlesRef.current = parsed;
 
@@ -5890,6 +6778,8 @@ export default function TradingGame() {
                     } // <--- changed
                     return; // <--- changed
                 }
+
+                if (saveHydratedRef.current && currentGameUser?.profile?.market?.loaded) return; // <--- changed: do not overwrite a restored saved market after sign in
 
                 const parsed = fallbackCandles();
                 csvCandlesRef.current = parsed;
@@ -6887,6 +7777,77 @@ export default function TradingGame() {
                 `}
             </style>
 
+            {!authBooting && !currentGameUser && ( // <--- changed: Supabase-backed sign in/sign up gate shown as soon as the game starts
+                <div style={styles.authOverlay}>
+                    <form style={styles.authCard} onSubmit={handleGameAuthSubmit}>
+                        <div style={styles.authGlow} />
+                        <div style={styles.authTopPill}>XAUUSD TRADING GAME</div>
+                        <div style={styles.authTitle}>{authMode === "signin" ? "Welcome Back" : "Create Your Trader Profile"}</div>
+                        <div style={styles.authSubtitle}>
+                            {authMode === "signin"
+                                ? "Sign in to restore your balance, trades, messages, market time, settings, and phone state."
+                                : "Create a unique Supabase profile so your save data is owned by the game system, not the browser."}
+                        </div>
+
+                        <div style={styles.authModeSwitch}>
+                            <button
+                                type="button"
+                                style={{ ...styles.authModeButton, ...(authMode === "signin" ? styles.authModeButtonActive : {}) }}
+                                onClick={() => { setAuthMode("signin"); setAuthMessage(""); }}
+                            >
+                                Sign In
+                            </button>
+                            <button
+                                type="button"
+                                style={{ ...styles.authModeButton, ...(authMode === "signup" ? styles.authModeButtonActive : {}) }}
+                                onClick={() => { setAuthMode("signup"); setAuthMessage(""); }}
+                            >
+                                Sign Up
+                            </button>
+                        </div>
+
+                        <label style={styles.authLabel}>
+                            Username
+                            <input
+                                style={styles.authInput}
+                                value={authUsername}
+                                onChange={(event) => setAuthUsername(event.target.value)}
+                                placeholder="ex: juan"
+                                autoComplete="username"
+                            />
+                        </label>
+
+                        <label style={styles.authLabel}>
+                            Password
+                            <input
+                                style={styles.authInput}
+                                value={authPassword}
+                                onChange={(event) => setAuthPassword(event.target.value)}
+                                placeholder="Your password"
+                                type="password"
+                                autoComplete={authMode === "signin" ? "current-password" : "new-password"}
+                            />
+                        </label>
+
+                        {authMessage ? <div style={styles.authError}>{authMessage}</div> : null}
+
+                        <button type="submit" style={{ ...styles.authSubmitButton, ...(authLoading ? styles.authSubmitButtonDisabled : {}) }} disabled={authLoading}>
+                            {authLoading ? "CONNECTING..." : authMode === "signin" ? "LOAD MY GAME" : "CREATE PROFILE"}
+                        </button>
+
+                        <div style={styles.authSaveNotice}>
+                            Server save only. Usernames must be unique and progress is restored from the game system.
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {currentGameUser && ( // <--- changed: small pro account chip for saved users
+                <button type="button" style={styles.authUserChip} onClick={handleGameLogout} title="Save and sign out">
+                    Lv {playerLevel} • {getCurrentLevelXp(playerXp)}/{getXpNeededForLevel(playerLevel)} XP • {currentGameUser.displayName || currentGameUser.username} • Sign Out
+                </button>
+            )}
+
             {isLandscape && ( // <--- changed
                 <div style={styles.orientationBlocker}>
                     <div style={styles.orientationTitle}>Rotate Back</div>
@@ -7118,7 +8079,7 @@ export default function TradingGame() {
                                                     )}
 
                                                     {activePhoneApp === "messages" && ( // <--- changed
-                                                        <IPhoneMessagesApp closing={phoneAppClosing} />
+                                                        <IPhoneMessagesApp closing={phoneAppClosing} contactsUnlocked={playerLevel >= CONTACTS_UNLOCK_LEVEL} playerLevel={playerLevel} />
                                                     )}
 
                                                     {musicAppKeepMounted && ( // <--- changed: keep mounted so audio continues after closing app/phone
@@ -7259,16 +8220,18 @@ export default function TradingGame() {
 
                         <div style={styles.marketTimeBlock}> {/* <--- changed */}
                             <div style={styles.phoneInlineAnchor}> {/* <--- changed */}
-                                <button
-                                    style={styles.phoneButton}
-                                    onClick={openPhonePanel}
-                                    aria-label="Open phone"
-                                >
-                                    <span style={styles.phoneButtonScreen}>
-                                        <span style={styles.phoneButtonNotch} />
-                                        <span style={styles.phoneButtonLine} />
-                                    </span>
-                                </button>
+                                {playerLevel >= PHONE_UNLOCK_LEVEL && ( // <--- changed: phone is hidden until Level 1
+                                    <button
+                                        style={styles.phoneButton}
+                                        onClick={openPhonePanel}
+                                        aria-label="Open phone"
+                                    >
+                                        <span style={styles.phoneButtonScreen}>
+                                            <span style={styles.phoneButtonNotch} />
+                                            <span style={styles.phoneButtonLine} />
+                                        </span>
+                                    </button>
+                                )}
 
                             </div>
 
@@ -7388,6 +8351,10 @@ export default function TradingGame() {
                         </div>
 
                         <div style={styles.chartWrap}>
+                            <div style={styles.chartLevelBadge}> {/* <--- changed: level badge aligned with pause/play button on the bottom-left */}
+                                Level: {playerLevel}
+                            </div>
+
                             <button
                                 style={styles.pauseButton}
                                 onClick={handleToggleSimulationPause}
@@ -7427,11 +8394,13 @@ export default function TradingGame() {
                                 value={quantity}
                                 type="number"
                                 min="1"
+                                max={getMaxContractsForLevel(playerLevel)} // <--- changed
+                                title={`Max ${getMaxContractsForLevel(playerLevel)} contracts at your current level`} // <--- changed
                                 onChange={(e) => {
                                     const value = Number(e.target.value);
                                     setQuantity(
                                         Number.isFinite(value)
-                                            ? Math.max(1, Math.min(value, 100))
+                                            ? clampContractQuantity(value, playerLevel) // <--- changed
                                             : 1
                                     );
                                 }}
@@ -7509,6 +8478,174 @@ export default function TradingGame() {
 }
 
 const styles: Record<string, CSSProperties> = {
+    authOverlay: { // <--- changed
+        position: "fixed", // <--- changed
+        inset: 0, // <--- changed
+        zIndex: 20000, // <--- changed
+        background: "radial-gradient(circle at 50% 20%, rgba(47,140,255,0.20), rgba(5,5,5,0.96) 42%, #050505 100%)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        padding: 22, // <--- changed
+        color: "#ffffff", // <--- changed
+        fontFamily: "Arial, sans-serif", // <--- changed
+        backdropFilter: "blur(12px)", // <--- changed
+        WebkitBackdropFilter: "blur(12px)", // <--- changed
+    },
+    authCard: { // <--- changed
+        width: "min(390px, 100%)", // <--- changed
+        position: "relative", // <--- changed
+        overflow: "hidden", // <--- changed
+        borderRadius: 30, // <--- changed
+        border: "1px solid rgba(255,255,255,0.12)", // <--- changed
+        background: "linear-gradient(180deg, rgba(28,28,32,0.96), rgba(12,12,14,0.98))", // <--- changed
+        boxShadow: "0 28px 90px rgba(0,0,0,0.62)", // <--- changed
+        padding: "30px 26px 24px", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        gap: 14, // <--- changed
+    },
+    authGlow: { // <--- changed
+        position: "absolute", // <--- changed
+        top: -100, // <--- changed
+        right: -70, // <--- changed
+        width: 220, // <--- changed
+        height: 220, // <--- changed
+        borderRadius: "50%", // <--- changed
+        background: "rgba(20,199,138,0.20)", // <--- changed
+        filter: "blur(28px)", // <--- changed
+        pointerEvents: "none", // <--- changed
+    },
+    authTopPill: { // <--- changed
+        alignSelf: "flex-start", // <--- changed
+        padding: "7px 11px", // <--- changed
+        borderRadius: 999, // <--- changed
+        background: "rgba(255,255,255,0.08)", // <--- changed
+        color: "rgba(255,255,255,0.68)", // <--- changed
+        fontSize: 10, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: 1.1, // <--- changed
+        zIndex: 1, // <--- changed
+    },
+    authTitle: { // <--- changed
+        zIndex: 1, // <--- changed
+        fontSize: 31, // <--- changed
+        fontWeight: 950, // <--- changed
+        letterSpacing: -1, // <--- changed
+        lineHeight: 1.04, // <--- changed
+        marginTop: 4, // <--- changed
+    },
+    authSubtitle: { // <--- changed
+        zIndex: 1, // <--- changed
+        color: "rgba(255,255,255,0.62)", // <--- changed
+        fontSize: 13, // <--- changed
+        fontWeight: 700, // <--- changed
+        lineHeight: 1.45, // <--- changed
+        marginBottom: 2, // <--- changed
+    },
+    authModeSwitch: { // <--- changed
+        zIndex: 1, // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "1fr 1fr", // <--- changed
+        gap: 6, // <--- changed
+        padding: 5, // <--- changed
+        borderRadius: 16, // <--- changed
+        background: "rgba(255,255,255,0.07)", // <--- changed
+        margin: "4px 0 2px", // <--- changed
+    },
+    authModeButton: { // <--- changed
+        height: 38, // <--- changed
+        border: "none", // <--- changed
+        borderRadius: 12, // <--- changed
+        background: "transparent", // <--- changed
+        color: "rgba(255,255,255,0.62)", // <--- changed
+        fontSize: 13, // <--- changed
+        fontWeight: 900, // <--- changed
+        cursor: "pointer", // <--- changed
+    },
+    authModeButtonActive: { // <--- changed
+        background: "#ffffff", // <--- changed
+        color: "#050505", // <--- changed
+        boxShadow: "0 8px 22px rgba(0,0,0,0.22)", // <--- changed
+    },
+    authLabel: { // <--- changed
+        zIndex: 1, // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        gap: 8, // <--- changed
+        color: "rgba(255,255,255,0.74)", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 900, // <--- changed
+        textTransform: "uppercase", // <--- changed
+        letterSpacing: 0.6, // <--- changed
+    },
+    authInput: { // <--- changed
+        height: 48, // <--- changed
+        borderRadius: 16, // <--- changed
+        border: "1px solid rgba(255,255,255,0.11)", // <--- changed
+        background: "rgba(255,255,255,0.075)", // <--- changed
+        color: "#ffffff", // <--- changed
+        outline: "none", // <--- changed
+        padding: "0 15px", // <--- changed
+        fontSize: 15, // <--- changed
+        fontWeight: 800, // <--- changed
+        textTransform: "none", // <--- changed
+        letterSpacing: 0, // <--- changed
+    },
+    authError: { // <--- changed
+        zIndex: 1, // <--- changed
+        color: "#ff6b70", // <--- changed
+        background: "rgba(255,64,72,0.10)", // <--- changed
+        border: "1px solid rgba(255,64,72,0.18)", // <--- changed
+        borderRadius: 14, // <--- changed
+        padding: "10px 12px", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 900, // <--- changed
+    },
+    authSubmitButton: { // <--- changed
+        zIndex: 1, // <--- changed
+        height: 52, // <--- changed
+        border: "none", // <--- changed
+        borderRadius: 17, // <--- changed
+        background: "linear-gradient(135deg, #14c78a, #2f8cff)", // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 14, // <--- changed
+        fontWeight: 950, // <--- changed
+        letterSpacing: 0.7, // <--- changed
+        cursor: "pointer", // <--- changed
+        boxShadow: "0 14px 30px rgba(47,140,255,0.22)", // <--- changed
+        marginTop: 2, // <--- changed
+    },
+    authSubmitButtonDisabled: { // <--- changed
+        opacity: 0.62, // <--- changed
+        cursor: "not-allowed", // <--- changed
+        filter: "grayscale(0.25)", // <--- changed
+    },
+    authSaveNotice: { // <--- changed
+        zIndex: 1, // <--- changed
+        color: "rgba(255,255,255,0.42)", // <--- changed
+        fontSize: 11, // <--- changed
+        fontWeight: 800, // <--- changed
+        textAlign: "center", // <--- changed
+        lineHeight: 1.35, // <--- changed
+    },
+    authUserChip: { // <--- changed
+        position: "fixed", // <--- changed
+        top: 14, // <--- changed
+        right: 14, // <--- changed
+        zIndex: 12000, // <--- changed
+        height: 34, // <--- changed
+        padding: "0 13px", // <--- changed
+        borderRadius: 999, // <--- changed
+        border: "1px solid rgba(255,255,255,0.11)", // <--- changed
+        background: "rgba(15,15,17,0.78)", // <--- changed
+        color: "rgba(255,255,255,0.78)", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 900, // <--- changed
+        backdropFilter: "blur(10px)", // <--- changed
+        WebkitBackdropFilter: "blur(10px)", // <--- changed
+        cursor: "pointer", // <--- changed
+    },
     safariIframeWrap: { // <--- changed
         flex: 1,
         width: "100%",
@@ -8416,7 +9553,7 @@ const styles: Record<string, CSSProperties> = {
     },
     phoneDialerCallButton: { // <--- changed
         width: 68, // <--- changed
-        height: 68, // <--- changed
+        height: 62, // <--- changed: tighter row height so the Recent box ends cleanly after the contacts
         borderRadius: 999, // <--- changed
         border: "none", // <--- changed
         background: "#34c759", // <--- changed
@@ -8512,7 +9649,7 @@ const styles: Record<string, CSSProperties> = {
     messagesAppPage: { // <--- changed
         width: "100%", // <--- changed
         height: "100%", // <--- changed
-        padding: "50px 14px 46px", // <--- changed: raises the Messages Recent card above the fake home button while keeping the inner list scrollable
+        padding: "50px 14px 40px", // <--- changed: raises the Messages Recent card above the fake home button while keeping the inner list scrollable
         background: "linear-gradient(180deg, #050505 0%, #101014 44%, #000000 100%)", // <--- changed
         alignItems: "stretch", // <--- changed
         gap: 8, // <--- changed: tighter vertical spacing gives the Recent card more height
@@ -8629,10 +9766,11 @@ const styles: Record<string, CSSProperties> = {
         overflow: "hidden", // <--- changed
     },
     messagesListCard: { // <--- changed
-        flex: "1 1 0", // <--- changed: forces the Recent box to take all remaining vertical space
+        flex: "0 1 auto", // <--- changed: Recent box hugs the contact rows instead of leaving a huge empty bottom
         minHeight: 0, // <--- changed
-        height: "auto", // <--- changed: prevents fake 100% height from fighting the flex layout
-        marginBottom: 0, // <--- changed: keeps the Recent box bottom lowered
+        height: "auto", // <--- changed
+        maxHeight: 318, // <--- changed: extra contacts scroll inside the Recent box
+        marginBottom: 0, // <--- changed
         borderRadius: 28, // <--- changed
         border: "1px solid rgba(255,255,255,0.08)", // <--- changed
         background: "rgba(28,28,30,0.86)", // <--- changed
@@ -8653,25 +9791,25 @@ const styles: Record<string, CSSProperties> = {
         flexShrink: 0, // <--- changed
     },
     messagesThreadScroll: { // <--- changed
-        flex: "1 1 0", // <--- changed: this is the scrollable area inside the Recent card
-        minHeight: 0, // <--- changed: required so flex children can actually scroll instead of stretching the card
-        maxHeight: "100%", // <--- changed: keeps scrolling contained inside the Recent box
-        overflowY: "scroll", // <--- changed: always scrolls inside the Recent box, not the whole Messages page
+        flex: "0 1 auto", // <--- changed: scroll area hugs the existing contacts until it reaches max height
+        minHeight: 0, // <--- changed
+        maxHeight: 280, // <--- changed: more contacts scroll inside the Recent card
+        overflowY: "auto", // <--- changed: scrolls only when more contacts exist
         overflowX: "hidden", // <--- changed
         WebkitOverflowScrolling: "touch", // <--- changed: smoother iPhone-style scrolling
         scrollbarWidth: "none", // <--- changed: hides Firefox scrollbar
         overscrollBehaviorY: "contain", // <--- changed: keeps swipe scrolling locked inside the Recent box
         touchAction: "pan-y", // <--- changed: lets mobile users drag-scroll the Recent list itself
-        paddingBottom: 18, // <--- changed: last row has breathing room at the lower card edge
+        paddingBottom: 2, // <--- changed: pulls the Recent card bottom closer to the last contact
     },
     messagesThreadRow: { // <--- changed
-        height: 68, // <--- changed
+        height: 62, // <--- changed: tighter row height so the Recent box ends cleanly after the contacts
         border: "none", // <--- changed
         borderTop: "1px solid rgba(255,255,255,0.07)", // <--- changed
         background: "transparent", // <--- changed
         color: "#ffffff", // <--- changed
         display: "grid", // <--- changed
-        gridTemplateColumns: "46px 1fr 26px", // <--- changed
+        gridTemplateColumns: "46px 1fr 44px", // <--- changed: right meta column aligns time and arrow together
         alignItems: "center", // <--- changed
         gap: 10, // <--- changed
         padding: "0 13px", // <--- changed
@@ -8697,7 +9835,7 @@ const styles: Record<string, CSSProperties> = {
     messagesThreadTopLine: { // <--- changed
         display: "flex", // <--- changed
         justifyContent: "space-between", // <--- changed
-        alignItems: "baseline", // <--- changed
+        alignItems: "center", // <--- changed
         gap: 8, // <--- changed
     },
     messagesThreadName: { // <--- changed
@@ -8707,6 +9845,14 @@ const styles: Record<string, CSSProperties> = {
         overflow: "hidden", // <--- changed
         textOverflow: "ellipsis", // <--- changed
         whiteSpace: "nowrap", // <--- changed
+    },
+    messagesThreadMeta: { // <--- changed
+        alignSelf: "stretch", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "flex-end", // <--- changed
+        gap: 5, // <--- changed
+        minWidth: 0, // <--- changed
     },
     messagesThreadTime: { // <--- changed
         fontSize: 11.5, // <--- changed
@@ -8740,7 +9886,53 @@ const styles: Record<string, CSSProperties> = {
         color: "rgba(255,255,255,0.25)", // <--- changed
         fontSize: 26, // <--- changed
         fontWeight: 300, // <--- changed
-        justifySelf: "end", // <--- changed
+        lineHeight: "20px", // <--- changed
+        display: "block", // <--- changed
+        transform: "translateY(-0.5px)", // <--- changed: visually aligns with the time text
+    },
+
+    messagesEmptyState: { // <--- changed: pro empty state when contact.txt has no usable names
+        flex: "1 1 0", // <--- changed
+        minHeight: 0, // <--- changed
+        padding: "18px 22px 26px", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        textAlign: "center", // <--- changed
+        color: "#ffffff", // <--- changed
+        borderTop: "1px solid rgba(255,255,255,0.07)", // <--- changed
+        background: "radial-gradient(circle at 50% 18%, rgba(10,132,255,0.20), rgba(10,132,255,0) 36%)", // <--- changed
+    },
+    messagesEmptyIconWrap: { // <--- changed
+        width: 70, // <--- changed
+        height: 70, // <--- changed
+        borderRadius: 24, // <--- changed
+        background: "linear-gradient(180deg, #67f36f 0%, #11c43a 100%)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        boxShadow: "0 18px 36px rgba(17,196,58,0.24)", // <--- changed
+        transform: "scale(0.92)", // <--- changed: keeps the existing Messages SVG centered inside the empty-state tile
+    },
+    messagesEmptyTitle: { // <--- changed
+        marginTop: 18, // <--- changed
+        fontSize: 22, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: -0.4, // <--- changed
+        color: "#ffffff", // <--- changed
+    },
+    messagesEmptyText: { // <--- changed
+        marginTop: 8, // <--- changed
+        maxWidth: 235, // <--- changed
+        fontSize: 13.5, // <--- changed
+        lineHeight: 1.35, // <--- changed
+        fontWeight: 650, // <--- changed
+        color: "rgba(255,255,255,0.58)", // <--- changed
+    },
+    messagesEmptyCode: { // <--- changed
+        color: "rgba(255,255,255,0.86)", // <--- changed
+        fontWeight: 850, // <--- changed
     },
 
     phoneCallsPage: { // <--- changed
@@ -9997,6 +11189,33 @@ const styles: Record<string, CSSProperties> = {
         padding: "0 6px",
     } as CSSProperties,
 
+
+    chartLevelBadge: { // <--- changed: mirrors the play/pause button position on the bottom-left of the chart box
+        position: "absolute", // <--- changed
+        left: 16, // <--- changed
+        bottom: 18, // <--- changed
+        minWidth: 92, // <--- changed
+        height: 44, // <--- changed
+        borderRadius: 13, // <--- changed
+        border: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        background: "rgba(18,18,18,0.82)", // <--- changed
+        boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
+        backdropFilter: "blur(10px)", // <--- changed
+        WebkitBackdropFilter: "blur(10px)", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        fontSize: 14, // <--- changed
+        fontWeight: 900, // <--- changed
+        letterSpacing: "0.2px", // <--- changed
+        zIndex: 20, // <--- changed
+        padding: "0 14px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        pointerEvents: "none", // <--- changed: keeps chart dragging/tapping untouched
+        userSelect: "none", // <--- changed
+        WebkitUserSelect: "none", // <--- changed
+    } as CSSProperties,
 
     pauseButton: {
         position: "absolute", // <--- changed
