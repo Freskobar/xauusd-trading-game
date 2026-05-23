@@ -11141,10 +11141,10 @@ const styles: Record<string, CSSProperties> = {
         boxSizing: "border-box",
     } as CSSProperties,
 
-    tradePanelStandaloneBottomFill: { // <--- changed: Home Screen/PWA only; lowers the actual dark gray button panel without creating page overflow
-        padding: "40px 22px 92px", // <--- changed: buttons sit lower inside the real panel and the dark gray reaches the bottom
-        marginTop: -40, // <--- changed: grows the panel upward instead of pushing the whole app past the viewport
-        background: "#1b1b1b", // <--- changed: guarantees the full lower area stays the same dark gray
+    tradePanelStandaloneBottomFill: { // <--- changed: Home Screen/PWA only; dark panel starts higher, but the button rows sit lower inside it without causing page scroll
+        padding: "58px 22px 40px", // <--- changed: moves the quantity/BUY/SELL/Pending rows down while removing the huge empty dead space below them
+        marginTop: -48, // <--- changed: pulls the dark gray panel upward as one real container instead of moving floating pieces separately
+        background: "#1b1b1b", // <--- changed: guarantees the lower area stays the same dark gray all the way to the bottom
         borderRadius: "24px 24px 0 0", // <--- changed
         flexShrink: 0, // <--- changed
     } as CSSProperties,
@@ -11370,8 +11370,8 @@ const styles: Record<string, CSSProperties> = {
         textOverflow: "ellipsis", // <--- changed
     } as CSSProperties,
 
-    chartAccountChipStandaloneLower: { // <--- changed: Home Screen/PWA only; lowers Lv/XP/user chip without creating page overflow
-        bottom: 2, // <--- changed: lower than Safari, but still inside the clipped game viewport
+    chartAccountChipStandaloneLower: { // <--- changed: Home Screen/PWA only; keeps Lv/XP/user chip attached to the lowered bottom control area without creating overflow
+        bottom: 6, // <--- changed: slight lift so it does not collide with the taller dark bottom panel
         transform: "none", // <--- changed: no translate overflow/scroll side effects
     } as CSSProperties,
 
@@ -11395,8 +11395,8 @@ const styles: Record<string, CSSProperties> = {
         WebkitTapHighlightColor: "transparent", // <--- changed
     },
 
-    pauseButtonStandaloneLower: { // <--- changed: Home Screen/PWA only; lowers play/pause button without creating page overflow
-        bottom: 8, // <--- changed: follows the lowered Lv/XP chip while staying inside the viewport
+    pauseButtonStandaloneLower: { // <--- changed: Home Screen/PWA only; keeps play/pause aligned with the XP chip and the corrected bottom panel
+        bottom: 10, // <--- changed: slight lift so it lines up cleanly above the raised dark panel
         transform: "none", // <--- changed: no translate overflow/scroll side effects
     } as CSSProperties,
 
