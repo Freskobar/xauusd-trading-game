@@ -7855,12 +7855,6 @@ export default function TradingGame() {
                 </div>
             )}
 
-            {currentGameUser && ( // <--- changed: small pro account chip for saved users
-                <button type="button" style={styles.authUserChip} onClick={handleGameLogout} title="Save and sign out">
-                    Lv {playerLevel} • {getCurrentLevelXp(playerXp)}/{getXpNeededForLevel(playerLevel)} XP • {currentGameUser.displayName || currentGameUser.username} • Sign Out
-                </button>
-            )}
-
             {isLandscape && ( // <--- changed
                 <div style={styles.orientationBlocker}>
                     <div style={styles.orientationTitle}>Rotate Back</div>
@@ -8364,9 +8358,16 @@ export default function TradingGame() {
                         </div>
 
                         <div style={styles.chartWrap}>
-                            <div style={styles.chartLevelBadge}> {/* <--- changed: level badge aligned with pause/play button on the bottom-left */}
-                                Level: {playerLevel}
-                            </div>
+                            {currentGameUser && ( // <--- changed: account/level row now lives in the bottom-left chart controls area
+                                <button
+                                    type="button"
+                                    style={styles.chartAccountChip}
+                                    onClick={handleGameLogout}
+                                    title="Save and sign out"
+                                >
+                                    Lv {playerLevel} • {getCurrentLevelXp(playerXp)}/{getXpNeededForLevel(playerLevel)} XP • {currentGameUser.displayName || currentGameUser.username} • Sign Out
+                                </button>
+                            )}
 
                             <button
                                 style={styles.pauseButton}
@@ -8759,11 +8760,11 @@ const styles: Record<string, CSSProperties> = {
     topPanel: {
         background: "#181818",
         borderBottom: "1px solid #2a2a2a",
-        padding: "18px 24px 16px", // <--- changed
+        padding: "12px 22px 10px", // <--- changed: shorter top panel after moving account row to chart controls
         display: "grid",
         gridTemplateColumns: "1fr 1fr 1fr",
         alignItems: "center", // <--- changed
-        minHeight: 74, // <--- changed
+        minHeight: 58, // <--- changed: top no longer feels too tall on mobile Safari
     },
     topMetric: {
         minHeight: 40, // <--- changed
@@ -8800,7 +8801,7 @@ const styles: Record<string, CSSProperties> = {
     },
     timeframes: {
         background: "#181818",
-        padding: "12px 12px 14px",
+        padding: "8px 12px 9px", // <--- changed: reduces vertical height above the chart
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(56px, 1fr))", // <--- changed
         gap: 8,
@@ -8811,8 +8812,8 @@ const styles: Record<string, CSSProperties> = {
         color: "#ffffff",
         border: "none",
         borderRadius: 6,
-        height: 34,
-        fontSize: 20, // <--- changed
+        height: 30, // <--- changed: shorter top controls
+        fontSize: 17, // <--- changed
         fontWeight: 700,
         cursor: "pointer",
     },
@@ -8821,7 +8822,7 @@ const styles: Record<string, CSSProperties> = {
         color: "#111111",
         border: "none",
         borderRadius: 6,
-        height: 34,
+        height: 30, // <--- changed: shorter top controls
         fontSize: 16,
         fontWeight: 700,
         cursor: "pointer",
@@ -8830,7 +8831,7 @@ const styles: Record<string, CSSProperties> = {
         position: "relative", // <--- changed
         background: "transparent", // <--- changed
         border: "none", // <--- changed
-        padding: "8px 62px 6px", // <--- changed
+        padding: "5px 62px 4px", // <--- changed: shorter market-time strip above chart
         marginTop: "0px", // <--- changed
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
@@ -11206,11 +11207,11 @@ const styles: Record<string, CSSProperties> = {
     } as CSSProperties,
 
 
-    chartLevelBadge: { // <--- changed: mirrors the play/pause button position on the bottom-left of the chart box
+    chartAccountChip: { // <--- changed: Lv/XP/user/sign-out row moved to the same bottom-left area as the old Level badge
         position: "absolute", // <--- changed
         left: 16, // <--- changed
         bottom: 18, // <--- changed
-        minWidth: 92, // <--- changed
+        maxWidth: "calc(100% - 84px)", // <--- changed: keeps it clear of the play/pause button on the right
         height: 44, // <--- changed
         borderRadius: 13, // <--- changed
         border: "1px solid rgba(255,255,255,0.08)", // <--- changed
@@ -11222,15 +11223,18 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        fontSize: 14, // <--- changed
+        fontSize: 12, // <--- changed: fits Lv/XP/username/sign-out cleanly on mobile Safari
         fontWeight: 900, // <--- changed
-        letterSpacing: "0.2px", // <--- changed
+        letterSpacing: "0.15px", // <--- changed
         zIndex: 20, // <--- changed
-        padding: "0 14px", // <--- changed
+        padding: "0 12px", // <--- changed
         boxSizing: "border-box", // <--- changed
-        pointerEvents: "none", // <--- changed: keeps chart dragging/tapping untouched
+        cursor: "pointer", // <--- changed
         userSelect: "none", // <--- changed
         WebkitUserSelect: "none", // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
     } as CSSProperties,
 
     pauseButton: {
