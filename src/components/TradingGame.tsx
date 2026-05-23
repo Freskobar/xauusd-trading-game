@@ -1982,23 +1982,14 @@ function IPhoneMusicApp({ closing }: { closing: boolean }) { // <--- changed
             ...(closing ? styles.phoneAppPageClosing : {}),
             background: "linear-gradient(180deg, #19191d 0%, #0b0b0d 52%, #000000 100%)",
             color: "#ffffff",
-            width: "100%", // <--- changed: locks Music app content inside the phone screen width
-            maxWidth: "100%", // <--- changed: prevents the Music app from stretching outside the phone shell
-            minWidth: 0, // <--- changed: prevents flex shrink/overflow clipping inside the phone
-            alignItems: "stretch", // <--- changed: overrides phoneAppPage center alignment so Music fills the same screen as other apps
             padding: "55px 16px 102px", // <--- changed
             overflow: "hidden",
         },
         scroll: {
-            width: "100%", // <--- changed: keeps Library/search content inside the phone app viewport
-            maxWidth: "100%", // <--- changed
-            minWidth: 0, // <--- changed
             height: "100%",
             overflowY: "auto",
-            overflowX: "hidden", // <--- changed: stops sideways content from being clipped outside the phone
             paddingBottom: 102, // <--- changed
             scrollbarWidth: "none",
-            boxSizing: "border-box", // <--- changed
         },
         header: {
             display: "flex",
@@ -6895,9 +6886,30 @@ export default function TradingGame() {
                                                                 ...(phoneChromeVisualApp === "safari" ? { color: "#000000", filter: "none" } : {}),
                                                                 ...(phoneChromeFading ? styles.phoneChromeFadeHidden : {}), // <--- changed: fade status details only, not Dynamic Island
                                                             }}>
-                                                            <PhoneServiceSvg strength={cellStrength} /> {/* <--- changed: crisp SVG status icon */}
-                                                            <PhoneWifiSvg strength={wifiStrength} /> {/* <--- changed: crisp SVG status icon */}
-                                                            <PhoneBatterySvg percent={batteryPercent} black={phoneChromeVisualApp === "safari"} /> {/* <--- changed: battery switches black only in Safari */} {/* <--- changed: crisp SVG status icon */}
+                                                            <span
+                                                                style={{
+                                                                    ...styles.phoneStatusIconFadeWrap,
+                                                                    ...(phoneChromeFading ? styles.phoneChromeFadeHidden : {}), // <--- changed: iOS Safari needs opacity on the actual SVG wrapper too
+                                                                }}
+                                                            >
+                                                                <PhoneServiceSvg strength={cellStrength} /> {/* <--- changed: crisp SVG status icon */}
+                                                            </span>
+                                                            <span
+                                                                style={{
+                                                                    ...styles.phoneStatusIconFadeWrap,
+                                                                    ...(phoneChromeFading ? styles.phoneChromeFadeHidden : {}), // <--- changed: keeps Wi-Fi fading on real mobile Safari
+                                                                }}
+                                                            >
+                                                                <PhoneWifiSvg strength={wifiStrength} /> {/* <--- changed: crisp SVG status icon */}
+                                                            </span>
+                                                            <span
+                                                                style={{
+                                                                    ...styles.phoneStatusIconFadeWrap,
+                                                                    ...(phoneChromeFading ? styles.phoneChromeFadeHidden : {}), // <--- changed: keeps battery fading on real mobile Safari
+                                                                }}
+                                                            >
+                                                                <PhoneBatterySvg percent={batteryPercent} black={phoneChromeVisualApp === "safari"} /> {/* <--- changed: battery switches black only in Safari */} {/* <--- changed: crisp SVG status icon */}
+                                                            </span>
                                                         </div>                                    </div>
 
                                                     <div style={styles.phoneHomeScreen}> {/* <--- changed */}
@@ -7004,12 +7016,6 @@ export default function TradingGame() {
                                                     {musicAppKeepMounted && ( // <--- changed: keep mounted so audio continues after closing app/phone
                                                         <div
                                                             style={{
-                                                                position: "absolute", // <--- changed: mounted Music wrapper now fills the phone viewport instead of behaving like normal page content
-                                                                inset: 0, // <--- changed
-                                                                width: "100%", // <--- changed
-                                                                height: "100%", // <--- changed
-                                                                overflow: "hidden", // <--- changed: clips Music app to the same phone screen as the other apps
-                                                                pointerEvents: activePhoneApp === "music" ? "auto" : "none", // <--- changed
                                                                 display: activePhoneApp === "music" ? "block" : "none",
                                                             }}
                                                         >
@@ -8029,6 +8035,20 @@ const styles: Record<string, CSSProperties> = {
         textRendering: "geometricPrecision", // <--- changed
         transition: "opacity 210ms cubic-bezier(0.22, 1, 0.36, 1), color 100ms ease", // <--- changed
     },
+    phoneStatusIconFadeWrap: { // <--- changed: separate wrapper makes service/Wi-Fi/battery fade correctly on iOS Safari
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        height: 18, // <--- changed
+        flexShrink: 0, // <--- changed
+        opacity: 1, // <--- changed
+        transition: "opacity 210ms cubic-bezier(0.22, 1, 0.36, 1)", // <--- changed
+        WebkitBackfaceVisibility: "hidden", // <--- changed: prevents mobile Safari from skipping SVG opacity updates
+        backfaceVisibility: "hidden", // <--- changed
+        transform: "translate3d(0,0,0)", // <--- changed: forces compositing on iOS Safari
+        willChange: "opacity", // <--- changed
+    } as CSSProperties,
+
     statusSvg: {
         display: "block", // <--- changed
         color: "#ffffff", // <--- changed
@@ -9416,6 +9436,10 @@ const styles: Record<string, CSSProperties> = {
     phoneChromeFadeHidden: { // <--- changed
         opacity: 0,
         transition: "opacity 210ms cubic-bezier(0.22, 1, 0.36, 1)",
+        WebkitBackfaceVisibility: "hidden", // <--- changed: makes opacity fade reliable on iOS Safari
+        backfaceVisibility: "hidden", // <--- changed
+        transform: "translate3d(0,0,0)", // <--- changed: forces mobile Safari to repaint service/Wi-Fi/battery icons
+        willChange: "opacity", // <--- changed
     } as CSSProperties,
 
 
