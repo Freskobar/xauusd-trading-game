@@ -290,7 +290,7 @@ function getMarketSessionName(timestamp: number) {
     const date = new Date(timestamp);
 
     const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
+        timeZone: MARKET_TIME_ZONE,
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
@@ -309,16 +309,43 @@ function getMarketSessionName(timestamp: number) {
     return "Market"; // <--- changed
 }
 
+
+function getNewYorkClockParts(timestamp: number) { // <--- changed: single source of truth for candle/session time alignment
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: MARKET_TIME_ZONE,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+    }).formatToParts(new Date(timestamp));
+
+    return {
+        hour: Number(parts.find((part) => part.type === "hour")?.value ?? 0),
+        minute: Number(parts.find((part) => part.type === "minute")?.value ?? 0),
+    };
+}
+
+function getMinutesSinceTradingDayOpen(timestamp: number) { // <--- changed: Daily candle now follows the market clock instead of app-start time
+    const { hour, minute } = getNewYorkClockParts(timestamp); // <--- changed
+    const minutes = hour * 60 + minute; // <--- changed
+    const tradingDayOpenMinutes = 18 * 60; // <--- changed: aligns Daily/4H cycle with the 6 PM ET futures/forex-style session open
+
+    return (minutes - tradingDayOpenMinutes + 24 * 60) % (24 * 60); // <--- changed
+}
+
+function getActive15mIndexFromTimestamp(timestamp: number) { // <--- changed: fixes 30m/1h/4H/Daily candle progress on initial load
+    return Math.floor(getMinutesSinceTradingDayOpen(timestamp) / 15); // <--- changed
+}
+
 function formatMarketDateTime(timestamp: number) {
     const date = new Date(timestamp);
 
     const day = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
+        timeZone: MARKET_TIME_ZONE,
         weekday: "long",
     }).format(date);
 
     const time = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
+        timeZone: MARKET_TIME_ZONE,
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
@@ -329,7 +356,7 @@ function formatMarketDateTime(timestamp: number) {
 
 function formatPhoneStatusTime(timestamp: number) {
     return new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
+        timeZone: MARKET_TIME_ZONE,
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
@@ -398,23 +425,102 @@ function parseNumber(value: string | undefined) {
     return Number(value.replace(/"/g, "").trim());
 }
 
+const MARKET_TIME_ZONE = "America/New_York"; // <--- changed: one timezone source for display/session/candle boundaries
+const CSV_CONFIRMED_TIME_ZONE = "America/New_York"; // <--- changed: user confirmed CSV timestamps are New York wall-clock time
+const CSV_TIMESTAMP_PARSE_ERROR = "CSV timestamp could not be parsed. The app is using the confirmed CSV timezone: America/New_York."; // <--- changed: no silent unknown-timezone guessing
+
+function getTimeZoneOffsetMs(timeZone: string, timestamp: number) { // <--- changed: DST-safe timezone offset helper
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+    }).formatToParts(new Date(timestamp));
+
+    const values = Object.fromEntries(
+        parts
+            .filter((part) => part.type !== "literal")
+            .map((part) => [part.type, Number(part.value)])
+    ) as Record<string, number>;
+
+    const zonedAsUtc = Date.UTC(
+        values.year,
+        (values.month ?? 1) - 1,
+        values.day ?? 1,
+        (values.hour ?? 0) % 24,
+        values.minute ?? 0,
+        values.second ?? 0
+    );
+
+    return zonedAsUtc - timestamp;
+}
+
+function zonedMarketTimeToUtcMs( // <--- changed: converts CSV wall-clock New York time into real UTC ms, including DST
+    year: number,
+    month: number,
+    day: number,
+    hour = 0,
+    minute = 0,
+    second = 0
+) {
+    const localAsUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+    let utcGuess = localAsUtc;
+
+    for (let i = 0; i < 3; i++) {
+        const offset = getTimeZoneOffsetMs(MARKET_TIME_ZONE, utcGuess);
+        const nextGuess = localAsUtc - offset;
+
+        if (Math.abs(nextGuess - utcGuess) < 1) {
+            return nextGuess;
+        }
+
+        utcGuess = nextGuess;
+    }
+
+    return utcGuess;
+}
+
 function parseCsvTimestamp(value: string | undefined) {
     if (!value) return null;
 
     const cleaned = value.replace(/"/g, "").trim();
     if (!cleaned) return null;
 
-    const direct = Date.parse(cleaned);
-    if (Number.isFinite(direct)) return direct;
+    const normalized = cleaned.includes("T") ? cleaned : cleaned.replace(" ", "T"); // <--- changed
+    const hasExplicitTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized); // <--- changed
 
-    const normalized = cleaned.includes("T")
-        ? cleaned
-        : cleaned.replace(" ", "T");
+    if (hasExplicitTimezone) { // <--- changed: if the CSV ever includes Z/-04:00/+00:00, use that exact source data
+        const direct = Date.parse(normalized); // <--- changed
+        return Number.isFinite(direct) ? direct : null; // <--- changed
+    }
 
-    const withEasternOffset = Date.parse(`${normalized}-04:00`);
-    if (Number.isFinite(withEasternOffset)) return withEasternOffset;
+    const parts = cleaned.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/); // <--- changed: CSV format like 2025-05-14 00:00:00
+    if (!parts) return null; // <--- changed
 
-    return null;
+    const [, year, month, day, hour, minute, second = "0"] = parts; // <--- changed
+
+    return zonedMarketTimeToUtcMs( // <--- changed: user-confirmed CSV timezone, DST-safe New York conversion
+        Number(year),
+        Number(month),
+        Number(day),
+        Number(hour),
+        Number(minute),
+        Number(second)
+    );
+}
+
+function requireCsvTimestamp(value: string | undefined, rowLabel: string) { // <--- changed: validates CSV time while using user-confirmed New York timezone
+    const timestamp = parseCsvTimestamp(value); // <--- changed
+
+    if (timestamp === null) { // <--- changed
+        throw new Error(`${CSV_TIMESTAMP_PARSE_ERROR} Problem row: ${rowLabel}. Raw time value: ${value ?? "blank"}`); // <--- changed
+    }
+
+    return timestamp; // <--- changed
 }
 
 function parseCsvCandles(csvText: string): CsvCandle[] {
@@ -634,7 +740,7 @@ function makeAggregatedCandle(group: Candle[]): Candle {
 }
 
 // Higher timeframe aggregation respects the current live group.
-// Example: Daily starts as 1 active 15m candle, then grows until 96 15m candles.
+// Example: Daily starts from the actual market-clock phase, not automatically from app launch. // <--- changed
 function aggregateCandles(
     base: Candle[],
     timeframe: string,
@@ -1710,6 +1816,7 @@ function formatMusicTime(seconds: number) { // <--- changed
 
 let MUSIC_APP_PERSISTENT_AUDIO: HTMLAudioElement | null = null; // <--- changed: keeps music playing when phone closes
 let MUSIC_APP_PERSISTENT_INDEX = 0; // <--- changed
+let MUSIC_APP_PAUSED_BY_REAL_APP_BACKGROUND = false; // <--- changed: pauses only while the real browser/app is minimized
 
 function getMusicAppPersistentAudio() { // <--- changed
     if (typeof window === "undefined") return null; // <--- changed
@@ -1743,6 +1850,51 @@ function IPhoneMusicApp({ closing }: { closing: boolean }) { // <--- changed
         if (!query) return true; // <--- changed
         return `${track.title} ${track.artist} ${track.album}`.toLowerCase().includes(query); // <--- changed
     }); // <--- changed
+
+
+    useEffect(() => { // <--- changed: pause music when the real phone/browser app is minimized, resume on return
+        const handleVisibilityChange = () => { // <--- changed
+            const audio = audioRef.current; // <--- changed
+            if (!audio) return; // <--- changed
+
+            if (document.hidden) { // <--- changed
+                MUSIC_APP_PAUSED_BY_REAL_APP_BACKGROUND = !audio.paused; // <--- changed
+                if (!audio.paused) audio.pause(); // <--- changed
+                return; // <--- changed
+            } // <--- changed
+
+            if (MUSIC_APP_PAUSED_BY_REAL_APP_BACKGROUND) { // <--- changed
+                MUSIC_APP_PAUSED_BY_REAL_APP_BACKGROUND = false; // <--- changed
+                audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); // <--- changed
+            } // <--- changed
+        }; // <--- changed
+
+        const handlePageHide = () => { // <--- changed
+            const audio = audioRef.current; // <--- changed
+            if (!audio) return; // <--- changed
+            MUSIC_APP_PAUSED_BY_REAL_APP_BACKGROUND = !audio.paused; // <--- changed
+            if (!audio.paused) audio.pause(); // <--- changed
+        }; // <--- changed
+
+        const handlePageShow = () => { // <--- changed
+            const audio = audioRef.current; // <--- changed
+            if (!audio || document.hidden) return; // <--- changed
+            if (MUSIC_APP_PAUSED_BY_REAL_APP_BACKGROUND) { // <--- changed
+                MUSIC_APP_PAUSED_BY_REAL_APP_BACKGROUND = false; // <--- changed
+                audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); // <--- changed
+            } // <--- changed
+        }; // <--- changed
+
+        document.addEventListener("visibilitychange", handleVisibilityChange); // <--- changed
+        window.addEventListener("pagehide", handlePageHide); // <--- changed
+        window.addEventListener("pageshow", handlePageShow); // <--- changed
+
+        return () => { // <--- changed
+            document.removeEventListener("visibilitychange", handleVisibilityChange); // <--- changed
+            window.removeEventListener("pagehide", handlePageHide); // <--- changed
+            window.removeEventListener("pageshow", handlePageShow); // <--- changed
+        }; // <--- changed
+    }, []); // <--- changed
 
     useEffect(() => { // <--- changed
         const audio = audioRef.current; // <--- changed
@@ -3768,7 +3920,7 @@ export default function TradingGame() {
     const homeSwipeStartYRef = useRef<number | null>(null); // <--- changed: real mobile swipe-up start position for home bar
     const homeSwipeDidTriggerRef = useRef(false); // <--- changed: stops one swipe from firing multiple times
     const appStartRef = useRef(Date.now());
-    const fallbackMarketSessionStartRef = useRef(new Date("2026-05-18T08:30:00-04:00").getTime()); // <--- changed
+    const fallbackMarketSessionStartRef = useRef(zonedMarketTimeToUtcMs(2026, 5, 18, 8, 30)); // <--- changed: DST-safe fallback market timestamp
     const csvCandlesRef = useRef<CsvCandle[]>([]);
     const pauseStartedAtRef = useRef<number | null>(null); // <--- changed
     const totalPausedMsRef = useRef(0); // <--- changed
@@ -4036,23 +4188,23 @@ export default function TradingGame() {
     }
 
 
-    function transitionPhoneChromeTo(nextApp: "home" | "phone" | "safari" | "music", delayMs = 190) { // <--- changed
+    function transitionPhoneChromeTo(nextApp: "home" | "phone" | "safari" | "music", delayMs = 210) { // <--- changed
         setPhoneChromeFading(true); // <--- changed
 
         window.setTimeout(() => { // <--- changed
-            setPhoneChromeVisualApp(nextApp); // <--- changed: color swaps while invisible
+            setPhoneChromeVisualApp(nextApp); // <--- changed: color swaps while fully faded out
         }, delayMs); // <--- changed
 
         window.setTimeout(() => { // <--- changed
             setPhoneChromeFading(false); // <--- changed
-        }, delayMs + 180); // <--- changed
+        }, delayMs + 210); // <--- changed: slightly quicker fade-in so the status icons do not feel late
     }
 
     function closePhonePanel() {
         if (!phoneOpen || phoneClosing) return; // <--- changed
 
         playPhoneSound(phoneLockSoundRef); // <--- changed
-        transitionPhoneChromeTo("home", 120); // <--- changed
+        transitionPhoneChromeTo("home", 185); // <--- changed: quicker close-phone status fade
         setPhoneClosing(true); // <--- changed
         phoneOpeningAfterPreloadRef.current = false; // <--- changed
 
@@ -4096,7 +4248,7 @@ export default function TradingGame() {
         }, 95); // <--- changed
 
         if (shouldCloseApp) { // <--- changed
-            transitionPhoneChromeTo("home", 210); // <--- changed: fade out, switch color while app closes, fade back in
+            transitionPhoneChromeTo("home", 210); // <--- changed: same smooth steps, slightly quicker so it does not feel late
 
             window.setTimeout(() => {
                 setPhoneAppClosing(true); // <--- changed: app begins its slide-down close after the home bar press starts
@@ -5594,9 +5746,7 @@ export default function TradingGame() {
                 const closedCandles = history.candles;
                 const open = history.lastClose;
                 const rawNext = parsed[history.nextIndex];
-                const activeCandleTimeMs =
-                    parseCsvTimestamp(rawNext.time) ??
-                    fallbackMarketSessionStartRef.current; // <--- changed
+                const activeCandleTimeMs = requireCsvTimestamp(rawNext.time, `CSV row ${history.nextIndex + 2}`); // <--- changed: strict CSV timestamp, no timezone guessing
 
                 const planned = createActivePlan(
                     applyRealCandleShape(rawNext, open)
@@ -5614,16 +5764,28 @@ export default function TradingGame() {
 
                 setMarket({
                     loaded: true,
-                    status: `Loaded ${parsed.length.toLocaleString()} XAGUSD 15m candles`,
+                    status: `Loaded ${parsed.length.toLocaleString()} XAGUSD 15m candles • CSV time: New York`,
                     closedCandles,
                     activeCandle,
                     plannedCandle: planned,
                     dataIndex: history.nextIndex,
-                    active15mIndex: 0,
+                    active15mIndex: getActive15mIndexFromTimestamp(activeCandleTimeMs), // <--- changed: start higher-timeframe candles at the correct market-clock phase
                     activeCandleTimeMs, // <--- changed
                 });
             } catch (error) {
                 console.error(error);
+
+                const errorMessage = error instanceof Error ? error.message : String(error); // <--- changed
+                if (errorMessage.includes(CSV_TIMESTAMP_PARSE_ERROR)) { // <--- changed: do not silently fake market time when the CSV is not timezone-aware
+                    if (!cancelled) { // <--- changed
+                        setMarket((prev) => ({ // <--- changed
+                            ...prev, // <--- changed
+                            loaded: false, // <--- changed
+                            status: errorMessage, // <--- changed
+                        })); // <--- changed
+                    } // <--- changed
+                    return; // <--- changed
+                }
 
                 const parsed = fallbackCandles();
                 csvCandlesRef.current = parsed;
@@ -5636,9 +5798,7 @@ export default function TradingGame() {
 
                 const closedCandles = history.candles;
                 const open = history.lastClose;
-                const activeCandleTimeMs =
-                    parseCsvTimestamp(parsed[history.nextIndex].time) ??
-                    fallbackMarketSessionStartRef.current; // <--- changed
+                const activeCandleTimeMs = fallbackMarketSessionStartRef.current; // <--- changed: fallback data has no CSV timestamps; only used when CSV fails to load
 
                 const planned = createActivePlan(
                     applyRealCandleShape(parsed[history.nextIndex], open)
@@ -5661,7 +5821,7 @@ export default function TradingGame() {
                     activeCandle,
                     plannedCandle: planned,
                     dataIndex: history.nextIndex,
-                    active15mIndex: 0,
+                    active15mIndex: getActive15mIndexFromTimestamp(activeCandleTimeMs), // <--- changed: fallback also respects the market-clock phase
                     activeCandleTimeMs, // <--- changed
                 });
             }
@@ -5942,10 +6102,14 @@ export default function TradingGame() {
                 }
 
                 const nextRaw = data[nextIndex];
-                const nextCandleTimeMs =
-                    parseCsvTimestamp(nextRaw.time) ??
-                    ((prev.activeCandleTimeMs ?? fallbackMarketSessionStartRef.current) +
-                        15 * 60 * 1000); // <--- changed
+                const nextCandleTimeMs = parseCsvTimestamp(nextRaw.time); // <--- changed: strict CSV timestamp, no synthetic +15m fallback
+
+                if (nextCandleTimeMs === null) { // <--- changed
+                    return { // <--- changed
+                        ...prev, // <--- changed
+                        status: `${CSV_TIMESTAMP_PARSE_ERROR} Problem row: CSV row ${nextIndex + 2}. Raw time value: ${nextRaw.time ?? "blank"}`, // <--- changed
+                    }; // <--- changed
+                }
 
                 const nextPlan = createActivePlan(
                     applyRealCandleShape(nextRaw, finished.close)
@@ -5971,7 +6135,7 @@ export default function TradingGame() {
                     activeCandle: newActive,
                     plannedCandle: nextPlan,
                     dataIndex: nextIndex,
-                    active15mIndex: prev.active15mIndex + 1,
+                    active15mIndex: getActive15mIndexFromTimestamp(nextCandleTimeMs), // <--- changed: recalculate from the next CSV timestamp so gaps/DST/weekends stay aligned
                     activeCandleTimeMs: nextCandleTimeMs, // <--- changed
                 };
             });
@@ -7802,6 +7966,7 @@ const styles: Record<string, CSSProperties> = {
         fontWeight: 900, // <--- changed
         color: "#ffffff", // <--- changed
         lineHeight: "18px", // <--- changed: aligns time with status icons
+        transition: "opacity 210ms cubic-bezier(0.22, 1, 0.36, 1), color 100ms ease", // <--- changed
     },
     phoneLocationSlot: {
         width: 15, // <--- changed: permanently reserves location icon space
@@ -7848,6 +8013,7 @@ const styles: Record<string, CSSProperties> = {
         overflow: "visible", // <--- changed
         WebkitFontSmoothing: "antialiased", // <--- changed
         textRendering: "geometricPrecision", // <--- changed
+        transition: "opacity 210ms cubic-bezier(0.22, 1, 0.36, 1), color 100ms ease", // <--- changed
     },
     statusSvg: {
         display: "block", // <--- changed
@@ -9235,7 +9401,7 @@ const styles: Record<string, CSSProperties> = {
 
     phoneChromeFadeHidden: { // <--- changed
         opacity: 0,
-        transition: "opacity 160ms ease",
+        transition: "opacity 210ms cubic-bezier(0.22, 1, 0.36, 1)",
     } as CSSProperties,
 
 
