@@ -151,6 +151,8 @@ const HISTORY_BASE_CANDLES = 9000;
 const MAX_BASE_CANDLES = 10000;
 const TRIM_BASE_CANDLES = 96;
 
+type FakePhoneAppName = "home" | "phone" | "safari" | "music" | "messages"; // <--- changed: Messages app now opens like the other fake iPhone apps
+
 // Home screen tweak knobs // <--- changed
 // Change these numbers to quickly tune the iPhone home screen layout. // <--- changed
 const HOME_APP_SIZE = 56; // <--- changed: size of the normal home screen apps/icons
@@ -1727,6 +1729,85 @@ function IPhonePhoneApp({ // <--- changed
 }
 
 
+
+
+
+function IPhoneMessagesApp({ closing }: { closing: boolean }) { // <--- changed: polished fake Messages app
+    const pinnedThreads = [
+        { name: "Mia", initials: "M", preview: "That actually looks clean 😂", time: "9:42 AM", gradient: "linear-gradient(145deg, #ff8ad8, #ff2d55)" },
+        { name: "Jayden", initials: "J", preview: "Send me the link when it is done", time: "8:18 AM", gradient: "linear-gradient(145deg, #5ac8fa, #0a84ff)" },
+        { name: "Mom", initials: "M", preview: "Call me when you get a chance", time: "Yesterday", gradient: "linear-gradient(145deg, #52d273, #30d158)" },
+    ];
+
+    const messageThreads = [
+        { name: "Odyssey Support", initials: "OS", preview: "Your appointment is confirmed for tomorrow.", time: "10:12 AM", unread: 2, gradient: "linear-gradient(145deg, #30d158, #0a84ff)" },
+        { name: "Alex Rivera", initials: "AR", preview: "I can help test it on mobile later.", time: "9:03 AM", unread: 0, gradient: "linear-gradient(145deg, #ffb340, #ff9f0a)" },
+        { name: "Mia Carter", initials: "MC", preview: "The animation feels way smoother now.", time: "Yesterday", unread: 1, gradient: "linear-gradient(145deg, #ff8ad8, #ff2d55)" },
+        { name: "Jayden Brooks", initials: "JB", preview: "Make the messages app look like iPhone.", time: "Sunday", unread: 0, gradient: "linear-gradient(145deg, #64d2ff, #5856d6)" },
+        { name: "Everybody Eats", initials: "EE", preview: "Trial button copy is ready to review.", time: "Fri", unread: 0, gradient: "linear-gradient(145deg, #bf8cff, #7d5fff)" },
+    ];
+
+    return (
+        <div
+            style={{
+                ...styles.phoneAppPage,
+                ...styles.messagesAppPage,
+                ...(closing ? styles.phoneAppPageClosing : {}),
+            }}
+        >
+            <div style={styles.messagesHeader}>
+                <button type="button" style={styles.messagesHeaderButton}>Edit</button>
+                <div style={styles.messagesHeaderTitle}>Messages</div>
+                <button type="button" style={styles.messagesComposeButton} aria-label="Compose message">
+                    ✎
+                </button>
+            </div>
+
+            <div style={styles.messagesSearchBar}>
+                <PhoneSearchTabIcon />
+                <span style={styles.messagesSearchText}>Search</span>
+            </div>
+
+            <div style={styles.messagesPinnedSection}>
+                {pinnedThreads.map((thread) => (
+                    <button key={thread.name} type="button" style={styles.messagesPinnedCard}>
+                        <div style={{ ...styles.messagesPinnedAvatar, background: thread.gradient }}>
+                            {thread.initials}
+                        </div>
+                        <div style={styles.messagesPinnedName}>{thread.name}</div>
+                        <div style={styles.messagesPinnedPreview}>{thread.preview}</div>
+                    </button>
+                ))}
+            </div>
+
+            <div style={styles.messagesListCard}>
+                <div style={styles.messagesListTitle}>Recent</div>
+
+                {messageThreads.map((thread) => (
+                    <button key={thread.name} type="button" style={styles.messagesThreadRow}>
+                        <div style={{ ...styles.messagesThreadAvatar, background: thread.gradient }}>
+                            {thread.initials}
+                        </div>
+
+                        <div style={styles.messagesThreadBody}>
+                            <div style={styles.messagesThreadTopLine}>
+                                <span style={styles.messagesThreadName}>{thread.name}</span>
+                                <span style={styles.messagesThreadTime}>{thread.time}</span>
+                            </div>
+                            <div style={styles.messagesThreadPreview}>{thread.preview}</div>
+                        </div>
+
+                        {thread.unread > 0 ? (
+                            <div style={styles.messagesUnreadBadge}>{thread.unread}</div>
+                        ) : (
+                            <div style={styles.messagesChevron}>›</div>
+                        )}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 
 type MusicTrack = { // <--- changed
@@ -3982,8 +4063,8 @@ export default function TradingGame() {
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
     const [phoneClosing, setPhoneClosing] = useState(false); // <--- changed
-    const [activePhoneApp, setActivePhoneApp] = useState<"home" | "phone" | "safari" | "music">("home"); // <--- changed
-    const [phoneChromeVisualApp, setPhoneChromeVisualApp] = useState<"home" | "phone" | "safari" | "music">("home"); // <--- changed: status/home chrome color changes only while faded out
+    const [activePhoneApp, setActivePhoneApp] = useState<FakePhoneAppName>("home"); // <--- changed
+    const [phoneChromeVisualApp, setPhoneChromeVisualApp] = useState<FakePhoneAppName>("home"); // <--- changed: status/home chrome color changes only while faded out
     const [phoneChromeFading, setPhoneChromeFading] = useState(false); // <--- changed: fades top phone chrome during app transitions
     const [musicAppKeepMounted, setMusicAppKeepMounted] = useState(false); // <--- changed: keeps Music mounted so songs continue playing
     const [phoneAppClosing, setPhoneAppClosing] = useState(false); // <--- changed
@@ -4196,7 +4277,7 @@ export default function TradingGame() {
     }
 
 
-    function transitionPhoneChromeTo(nextApp: "home" | "phone" | "safari" | "music", delayMs = 210) { // <--- changed
+    function transitionPhoneChromeTo(nextApp: FakePhoneAppName, delayMs = 210) { // <--- changed
         setPhoneChromeFading(true); // <--- changed
 
         window.setTimeout(() => { // <--- changed
@@ -4241,6 +4322,12 @@ export default function TradingGame() {
         setMusicAppKeepMounted(true); // <--- changed: once opened, keep mounted so audio keeps playing
         transitionPhoneChromeTo("music"); // <--- changed
         setActivePhoneApp("music"); // <--- changed
+    }
+
+    function openFakeMessagesApp() { // <--- changed: opens the new fake Messages app from the dock
+        setPhoneAppClosing(false); // <--- changed
+        transitionPhoneChromeTo("messages"); // <--- changed
+        setActivePhoneApp("messages"); // <--- changed
     }
 
     function handlePhoneHomePress() { // <--- changed
@@ -6976,9 +7063,9 @@ export default function TradingGame() {
                                                                 <div
                                                                     key={app.name}
                                                                     style={styles.phoneDockSlot}
-                                                                    onClick={app.icon === "phone" ? openFakePhoneApp : app.icon === "safari" ? openFakeSafariApp : app.icon === "music" ? openFakeMusicApp : undefined}
-                                                                    role={app.icon === "phone" || app.icon === "safari" || app.icon === "music" ? "button" : undefined}
-                                                                    aria-label={app.icon === "phone" ? "Open Phone app" : app.icon === "safari" ? "Open Safari app" : app.icon === "music" ? "Open Music app" : undefined}
+                                                                    onClick={app.icon === "phone" ? openFakePhoneApp : app.icon === "safari" ? openFakeSafariApp : app.icon === "music" ? openFakeMusicApp : app.icon === "messages" ? openFakeMessagesApp : undefined}
+                                                                    role={app.icon === "phone" || app.icon === "safari" || app.icon === "music" || app.icon === "messages" ? "button" : undefined}
+                                                                    aria-label={app.icon === "phone" ? "Open Phone app" : app.icon === "safari" ? "Open Safari app" : app.icon === "music" ? "Open Music app" : app.icon === "messages" ? "Open Messages app" : undefined}
                                                                 >
                                                                     <div
                                                                         style={{
@@ -7019,6 +7106,10 @@ export default function TradingGame() {
 
                                                     {activePhoneApp === "safari" && ( // <--- changed
                                                         <IPhoneSafariApp closing={phoneAppClosing} />
+                                                    )}
+
+                                                    {activePhoneApp === "messages" && ( // <--- changed
+                                                        <IPhoneMessagesApp closing={phoneAppClosing} />
                                                     )}
 
                                                     {musicAppKeepMounted && ( // <--- changed: keep mounted so audio continues after closing app/phone
@@ -8408,6 +8499,226 @@ const styles: Record<string, CSSProperties> = {
         whiteSpace: "nowrap", // <--- changed
         transform: "translateY(0)", // <--- changed
     },
+
+    messagesAppPage: { // <--- changed
+        width: "100%", // <--- changed
+        height: "100%", // <--- changed
+        padding: "54px 16px 38px", // <--- changed
+        background: "linear-gradient(180deg, #050505 0%, #101014 44%, #000000 100%)", // <--- changed
+        alignItems: "stretch", // <--- changed
+        gap: 12, // <--- changed
+    },
+    messagesHeader: { // <--- changed
+        height: 42, // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "54px 1fr 54px", // <--- changed
+        alignItems: "center", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    messagesHeaderButton: { // <--- changed
+        border: "none", // <--- changed
+        background: "transparent", // <--- changed
+        color: "#0a84ff", // <--- changed
+        fontSize: 16, // <--- changed
+        fontWeight: 600, // <--- changed
+        padding: 0, // <--- changed
+        textAlign: "left", // <--- changed
+        cursor: "pointer", // <--- changed
+    },
+    messagesHeaderTitle: { // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 27, // <--- changed
+        fontWeight: 800, // <--- changed
+        letterSpacing: -0.9, // <--- changed
+        textAlign: "center", // <--- changed
+    },
+    messagesComposeButton: { // <--- changed
+        justifySelf: "end", // <--- changed
+        width: 30, // <--- changed
+        height: 30, // <--- changed
+        borderRadius: 15, // <--- changed
+        border: "none", // <--- changed
+        background: "rgba(10,132,255,0.18)", // <--- changed
+        color: "#0a84ff", // <--- changed
+        fontSize: 18, // <--- changed
+        fontWeight: 900, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        cursor: "pointer", // <--- changed
+    },
+    messagesSearchBar: { // <--- changed
+        height: 38, // <--- changed
+        borderRadius: 15, // <--- changed
+        background: "rgba(118,118,128,0.26)", // <--- changed
+        color: "rgba(255,255,255,0.46)", // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 8, // <--- changed
+        padding: "0 12px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    messagesSearchText: { // <--- changed
+        fontSize: 16, // <--- changed
+        fontWeight: 600, // <--- changed
+        color: "rgba(255,255,255,0.48)", // <--- changed
+    },
+    messagesPinnedSection: { // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "repeat(3, 1fr)", // <--- changed
+        gap: 9, // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    messagesPinnedCard: { // <--- changed
+        minHeight: 116, // <--- changed
+        borderRadius: 24, // <--- changed
+        border: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        background: "linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.045))", // <--- changed
+        boxShadow: "0 16px 34px rgba(0,0,0,0.32)", // <--- changed
+        padding: "10px 7px", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "flex-start", // <--- changed
+        overflow: "hidden", // <--- changed
+        cursor: "pointer", // <--- changed
+    },
+    messagesPinnedAvatar: { // <--- changed
+        width: 45, // <--- changed
+        height: 45, // <--- changed
+        borderRadius: 22.5, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        fontSize: 16, // <--- changed
+        fontWeight: 900, // <--- changed
+        boxShadow: "0 10px 20px rgba(0,0,0,0.28)", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    messagesPinnedName: { // <--- changed
+        marginTop: 7, // <--- changed
+        fontSize: 13, // <--- changed
+        fontWeight: 800, // <--- changed
+        lineHeight: 1.05, // <--- changed
+        maxWidth: "100%", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+    },
+    messagesPinnedPreview: { // <--- changed
+        marginTop: 4, // <--- changed
+        fontSize: 10.5, // <--- changed
+        lineHeight: 1.15, // <--- changed
+        color: "rgba(255,255,255,0.58)", // <--- changed
+        textAlign: "center", // <--- changed
+        display: "-webkit-box", // <--- changed
+        WebkitLineClamp: 2, // <--- changed
+        WebkitBoxOrient: "vertical", // <--- changed
+        overflow: "hidden", // <--- changed
+    },
+    messagesListCard: { // <--- changed
+        flex: 1, // <--- changed
+        minHeight: 0, // <--- changed
+        borderRadius: 28, // <--- changed
+        border: "1px solid rgba(255,255,255,0.08)", // <--- changed
+        background: "rgba(28,28,30,0.86)", // <--- changed
+        boxShadow: "0 22px 46px rgba(0,0,0,0.36)", // <--- changed
+        overflow: "hidden", // <--- changed
+        display: "flex", // <--- changed
+        flexDirection: "column", // <--- changed
+    },
+    messagesListTitle: { // <--- changed
+        height: 38, // <--- changed
+        padding: "14px 16px 0", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        color: "rgba(255,255,255,0.58)", // <--- changed
+        fontSize: 13, // <--- changed
+        fontWeight: 800, // <--- changed
+        letterSpacing: 0.2, // <--- changed
+        textTransform: "uppercase", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    messagesThreadRow: { // <--- changed
+        height: 68, // <--- changed
+        border: "none", // <--- changed
+        borderTop: "1px solid rgba(255,255,255,0.07)", // <--- changed
+        background: "transparent", // <--- changed
+        color: "#ffffff", // <--- changed
+        display: "grid", // <--- changed
+        gridTemplateColumns: "46px 1fr 26px", // <--- changed
+        alignItems: "center", // <--- changed
+        gap: 10, // <--- changed
+        padding: "0 13px", // <--- changed
+        boxSizing: "border-box", // <--- changed
+        cursor: "pointer", // <--- changed
+        textAlign: "left", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    messagesThreadAvatar: { // <--- changed
+        width: 44, // <--- changed
+        height: 44, // <--- changed
+        borderRadius: 22, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        fontSize: 14, // <--- changed
+        fontWeight: 900, // <--- changed
+        boxShadow: "0 10px 20px rgba(0,0,0,0.26)", // <--- changed
+    },
+    messagesThreadBody: { // <--- changed
+        minWidth: 0, // <--- changed
+    },
+    messagesThreadTopLine: { // <--- changed
+        display: "flex", // <--- changed
+        justifyContent: "space-between", // <--- changed
+        alignItems: "baseline", // <--- changed
+        gap: 8, // <--- changed
+    },
+    messagesThreadName: { // <--- changed
+        fontSize: 15.5, // <--- changed
+        fontWeight: 800, // <--- changed
+        color: "#ffffff", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+    },
+    messagesThreadTime: { // <--- changed
+        fontSize: 11.5, // <--- changed
+        fontWeight: 700, // <--- changed
+        color: "rgba(255,255,255,0.42)", // <--- changed
+        flexShrink: 0, // <--- changed
+    },
+    messagesThreadPreview: { // <--- changed
+        marginTop: 4, // <--- changed
+        fontSize: 12.5, // <--- changed
+        lineHeight: 1.2, // <--- changed
+        color: "rgba(255,255,255,0.5)", // <--- changed
+        overflow: "hidden", // <--- changed
+        textOverflow: "ellipsis", // <--- changed
+        whiteSpace: "nowrap", // <--- changed
+    },
+    messagesUnreadBadge: { // <--- changed
+        width: 22, // <--- changed
+        height: 22, // <--- changed
+        borderRadius: 11, // <--- changed
+        background: "#0a84ff", // <--- changed
+        color: "#ffffff", // <--- changed
+        fontSize: 12, // <--- changed
+        fontWeight: 900, // <--- changed
+        display: "flex", // <--- changed
+        alignItems: "center", // <--- changed
+        justifyContent: "center", // <--- changed
+        justifySelf: "end", // <--- changed
+    },
+    messagesChevron: { // <--- changed
+        color: "rgba(255,255,255,0.25)", // <--- changed
+        fontSize: 26, // <--- changed
+        fontWeight: 300, // <--- changed
+        justifySelf: "end", // <--- changed
+    },
+
     phoneCallsPage: { // <--- changed
         width: "100%", // <--- changed
         height: "100%", // <--- changed
