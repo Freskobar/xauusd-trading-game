@@ -6880,6 +6880,22 @@ export default function TradingGame() {
 
     useEffect(() => {
         const preventContextMenu = (event: Event) => event.preventDefault();
+        const preventViewportGesture = (event: Event) => event.preventDefault(); // <--- changed: blocks iPhone Safari/PWA pinch zoom
+        const preventPageTouchMove = (event: TouchEvent) => { // <--- changed: prevents the document itself from scrolling left/right or up/down
+            event.preventDefault(); // <--- changed
+        }; // <--- changed
+
+        const lockViewportMeta = () => { // <--- changed: forces the app to behave like a native no-zoom app even if index.html is missing this
+            let viewportMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null; // <--- changed
+
+            if (!viewportMeta) { // <--- changed
+                viewportMeta = document.createElement("meta"); // <--- changed
+                viewportMeta.name = "viewport"; // <--- changed
+                document.head.appendChild(viewportMeta); // <--- changed
+            } // <--- changed
+
+            viewportMeta.content = "width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"; // <--- changed
+        }; // <--- changed
 
         const updateOrientationState = () => {
             const isPhoneSizedScreen =
@@ -6889,12 +6905,8 @@ export default function TradingGame() {
                 window.matchMedia?.("(display-mode: standalone)").matches ||
                 (window.navigator as Navigator & { standalone?: boolean }).standalone === true; // <--- changed
 
-            const layoutViewportWidth = document.documentElement.clientWidth || window.innerWidth; // <--- changed: prevents the scaled stage from becoming wider than the real page
-            const layoutViewportHeight = document.documentElement.clientHeight || window.innerHeight; // <--- changed: prevents the scaled stage from becoming taller than the real page
-            const visualViewportWidth = window.visualViewport?.width ?? layoutViewportWidth; // <--- changed
-            const visualViewportHeight = window.visualViewport?.height ?? layoutViewportHeight; // <--- changed
-            const viewportWidth = Math.floor(Math.min(visualViewportWidth, layoutViewportWidth)); // <--- changed: no horizontal overflow/side scrolling on iPhone
-            const viewportHeight = Math.floor(Math.min(visualViewportHeight, layoutViewportHeight)); // <--- changed: no vertical overflow/page scrolling on iPhone
+            const viewportWidth = Math.floor(window.innerWidth || document.documentElement.clientWidth || GAME_BASE_WIDTH); // <--- changed: exact app window width; prevents scaled content from creating sideways scroll
+            const viewportHeight = Math.floor(window.innerHeight || document.documentElement.clientHeight || GAME_BASE_HEIGHT); // <--- changed: exact app window height; prevents scaled content from creating vertical scroll
             const verticalSafePadding = isIosHomeScreenApp && isPhoneSizedScreen
                 ? IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING
                 : 0; // <--- changed: Home Screen/PWA header content safe offset
@@ -6941,8 +6953,37 @@ export default function TradingGame() {
         document.body.style.userSelect = "none";
         document.body.style.webkitUserSelect = "none";
         document.body.style.setProperty("-webkit-tap-highlight-color", "transparent"); // <--- changed
+        document.documentElement.style.touchAction = "none"; // <--- changed: disables browser pan/zoom gestures on supported browsers
+        document.body.style.touchAction = "none"; // <--- changed
+
+        const rootElement = document.getElementById("root"); // <--- changed: Vite root can otherwise become the scrollable element
+        const previousRootStyles = rootElement
+            ? {
+                overflow: rootElement.style.overflow,
+                width: rootElement.style.width,
+                height: rootElement.style.height,
+                position: rootElement.style.position,
+                inset: rootElement.style.inset,
+                touchAction: rootElement.style.touchAction,
+            }
+            : null; // <--- changed
+
+        if (rootElement) { // <--- changed
+            rootElement.style.overflow = "hidden"; // <--- changed
+            rootElement.style.width = "100dvw"; // <--- changed
+            rootElement.style.height = "100dvh"; // <--- changed
+            rootElement.style.position = "fixed"; // <--- changed
+            rootElement.style.inset = "0"; // <--- changed
+            rootElement.style.touchAction = "none"; // <--- changed
+        } // <--- changed
+
+        lockViewportMeta(); // <--- changed
 
         window.addEventListener("contextmenu", preventContextMenu);
+        window.addEventListener("gesturestart", preventViewportGesture as EventListener, { passive: false }); // <--- changed: iOS Safari pinch zoom
+        window.addEventListener("gesturechange", preventViewportGesture as EventListener, { passive: false }); // <--- changed
+        window.addEventListener("gestureend", preventViewportGesture as EventListener, { passive: false }); // <--- changed
+        document.addEventListener("touchmove", preventPageTouchMove, { passive: false }); // <--- changed: no document scrolling; canvas drag handlers still work
         window.addEventListener("resize", updateOrientationState); // <--- changed
         window.addEventListener("orientationchange", updateOrientationState); // <--- changed
         window.visualViewport?.addEventListener("resize", updateOrientationState); // <--- changed: iPhone PWA can change usable viewport without a normal resize
@@ -6963,16 +7004,32 @@ export default function TradingGame() {
             document.documentElement.style.width = ""; // <--- changed
             document.documentElement.style.height = ""; // <--- changed
             document.documentElement.style.overscrollBehavior = ""; // <--- changed
+            document.documentElement.style.touchAction = ""; // <--- changed
             document.body.style.overflow = "";
             document.body.style.width = ""; // <--- changed
             document.body.style.height = ""; // <--- changed
             document.body.style.position = ""; // <--- changed
             document.body.style.inset = ""; // <--- changed
             document.body.style.overscrollBehavior = ""; // <--- changed
+            document.body.style.touchAction = ""; // <--- changed
             document.body.style.userSelect = "";
             document.body.style.webkitUserSelect = "";
             document.body.style.removeProperty("-webkit-tap-highlight-color"); // <--- changed
+
+            if (rootElement && previousRootStyles) { // <--- changed
+                rootElement.style.overflow = previousRootStyles.overflow; // <--- changed
+                rootElement.style.width = previousRootStyles.width; // <--- changed
+                rootElement.style.height = previousRootStyles.height; // <--- changed
+                rootElement.style.position = previousRootStyles.position; // <--- changed
+                rootElement.style.inset = previousRootStyles.inset; // <--- changed
+                rootElement.style.touchAction = previousRootStyles.touchAction; // <--- changed
+            } // <--- changed
+
             window.removeEventListener("contextmenu", preventContextMenu);
+            window.removeEventListener("gesturestart", preventViewportGesture as EventListener); // <--- changed
+            window.removeEventListener("gesturechange", preventViewportGesture as EventListener); // <--- changed
+            window.removeEventListener("gestureend", preventViewportGesture as EventListener); // <--- changed
+            document.removeEventListener("touchmove", preventPageTouchMove); // <--- changed
             window.removeEventListener("resize", updateOrientationState); // <--- changed
             window.removeEventListener("orientationchange", updateOrientationState); // <--- changed
             window.visualViewport?.removeEventListener("resize", updateOrientationState); // <--- changed
@@ -7789,6 +7846,23 @@ export default function TradingGame() {
 
             <style>
                 {`
+                    html, body, #root {
+                        width: 100dvw !important;
+                        height: 100dvh !important;
+                        max-width: 100dvw !important;
+                        max-height: 100dvh !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        overflow: hidden !important;
+                        overscroll-behavior: none !important;
+                        touch-action: none !important;
+                        -webkit-text-size-adjust: 100%;
+                    }
+
+                    * {
+                        box-sizing: border-box;
+                    }
+
                     @keyframes phoneSlideBounceIn {
                         0% { transform: translateY(115%); opacity: 0; }
                         70% { transform: translateY(-10px); opacity: 1; }
@@ -8731,6 +8805,8 @@ const styles: Record<string, CSSProperties> = {
         userSelect: "none", // <--- changed
         WebkitUserSelect: "none", // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
+        touchAction: "none", // <--- changed: the app itself handles touches, the browser never pans/zooms it
+        overscrollBehavior: "none", // <--- changed
     },
     phoneIconPreloadCache: { // <--- changed
         position: "fixed", // <--- changed
@@ -8769,13 +8845,16 @@ const styles: Record<string, CSSProperties> = {
         color: "#a0a0a0", // <--- changed
     },
     appScaleFrame: {
-        width: "100%", // <--- changed: viewport-locked frame prevents horizontal scroll
-        height: "100%", // <--- changed: viewport-locked frame prevents vertical scroll
-        position: "relative", // <--- changed
+        width: "100dvw", // <--- changed: exact viewport width, never wider
+        height: "100dvh", // <--- changed: exact viewport height, never taller
+        position: "fixed", // <--- changed: removes any chance of document flow creating scroll
+        inset: 0, // <--- changed
         flexShrink: 0, // <--- changed
         overflow: "hidden", // <--- changed: clips any standalone-only lower controls without creating page scroll
-        maxWidth: "100%", // <--- changed
-        maxHeight: "100%", // <--- changed
+        maxWidth: "100dvw", // <--- changed
+        maxHeight: "100dvh", // <--- changed
+        touchAction: "none", // <--- changed
+        overscrollBehavior: "none", // <--- changed
     },
     appScaleObject: {
         width: GAME_BASE_WIDTH, // <--- changed
@@ -11062,11 +11141,12 @@ const styles: Record<string, CSSProperties> = {
         boxSizing: "border-box",
     } as CSSProperties,
 
-    tradePanelStandaloneBottomFill: { // <--- changed: Home Screen/PWA only; moves the real dark gray button panel lower as one unit
-        padding: "50px 22px 82px", // <--- changed: the button grid itself sits lower inside the actual dark gray panel
-        marginTop: -30, // <--- changed: panel grows upward so its bottom still stays locked to the screen bottom without causing page scroll
+    tradePanelStandaloneBottomFill: { // <--- changed: Home Screen/PWA only; lowers the actual dark gray button panel without creating page overflow
+        padding: "40px 22px 92px", // <--- changed: buttons sit lower inside the real panel and the dark gray reaches the bottom
+        marginTop: -40, // <--- changed: grows the panel upward instead of pushing the whole app past the viewport
         background: "#1b1b1b", // <--- changed: guarantees the full lower area stays the same dark gray
         borderRadius: "24px 24px 0 0", // <--- changed
+        flexShrink: 0, // <--- changed
     } as CSSProperties,
 
     input: { // <--- restored
