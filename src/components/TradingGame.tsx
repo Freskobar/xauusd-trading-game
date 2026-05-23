@@ -283,7 +283,7 @@ const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage h
 const MOBILE_STAGE_SAFE_WIDTH_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame left/right
 const MOBILE_STAGE_SAFE_HEIGHT_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame top/bottom
 const MOBILE_STAGE_SCALE_TWEAK = 1; // <--- changed: restores full Safari-frame fill after login
-const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 18; // <--- changed: PWA top stack moves way higher while the dark header color still reaches the very top
+const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 10; // <--- changed: PWA top stack nudged a little higher while the dark header color still reaches the very top
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -8933,7 +8933,7 @@ const styles: Record<string, CSSProperties> = {
         borderBottom: "1px solid #1f1f1f",
     },
     timeframesStandaloneHigher: {
-        padding: "10px 12px 12px", // <--- changed: PWA-only tighter row so the top/header stack sits higher
+        padding: "8px 12px 10px", // <--- changed: PWA-only nudges the timeframe row a little higher
     } as CSSProperties,
     tfButton: {
         background: "#222222",
@@ -8973,8 +8973,8 @@ const styles: Record<string, CSSProperties> = {
         boxSizing: "border-box", // <--- changed
     },
     marketTimeBlockStandaloneHigher: {
-        padding: "5px 62px 2px", // <--- changed: PWA-only pulls market text and side buttons higher without rescaling the app
-        marginTop: -2, // <--- changed
+        padding: "2px 62px 0px", // <--- changed: PWA-only pulls market text and side buttons a little higher without rescaling the app
+        marginTop: -5, // <--- changed
     } as CSSProperties,
     marketTimeCenterColumn: {
         display: "flex", // <--- changed
