@@ -280,10 +280,10 @@ const PHONE_LOCK_SOUND_PATH = "/sounds/phone lock.m4a"; // <--- changed: put thi
 const GAME_BASE_WIDTH = 480; // <--- changed: fixed professional design-stage width
 const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage height
 
-const MOBILE_STAGE_SAFE_WIDTH_PADDING = 0; // <--- changed: used in app-scale math so Safari/PWA can fill left/right without TS unused warnings
-const MOBILE_STAGE_SAFE_HEIGHT_PADDING = 8; // <--- changed: used in app-scale math to stop Safari from zooming the logged-in game too tall
-const MOBILE_STAGE_SCALE_TWEAK = 0.985; // <--- changed: used in app-scale math for a tiny iPhone Safari/PWA breathing-room shrink
-const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 96; // <--- changed: extra vertical room only when saved to iPhone Home Screen/PWA so top Ticker/Balance never sits under the status area
+const MOBILE_STAGE_SAFE_WIDTH_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame left/right
+const MOBILE_STAGE_SAFE_HEIGHT_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame top/bottom
+const MOBILE_STAGE_SCALE_TWEAK = 1; // <--- changed: restores full Safari-frame fill after login
+const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 76; // <--- changed: extra vertical room only when saved to iPhone Home Screen/PWA so top Ticker/Balance never sits under the status area
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -4603,25 +4603,6 @@ export default function TradingGame() {
     }
 
     useEffect(() => { // <--- changed
-        const viewportMeta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]'); // <--- changed: fixes iPhone Safari/PWA zooming and lets safe-area work
-        const previousViewportContent = viewportMeta?.getAttribute("content") ?? null; // <--- changed
-
-        if (viewportMeta) { // <--- changed
-            viewportMeta.setAttribute("content", "width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"); // <--- changed
-        } else { // <--- changed
-            const createdViewportMeta = document.createElement("meta"); // <--- changed
-            createdViewportMeta.name = "viewport"; // <--- changed
-            createdViewportMeta.content = "width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"; // <--- changed
-            document.head.appendChild(createdViewportMeta); // <--- changed
-        }
-
-        document.documentElement.style.setProperty("height", "100%"); // <--- changed
-        document.documentElement.style.setProperty("overflow", "hidden"); // <--- changed
-        document.body.style.setProperty("height", "100%"); // <--- changed
-        document.body.style.setProperty("margin", "0"); // <--- changed
-        document.body.style.setProperty("overflow", "hidden"); // <--- changed
-        document.body.style.setProperty("touch-action", "none"); // <--- changed
-
         phoneUnlockSoundRef.current = new Audio(PHONE_UNLOCK_SOUND_PATH); // <--- changed
         phoneLockSoundRef.current = new Audio(PHONE_LOCK_SOUND_PATH); // <--- changed
 
@@ -4634,13 +4615,6 @@ export default function TradingGame() {
             phoneLockSoundRef.current.preload = "auto"; // <--- changed
             phoneLockSoundRef.current.load(); // <--- changed
         }
-
-        return () => { // <--- changed
-            const currentViewportMeta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]'); // <--- changed
-            if (currentViewportMeta && previousViewportContent !== null) { // <--- changed
-                currentViewportMeta.setAttribute("content", previousViewportContent); // <--- changed
-            }
-        }; // <--- changed
     }, []); // <--- changed
 
     useEffect(() => { // <--- changed: starts loading all home-screen PNG icons as soon as the game mounts
@@ -4665,7 +4639,8 @@ export default function TradingGame() {
     const [now, setNow] = useState(Date.now());
     const [isLandscape, setIsLandscape] = useState(false); // <--- changed
     const [mobilePhoneScale, setMobilePhoneScale] = useState(1); // <--- changed: phone stays fixed inside the full app stage
-    const [appScale, setAppScale] = useState(1); // <--- changed: scales the entire app as one proportional object
+    const [appScale, setAppScale] = useState({ x: 1, y: 1 }); // <--- changed: fills Safari/PWA viewport from edge to edge without leaving side/top/bottom gaps
+    const [isIosStandaloneApp, setIsIosStandaloneApp] = useState(false); // <--- changed: lets the Home Screen app move header content below the iPhone status bar while the panel color still reaches the top
     const [isDesktopStatusRender, setIsDesktopStatusRender] = useState(false); // <--- changed: desktop-only fake phone status bar polish
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
@@ -6914,27 +6889,28 @@ export default function TradingGame() {
                 window.matchMedia?.("(display-mode: standalone)").matches ||
                 (window.navigator as Navigator & { standalone?: boolean }).standalone === true; // <--- changed
 
-            const viewportWidth = window.visualViewport?.width ?? window.innerWidth; // <--- changed: Safari/PWA-safe viewport width
-            const viewportHeight = window.visualViewport?.height ?? window.innerHeight; // <--- changed: PWA/mobile Safari-safe viewport height
+            const viewportWidth = window.visualViewport?.width ?? window.innerWidth; // <--- changed: Safari/PWA visible width, not the old layout width
+            const viewportHeight = window.visualViewport?.height ?? window.innerHeight; // <--- changed: Safari/PWA visible height between browser bars
             const verticalSafePadding = isIosHomeScreenApp && isPhoneSizedScreen
                 ? IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING
-                : 0; // <--- changed: normal Safari keeps the old size; installed app gets breathing room
-            const horizontalSafePadding = isPhoneSizedScreen
-                ? MOBILE_STAGE_SAFE_WIDTH_PADDING * 2
-                : 0; // <--- changed: uses width-safe knob and clears TS unused warning
-            const mobileHeightSafePadding = isPhoneSizedScreen
-                ? MOBILE_STAGE_SAFE_HEIGHT_PADDING * 2
-                : 0; // <--- changed: uses height-safe knob and clears TS unused warning
-            const safeViewportWidth = Math.max(320, viewportWidth - horizontalSafePadding); // <--- changed
-            const safeViewportHeight = Math.max(320, viewportHeight - verticalSafePadding - mobileHeightSafePadding); // <--- changed
+                : 0; // <--- changed: Home Screen/PWA header content safe offset
 
-            const nextAppScale = Math.min(
-                safeViewportWidth / GAME_BASE_WIDTH,
-                safeViewportHeight / GAME_BASE_HEIGHT,
-                1
-            ) * (isPhoneSizedScreen ? MOBILE_STAGE_SCALE_TWEAK : 1); // <--- changed: uses scale tweak, fixes Safari over-zoom, and clears TS unused warning
+            document.documentElement.style.setProperty(
+                "--ios-home-screen-vertical-safe-padding",
+                `${verticalSafePadding}px`
+            ); // <--- changed: consumes the value so TypeScript does not flag it as unused and keeps the safe-area knob wired
 
-            setAppScale(nextAppScale); // <--- changed
+            const nextAppScaleX = Math.max(
+                0.01,
+                (viewportWidth - MOBILE_STAGE_SAFE_WIDTH_PADDING * 2) / GAME_BASE_WIDTH
+            ); // <--- changed: fills left/right exactly in Safari and Home Screen mode
+            const nextAppScaleY = Math.max(
+                0.01,
+                (viewportHeight - MOBILE_STAGE_SAFE_HEIGHT_PADDING * 2) / GAME_BASE_HEIGHT
+            ) * MOBILE_STAGE_SCALE_TWEAK; // <--- changed: fills top/bottom exactly instead of preserving a smaller centered rectangle
+
+            setIsIosStandaloneApp(isIosHomeScreenApp && isPhoneSizedScreen); // <--- changed
+            setAppScale({ x: nextAppScaleX, y: nextAppScaleY }); // <--- changed
             setMobilePhoneScale(1.11); // <--- changed: phone remains PC-perfect inside the scaled app stage
 
             setIsLandscape(
@@ -6945,7 +6921,11 @@ export default function TradingGame() {
         };
 
         document.documentElement.style.overflow = "hidden";
+        document.documentElement.style.margin = "0"; // <--- changed: removes any browser default gap around the game
+        document.documentElement.style.padding = "0"; // <--- changed
         document.body.style.overflow = "hidden";
+        document.body.style.margin = "0"; // <--- changed: lets Safari content touch the viewport edges
+        document.body.style.padding = "0"; // <--- changed
         document.body.style.userSelect = "none";
         document.body.style.webkitUserSelect = "none";
         document.body.style.setProperty("-webkit-tap-highlight-color", "transparent"); // <--- changed
@@ -7905,14 +7885,14 @@ export default function TradingGame() {
             <div
                 style={{
                     ...styles.appScaleFrame,
-                    width: GAME_BASE_WIDTH * appScale, // <--- changed: reserves the scaled full-app footprint
-                    height: GAME_BASE_HEIGHT * appScale, // <--- changed: reserves the scaled full-app footprint
+                    width: GAME_BASE_WIDTH * appScale.x, // <--- changed: reserves the horizontally filled full-app footprint
+                    height: GAME_BASE_HEIGHT * appScale.y, // <--- changed: reserves the vertically filled full-app footprint
                 }}
             >
                 <div
                     style={{
                         ...styles.appScaleObject,
-                        transform: `scale(${appScale})`, // <--- changed: scales chart, buttons, phone, and overlays together
+                        transform: `scale(${appScale.x}, ${appScale.y})`, // <--- changed: fills Safari/PWA viewport left-right and top-bottom
                     }}
                 >
                     <div style={styles.gameFrame}>
@@ -8207,7 +8187,7 @@ export default function TradingGame() {
                             </div>
                         )}
 
-                        <div style={styles.topPanel}>
+                        <div style={{ ...styles.topPanel, ...(isIosStandaloneApp ? styles.topPanelStandaloneSafe : {}) }}>
                             <div style={styles.topMetric}> {/* <--- changed */}
                                 <div style={styles.label}>BALANCE</div>
                                 <div style={styles.value}>
@@ -8716,18 +8696,14 @@ const styles: Record<string, CSSProperties> = {
         display: "block",
     },
     app: {
-        width: "100%",
-        height: "100dvh", // <--- changed: real dynamic viewport height for iPhone Safari/PWA
-        minHeight: "100dvh", // <--- changed: real dynamic viewport height for iPhone Safari/PWA
-        maxHeight: "100dvh", // <--- changed: prevents saved Home Screen app from stretching past the visible screen
-        boxSizing: "border-box", // <--- changed
-        paddingTop: "env(safe-area-inset-top)", // <--- changed: keeps Ticker/Balance below iPhone status bar in PWA
-        paddingBottom: "env(safe-area-inset-bottom)", // <--- changed: keeps bottom controls above the iPhone home indicator
-        paddingLeft: "env(safe-area-inset-left)", // <--- changed
-        paddingRight: "env(safe-area-inset-right)", // <--- changed
+        position: "fixed", // <--- changed: locks the game to the real visible viewport instead of a centered page box
+        inset: 0, // <--- changed
+        width: "100vw",
+        height: "100dvh", // <--- changed: Safari visible viewport height
+        minHeight: "100dvh", // <--- changed
         display: "flex",
         justifyContent: "center",
-        alignItems: "center",
+        alignItems: "flex-start", // <--- changed: no vertical centering gap; the game starts at the top of the usable Safari area
         background: "#050505",
         overflow: "hidden",
         userSelect: "none", // <--- changed
@@ -8791,7 +8767,7 @@ const styles: Record<string, CSSProperties> = {
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        borderRadius: 26,
+        borderRadius: 0, // <--- changed: full Safari/PWA viewport edge-to-edge with no rounded outer corners/gaps
         color: "white",
         fontFamily: "Arial, sans-serif",
         userSelect: "none", // <--- changed
@@ -8806,6 +8782,10 @@ const styles: Record<string, CSSProperties> = {
         gridTemplateColumns: "1fr 1fr 1fr",
         alignItems: "center", // <--- changed
         minHeight: 74, // <--- changed: restored original pre-sign-in height
+    },
+    topPanelStandaloneSafe: {
+        paddingTop: 18 + IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING, // <--- changed: Home Screen/PWA only; panel color still starts at the very top while Balance/Open P-L/Ticker move below the iPhone status bar
+        minHeight: 74 + IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING, // <--- changed
     },
     topMetric: {
         minHeight: 40, // <--- changed
