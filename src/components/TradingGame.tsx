@@ -6876,20 +6876,22 @@ export default function TradingGame() {
         const preventContextMenu = (event: Event) => event.preventDefault();
 
         const updateOrientationState = () => {
+            const viewportWidth = window.visualViewport?.width ?? window.innerWidth; // <--- changed: mobile Safari-safe width
+            const viewportHeight = window.visualViewport?.height ?? window.innerHeight; // <--- changed: mobile Safari-safe height
             const isPhoneSizedScreen =
-                Math.min(window.innerWidth, window.innerHeight) <= 768; // <--- changed
+                Math.min(viewportWidth, viewportHeight) <= 768; // <--- changed
 
             const nextAppScale = Math.min(
-                window.innerWidth / GAME_BASE_WIDTH,
-                window.innerHeight / GAME_BASE_HEIGHT,
+                viewportWidth / GAME_BASE_WIDTH,
+                viewportHeight / GAME_BASE_HEIGHT,
                 1
-            ); // <--- changed: scale the whole app stage, not just the phone
+            ); // <--- changed: scale against the real visible Safari viewport so the stage fits again
 
             setAppScale(nextAppScale); // <--- changed
             setMobilePhoneScale(1.11); // <--- changed: phone remains PC-perfect inside the scaled app stage
 
             setIsLandscape(
-                isPhoneSizedScreen && window.innerWidth > window.innerHeight
+                isPhoneSizedScreen && viewportWidth > viewportHeight
             ); // <--- changed: desktop PC should never show rotate blocker
 
             setIsDesktopStatusRender(true); // <--- changed: keep PC-perfect status bar styling; the full app now scales as one object
@@ -6904,6 +6906,8 @@ export default function TradingGame() {
         window.addEventListener("contextmenu", preventContextMenu);
         window.addEventListener("resize", updateOrientationState); // <--- changed
         window.addEventListener("orientationchange", updateOrientationState); // <--- changed
+        window.visualViewport?.addEventListener("resize", updateOrientationState); // <--- changed: Safari toolbar open/close keeps the app fitted
+        window.visualViewport?.addEventListener("scroll", updateOrientationState); // <--- changed: Safari viewport shifts keep the stage centered
 
         updateOrientationState(); // <--- changed
 
@@ -6925,6 +6929,8 @@ export default function TradingGame() {
             window.removeEventListener("contextmenu", preventContextMenu);
             window.removeEventListener("resize", updateOrientationState); // <--- changed
             window.removeEventListener("orientationchange", updateOrientationState); // <--- changed
+            window.visualViewport?.removeEventListener("resize", updateOrientationState); // <--- changed
+            window.visualViewport?.removeEventListener("scroll", updateOrientationState); // <--- changed
         };
     }, []);
 
@@ -8664,9 +8670,11 @@ const styles: Record<string, CSSProperties> = {
         display: "block",
     },
     app: {
-        width: "100%",
-        height: "100dvh", // <--- changed
-        minHeight: "100dvh", // <--- changed
+        position: "fixed", // <--- changed: locks the game to the visible Safari viewport instead of document flow
+        inset: 0, // <--- changed
+        width: "100vw", // <--- changed
+        height: "100svh", // <--- changed: stable mobile Safari height so the game sits like before
+        minHeight: "100svh", // <--- changed
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -8675,6 +8683,7 @@ const styles: Record<string, CSSProperties> = {
         userSelect: "none", // <--- changed
         WebkitUserSelect: "none", // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
+        touchAction: "none", // <--- changed: prevents Safari page movement from shifting the fitted stage
     },
     phoneIconPreloadCache: { // <--- changed
         position: "fixed", // <--- changed
