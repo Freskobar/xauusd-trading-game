@@ -280,6 +280,10 @@ const PHONE_LOCK_SOUND_PATH = "/sounds/phone lock.m4a"; // <--- changed: put thi
 const GAME_BASE_WIDTH = 480; // <--- changed: fixed professional design-stage width
 const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage height
 
+const MOBILE_STAGE_SAFE_WIDTH_PADDING = 24; // <--- changed: gives the logged-in game breathing room inside mobile Safari
+const MOBILE_STAGE_SAFE_HEIGHT_PADDING = 28; // <--- changed: prevents the chart/control stage from feeling zoomed in after sign-in
+const MOBILE_STAGE_SCALE_TWEAK = 0.94; // <--- changed: restores the earlier slightly-smaller mobile fit while keeping desktop unchanged
+
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
 const HOME_APP_GRID_WIDTH = HOME_APP_GRID_COLUMNS * HOME_APP_SIZE + (HOME_APP_GRID_COLUMNS - 1) * HOME_APP_GRID_GAP; // <--- changed: fixed app grid width so iPhone Safari cannot stretch gaps
@@ -6881,11 +6885,14 @@ export default function TradingGame() {
             const isPhoneSizedScreen =
                 Math.min(viewportWidth, viewportHeight) <= 768; // <--- changed
 
+            const mobileSafeWidth = Math.max(1, viewportWidth - MOBILE_STAGE_SAFE_WIDTH_PADDING); // <--- changed
+            const mobileSafeHeight = Math.max(1, viewportHeight - MOBILE_STAGE_SAFE_HEIGHT_PADDING); // <--- changed
+
             const nextAppScale = Math.min(
-                viewportWidth / GAME_BASE_WIDTH,
-                viewportHeight / GAME_BASE_HEIGHT,
+                mobileSafeWidth / GAME_BASE_WIDTH,
+                mobileSafeHeight / GAME_BASE_HEIGHT,
                 1
-            ); // <--- changed: scale against the real visible Safari viewport so the stage fits again
+            ) * (isPhoneSizedScreen ? MOBILE_STAGE_SCALE_TWEAK : 1); // <--- changed: logged-in chart stage no longer feels zoomed in on mobile Safari
 
             setAppScale(nextAppScale); // <--- changed
             setMobilePhoneScale(1.11); // <--- changed: phone remains PC-perfect inside the scaled app stage
