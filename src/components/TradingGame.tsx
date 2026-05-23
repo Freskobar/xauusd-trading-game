@@ -280,9 +280,9 @@ const PHONE_LOCK_SOUND_PATH = "/sounds/phone lock.m4a"; // <--- changed: put thi
 const GAME_BASE_WIDTH = 480; // <--- changed: fixed professional design-stage width
 const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage height
 
-const MOBILE_STAGE_SAFE_WIDTH_PADDING = 24; // <--- changed: gives the logged-in game breathing room inside mobile Safari
-const MOBILE_STAGE_SAFE_HEIGHT_PADDING = 28; // <--- changed: prevents the chart/control stage from feeling zoomed in after sign-in
-const MOBILE_STAGE_SCALE_TWEAK = 0.94; // <--- changed: restores the earlier slightly-smaller mobile fit while keeping desktop unchanged
+const MOBILE_STAGE_SAFE_WIDTH_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame left/right
+const MOBILE_STAGE_SAFE_HEIGHT_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame top/bottom
+const MOBILE_STAGE_SCALE_TWEAK = 1; // <--- changed: restores full Safari-frame fill after login
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -8365,7 +8365,7 @@ export default function TradingGame() {
                                     onClick={handleGameLogout}
                                     title="Save and sign out"
                                 >
-                                    Lv {playerLevel} • {getCurrentLevelXp(playerXp)}/{getXpNeededForLevel(playerLevel)} XP • {currentGameUser.displayName || currentGameUser.username} • Sign Out
+                                    Lv {playerLevel} • {getCurrentLevelXp(playerXp)}/{getXpNeededForLevel(playerLevel)} XP • {currentGameUser.username} • Sign Out
                                 </button>
                             )}
 
@@ -9112,8 +9112,8 @@ const styles: Record<string, CSSProperties> = {
     phoneButton: {
         position: "relative", // <--- changed
         width: 44, // <--- changed
-        height: 44, // <--- changed
-        borderRadius: 13, // <--- changed
+        height: 40, // <--- changed: compact row so it does not cover too much chart
+        borderRadius: 12, // <--- changed
         border: "none", // <--- changed // <--- changed
         background: "rgba(18,18,18,0.82)", // <--- changed
         boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
@@ -9221,7 +9221,7 @@ const styles: Record<string, CSSProperties> = {
         opacity: 0.96, // <--- changed
         position: "relative", // <--- changed
         zIndex: 11, // <--- changed: stays visible above full-screen app pages
-        padding: "0 12px", // <--- changed
+        padding: "0 10px", // <--- changed
         boxSizing: "border-box", // <--- changed
     },
     phoneStatusBarDesktop: {
@@ -9719,7 +9719,7 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         gap: 8, // <--- changed
-        padding: "0 12px", // <--- changed
+        padding: "0 10px", // <--- changed
         boxSizing: "border-box", // <--- changed
         flexShrink: 0, // <--- changed
     },
@@ -10232,7 +10232,7 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         gap: 7, // <--- changed
-        padding: "0 12px", // <--- changed
+        padding: "0 10px", // <--- changed
         boxSizing: "border-box", // <--- changed
         flexShrink: 0, // <--- changed
     },
@@ -10459,7 +10459,7 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         gap: 8, // <--- changed
-        padding: "0 12px", // <--- changed
+        padding: "0 10px", // <--- changed
         boxSizing: "border-box", // <--- changed
         flexShrink: 0, // <--- changed
     },
@@ -11209,11 +11209,11 @@ const styles: Record<string, CSSProperties> = {
 
     chartAccountChip: { // <--- changed: Lv/XP/user/sign-out row moved to the same bottom-left area as the old Level badge
         position: "absolute", // <--- changed
-        left: 16, // <--- changed
-        bottom: 18, // <--- changed
-        maxWidth: "calc(100% - 84px)", // <--- changed: keeps it clear of the play/pause button on the right
-        height: 44, // <--- changed
-        borderRadius: 13, // <--- changed
+        left: 10, // <--- changed: reaches closer to the Safari frame edge
+        bottom: 12, // <--- changed: aligns lower in the chart control area
+        maxWidth: "calc(100% - 68px)", // <--- changed: fills wider while staying clear of the play/pause button
+        height: 40, // <--- changed: compact row so it does not cover too much chart
+        borderRadius: 12, // <--- changed
         border: "1px solid rgba(255,255,255,0.08)", // <--- changed
         background: "rgba(18,18,18,0.82)", // <--- changed
         boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
@@ -11223,11 +11223,11 @@ const styles: Record<string, CSSProperties> = {
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        fontSize: 12, // <--- changed: fits Lv/XP/username/sign-out cleanly on mobile Safari
+        fontSize: 11.5, // <--- changed: fits Lv/XP/username/sign-out cleanly on mobile Safari
         fontWeight: 900, // <--- changed
         letterSpacing: "0.15px", // <--- changed
         zIndex: 20, // <--- changed
-        padding: "0 12px", // <--- changed
+        padding: "0 10px", // <--- changed
         boxSizing: "border-box", // <--- changed
         cursor: "pointer", // <--- changed
         userSelect: "none", // <--- changed
@@ -11242,8 +11242,8 @@ const styles: Record<string, CSSProperties> = {
         right: 16, // <--- changed
         bottom: 18, // <--- changed
         width: 44, // <--- changed
-        height: 44, // <--- changed
-        borderRadius: 13, // <--- changed
+        height: 40, // <--- changed: compact row so it does not cover too much chart
+        borderRadius: 12, // <--- changed
         border: "none", // <--- changed // <--- changed
         background: "rgba(18,18,18,0.82)", // <--- changed
         boxShadow: "0 12px 28px rgba(0,0,0,0.55)", // <--- changed
