@@ -123,7 +123,7 @@ type ChartMetrics = {
 
 const GREEN = "#14c78a";
 const RED = "#ff4048";
-const PENDING_BUTTON_BLUE = "#2f8cff"; // <--- changed
+const PENDING_BUTTON_BLUE = "#2f8cff"; // <--- restored: used by Pending Order button
 const DIM_GREEN_LINE = "rgba(20, 199, 138, 0.42)"; // <--- changed
 const DIM_RED_LINE = "rgba(255, 64, 72, 0.42)"; // <--- changed
 const DIM_BLUE_LINE = "rgba(47, 140, 255, 0.42)"; // <--- changed
@@ -168,7 +168,6 @@ const HOME_DOCK_HEIGHT = HOME_DOCK_APP_SIZE + 20; // <--- changed: height of the
 const HOME_DOCK_RADIUS = 28; // <--- changed: corner roundness of the dock
 const HOME_DOCK_VERTICAL_OFFSET = 5; // <--- changed: moves the dock up/down
 const HOME_DOCK_APP_HORIZONTAL_GAP = 14; // <--- changed: space between dock apps
-const PHONE_HOME_BAR_BOTTOM_OFFSET = 8; // <--- changed: moves home bar down/up without pushing dock outside phone
 
 
 // Centra Bank PNG icon tweak knobs // <--- changed
@@ -755,9 +754,12 @@ function PhoneWifiSvg({ strength = 3 }: { strength?: number }) {
     );
 }
 
-function PhoneBatterySvg({ percent }: { percent: number | null }) {
+function PhoneBatterySvg({ percent, black = false }: { percent: number | null; black?: boolean }) { // <--- changed
     const safePercent = Math.max(0, Math.min(100, percent ?? 67));
     const fillWidth = Math.max(2, Math.min(25, (safePercent / 100) * 25));
+    const batteryShellColor = black ? "rgba(0,0,0,0.34)" : "rgba(255,255,255,0.34)"; // <--- changed
+    const batteryFillColor = black ? "#000000" : "rgba(255,255,255,0.96)"; // <--- changed
+    const batteryTextColor = black ? "#ffffff" : "#050505"; // <--- changed
 
     return (
         <svg
@@ -788,7 +790,7 @@ function PhoneBatterySvg({ percent }: { percent: number | null }) {
                 width="25"
                 height="12.5"
                 rx="2.8"
-                fill="rgba(255,255,255,0.34)"
+                fill={batteryShellColor}
             />
 
             <rect
@@ -797,13 +799,13 @@ function PhoneBatterySvg({ percent }: { percent: number | null }) {
                 width={fillWidth}
                 height="12.5"
                 rx="0"
-                fill="rgba(255,255,255,0.96)"
+                fill={batteryFillColor}
                 clipPath="url(#iphoneBatteryClipCrisp)"
             />
 
             <path
                 d="M27.15 6.45H27.85C28.55 6.45 29 7.55 29 9C29 10.45 28.55 11.55 27.85 11.55H27.15Z"
-                fill="rgba(255,255,255,0.34)"
+                fill={batteryShellColor}
             />
 
             <text
@@ -814,7 +816,7 @@ function PhoneBatterySvg({ percent }: { percent: number | null }) {
                 alignmentBaseline="middle" // <--- changed: extra Safari/iOS alignment help
                 fontSize="10.9" // <--- changed: fixed size so the whole phone scales as one object
                 fontWeight="900"
-                fill="#050505"
+                fill={batteryTextColor}
                 fontFamily="Arial, sans-serif"
                 style={{
                     WebkitFontSmoothing: "antialiased",
@@ -1621,147 +1623,1120 @@ function IPhonePhoneApp({ // <--- changed
 
 
 
-function IPhoneSafariApp({ closing }: { closing: boolean }) { // <--- changed
-    const [safariQuery, setSafariQuery] = useState(""); // <--- changed
-    const [safariPageUrl, setSafariPageUrl] = useState(""); // <--- changed: real page URL loaded inside the phone iframe
-    const [safariHistory, setSafariHistory] = useState<string[]>([]); // <--- changed
-    const [safariHistoryIndex, setSafariHistoryIndex] = useState(-1); // <--- changed
-    const [iframeLoadKey, setIframeLoadKey] = useState(0); // <--- changed: forces refresh/reload inside the phone
 
-    const isWebPageOpen = safariPageUrl.length > 0; // <--- changed
+type MusicTrack = { // <--- changed
+    title: string;
+    artist: string;
+    album: string;
+    file: string;
+    src: string; // <--- changed: actual bundled audio URL
+    color: string;
+};
 
-    const quickSearches = [ // <--- changed
-        "youtube.com",
-        "github.com",
-        "tradingview.com",
-        "wikipedia.org",
-    ];
+const MUSIC_APP_GRADIENTS = [ // <--- changed
+    "linear-gradient(145deg, #ff2d55, #af52de)",
+    "linear-gradient(145deg, #ff9f0a, #ff375f)",
+    "linear-gradient(145deg, #5856d6, #007aff)",
+    "linear-gradient(145deg, #30d158, #0a84ff)",
+    "linear-gradient(145deg, #64d2ff, #bf5af2)",
+    "linear-gradient(145deg, #ffd60a, #ff375f)",
+];
 
-    function resolveSafariUrl(value: string) { // <--- changed: turns typed text into a real iframe URL
-        const rawValue = value.trim(); // <--- changed
-        const trimmedValue = rawValue.toLowerCase(); // <--- changed
+// <--- changed: MAIN-SCRIPT-ONLY MUSIC LOADER
+// This uses Vite's built-in import.meta.glob so the Music app is built from real audio files, not fake examples.
+// Put your files here in the project: public/sounds/Music App/
+// Supported names: Artist - Song.mp3, Artist - Song.m4a, Artist - Song.wav, Artist - Song.ogg
+const MUSIC_APP_IMPORTED_FILES = import.meta.glob(
+    "/public/sounds/Music App/*.{mp3,m4a,wav,ogg}",
+    {
+        eager: true,
+        query: "?url",
+        import: "default",
+    }
+) as Record<string, string>; // <--- changed
 
-        if (!rawValue) return ""; // <--- changed
+function cleanMusicFileName(value: string) { // <--- changed
+    return decodeURIComponent(value)
+        .replace(/\.(mp3|m4a|wav|ogg)$/i, "")
+        .replace(/[_]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
 
-        if (trimmedValue === "youtube" || trimmedValue === "yt") return "https://www.youtube.com"; // <--- changed
-        if (trimmedValue === "google") return "https://www.google.com"; // <--- changed
-        if (trimmedValue === "github") return "https://github.com"; // <--- changed
-        if (trimmedValue === "tradingview") return "https://www.tradingview.com"; // <--- changed
-        if (trimmedValue === "wikipedia") return "https://www.wikipedia.org"; // <--- changed
+function buildMusicTrackFromImportedFile(entry: [string, string], index: number): MusicTrack { // <--- changed
+    const [path, src] = entry; // <--- changed
+    const fileName = path.split("/").pop() ?? `Track ${index + 1}`; // <--- changed
+    const cleanName = cleanMusicFileName(fileName); // <--- changed
+    const parts = cleanName.split(" - "); // <--- changed
+    const artist = parts.length >= 2 ? parts[0].trim() : "Unknown Artist"; // <--- changed
+    const title = parts.length >= 2 ? parts.slice(1).join(" - ").trim() : cleanName; // <--- changed
 
-        const looksLikeUrl =
-            trimmedValue.includes(".") ||
-            trimmedValue.startsWith("http://") ||
-            trimmedValue.startsWith("https://"); // <--- changed
+    return { // <--- changed
+        title: title || `Track ${index + 1}`,
+        artist: artist || "Unknown Artist",
+        album: "Music App",
+        file: fileName,
+        src,
+        color: MUSIC_APP_GRADIENTS[index % MUSIC_APP_GRADIENTS.length],
+    };
+}
 
-        if (looksLikeUrl) { // <--- changed
-            return trimmedValue.startsWith("http")
-                ? rawValue
-                : `https://${rawValue}`; // <--- changed
-        }
+function loadMusicAppTracksFromMainScript() { // <--- changed
+    return Object.entries(MUSIC_APP_IMPORTED_FILES)
+        .sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
+        .map((entry, index) => buildMusicTrackFromImportedFile(entry, index)); // <--- changed
+}
 
-        // Real Google blocks iframe embedding, so DuckDuckGo Lite is used for real in-phone search results. // <--- changed
-        return `https://duckduckgo.com/html/?q=${encodeURIComponent(rawValue)}`; // <--- changed
+const EMPTY_MUSIC_TRACK: MusicTrack = { // <--- changed: only used for safe rendering when folder is empty
+    title: "No Songs Found",
+    artist: "Add audio files to public/sounds/Music App",
+    album: "Music App",
+    file: "",
+    src: "",
+    color: "linear-gradient(145deg, #3a3a3c, #1c1c1e)",
+};
+
+function getMusicTrackSrc(track: MusicTrack) { // <--- changed
+    return track.src; // <--- changed
+}
+
+function formatMusicTime(seconds: number) { // <--- changed
+    if (!Number.isFinite(seconds) || seconds <= 0) return "0:00"; // <--- changed
+    const minutes = Math.floor(seconds / 60); // <--- changed
+    const remainingSeconds = Math.floor(seconds % 60).toString().padStart(2, "0"); // <--- changed
+    return `${minutes}:${remainingSeconds}`; // <--- changed
+}
+
+
+let MUSIC_APP_PERSISTENT_AUDIO: HTMLAudioElement | null = null; // <--- changed: keeps music playing when phone closes
+let MUSIC_APP_PERSISTENT_INDEX = 0; // <--- changed
+
+function getMusicAppPersistentAudio() { // <--- changed
+    if (typeof window === "undefined") return null; // <--- changed
+    if (!MUSIC_APP_PERSISTENT_AUDIO) { // <--- changed
+        MUSIC_APP_PERSISTENT_AUDIO = new Audio(); // <--- changed
+        MUSIC_APP_PERSISTENT_AUDIO.preload = "auto"; // <--- changed
+    } // <--- changed
+    return MUSIC_APP_PERSISTENT_AUDIO; // <--- changed
+}
+
+function IPhoneMusicApp({ closing }: { closing: boolean }) { // <--- changed
+    const audioRef = useRef<HTMLAudioElement | null>(getMusicAppPersistentAudio()); // <--- changed: persistent audio survives phone close
+    const [selectedIndex, setSelectedIndex] = useState(() => MUSIC_APP_PERSISTENT_INDEX); // <--- changed
+    const [isPlaying, setIsPlaying] = useState(() => Boolean(getMusicAppPersistentAudio() && !getMusicAppPersistentAudio()!.paused)); // <--- changed
+    const [currentTime, setCurrentTime] = useState(() => getMusicAppPersistentAudio()?.currentTime ?? 0); // <--- changed
+    const [duration, setDuration] = useState(() => { const audio = getMusicAppPersistentAudio(); return audio && Number.isFinite(audio.duration) ? audio.duration : 0; }); // <--- changed
+    const [activeTab, setActiveTab] = useState<"library" | "listen" | "search">("library"); // <--- changed
+    const [playerOpen, setPlayerOpen] = useState(false); // <--- changed
+    const [searchValue, setSearchValue] = useState(""); // <--- changed
+    const [musicTracks] = useState<MusicTrack[]>(() => loadMusicAppTracksFromMainScript()); // <--- changed: real songs loaded directly in this main TSX
+    const [musicLibraryStatus] = useState(() => { // <--- changed
+        const count = loadMusicAppTracksFromMainScript().length; // <--- changed
+        return count > 0 ? `${count} songs loaded` : "No songs found in public/sounds/Music App"; // <--- changed
+    }); // <--- changed
+
+    if (!audioRef.current) audioRef.current = getMusicAppPersistentAudio(); // <--- changed
+
+    const currentTrack = musicTracks[selectedIndex] ?? EMPTY_MUSIC_TRACK; // <--- changed
+    const filteredTracks = musicTracks.filter((track) => { // <--- changed
+        const query = searchValue.trim().toLowerCase(); // <--- changed
+        if (!query) return true; // <--- changed
+        return `${track.title} ${track.artist} ${track.album}`.toLowerCase().includes(query); // <--- changed
+    }); // <--- changed
+
+    useEffect(() => { // <--- changed
+        const audio = audioRef.current; // <--- changed
+        if (!audio) return; // <--- changed
+
+        const updateTime = () => setCurrentTime(audio.currentTime || 0); // <--- changed
+        const updateDuration = () => setDuration(Number.isFinite(audio.duration) ? audio.duration : 0); // <--- changed
+        const handleEnded = () => musicTracks.length > 0 ? playTrack((selectedIndex + 1) % musicTracks.length, true) : undefined; // <--- changed
+
+        audio.addEventListener("timeupdate", updateTime); // <--- changed
+        audio.addEventListener("loadedmetadata", updateDuration); // <--- changed
+        audio.addEventListener("durationchange", updateDuration); // <--- changed
+        audio.addEventListener("ended", handleEnded); // <--- changed
+
+        return () => { // <--- changed
+            audio.removeEventListener("timeupdate", updateTime); // <--- changed
+            audio.removeEventListener("loadedmetadata", updateDuration); // <--- changed
+            audio.removeEventListener("durationchange", updateDuration); // <--- changed
+            audio.removeEventListener("ended", handleEnded); // <--- changed
+        }; // <--- changed
+    }, [selectedIndex]); // <--- changed
+
+    useEffect(() => { // <--- changed
+        const audio = audioRef.current; // <--- changed
+        if (!audio || !currentTrack || !currentTrack.src) return; // <--- changed
+
+        MUSIC_APP_PERSISTENT_INDEX = selectedIndex; // <--- changed
+        const nextSrc = new URL(getMusicTrackSrc(currentTrack), window.location.href).href; // <--- changed
+
+        if (audio.src !== nextSrc) { // <--- changed
+            audio.src = nextSrc; // <--- changed
+            audio.load(); // <--- changed
+            setCurrentTime(0); // <--- changed
+            setDuration(0); // <--- changed
+        } else { // <--- changed
+            setCurrentTime(audio.currentTime || 0); // <--- changed
+            setDuration(Number.isFinite(audio.duration) ? audio.duration : 0); // <--- changed
+            setIsPlaying(!audio.paused); // <--- changed
+        } // <--- changed
+
+        if (isPlaying || !audio.paused) { // <--- changed: remounting the phone does not pause music
+            audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); // <--- changed
+        } // <--- changed
+    }, [selectedIndex]); // <--- changed
+
+    function playTrack(index: number, forcePlay = true) { // <--- changed
+        if (musicTracks.length === 0) return; // <--- changed
+        const safeIndex = ((index % musicTracks.length) + musicTracks.length) % musicTracks.length; // <--- changed
+        MUSIC_APP_PERSISTENT_INDEX = safeIndex; // <--- changed
+        setSelectedIndex(safeIndex); // <--- changed
+        if (forcePlay) setIsPlaying(true); // <--- changed
+
+        window.setTimeout(() => { // <--- changed
+            const audio = audioRef.current; // <--- changed
+            if (!audio || !forcePlay) return; // <--- changed
+            audio.play().catch(() => setIsPlaying(false)); // <--- changed
+        }, 0); // <--- changed
     }
 
-    function openSafariPage(pageUrl: string) { // <--- changed
-        if (!pageUrl) return; // <--- changed
+    function togglePlay() { // <--- changed
+        const audio = audioRef.current; // <--- changed
+        if (!audio || !currentTrack.src) return; // <--- changed
 
-        setSafariPageUrl(pageUrl); // <--- changed
-        setSafariQuery(pageUrl); // <--- changed
-        setIframeLoadKey((currentKey) => currentKey + 1); // <--- changed
-
-        setSafariHistory((currentHistory) => { // <--- changed
-            const trimmedHistory = currentHistory.slice(0, safariHistoryIndex + 1); // <--- changed
-            const nextHistory = [...trimmedHistory, pageUrl]; // <--- changed
-            setSafariHistoryIndex(nextHistory.length - 1); // <--- changed
-            return nextHistory; // <--- changed
-        }); // <--- changed
-    }
-
-    function runSafariSearch(value = safariQuery) { // <--- changed
-        const resolvedUrl = resolveSafariUrl(value); // <--- changed
-        openSafariPage(resolvedUrl); // <--- changed: opens the real page inside the fake phone, not a browser tab
-    }
-
-    function goSafariBack() { // <--- changed
-        if (safariHistoryIndex > 0) { // <--- changed
-            const nextIndex = safariHistoryIndex - 1; // <--- changed
-            const nextUrl = safariHistory[nextIndex] ?? ""; // <--- changed
-            setSafariHistoryIndex(nextIndex); // <--- changed
-            setSafariPageUrl(nextUrl); // <--- changed
-            setSafariQuery(nextUrl); // <--- changed
-            setIframeLoadKey((currentKey) => currentKey + 1); // <--- changed
+        if (isPlaying) { // <--- changed
+            audio.pause(); // <--- changed
+            setIsPlaying(false); // <--- changed
             return; // <--- changed
-        }
+        } // <--- changed
 
-        setSafariPageUrl(""); // <--- changed: returns to the Safari start page inside the phone
-        setSafariQuery(""); // <--- changed
+        audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); // <--- changed
     }
 
-    function goSafariForward() { // <--- changed
-        const nextIndex = safariHistoryIndex + 1; // <--- changed
-        if (nextIndex >= safariHistory.length) return; // <--- changed
-
-        const nextUrl = safariHistory[nextIndex] ?? ""; // <--- changed
-        setSafariHistoryIndex(nextIndex); // <--- changed
-        setSafariPageUrl(nextUrl); // <--- changed
-        setSafariQuery(nextUrl); // <--- changed
-        setIframeLoadKey((currentKey) => currentKey + 1); // <--- changed
+    function seekTo(value: number) { // <--- changed
+        const audio = audioRef.current; // <--- changed
+        if (!audio || !duration) return; // <--- changed
+        const nextTime = (value / 100) * duration; // <--- changed
+        audio.currentTime = nextTime; // <--- changed
+        setCurrentTime(nextTime); // <--- changed
     }
 
-    function startNewSafariTab() { // <--- changed
-        setSafariQuery(""); // <--- changed
-        setSafariPageUrl(""); // <--- changed
+    const progress = duration > 0 ? clamp((currentTime / duration) * 100, 0, 100) : 0; // <--- changed
+
+    const musicStyles: Record<string, CSSProperties> = { // <--- changed
+        page: {
+            ...styles.phoneAppPage,
+            ...(closing ? styles.phoneAppPageClosing : {}),
+            background: "linear-gradient(180deg, #19191d 0%, #0b0b0d 52%, #000000 100%)",
+            color: "#ffffff",
+            padding: "55px 16px 102px", // <--- changed
+            overflow: "hidden",
+        },
+        scroll: {
+            height: "100%",
+            overflowY: "auto",
+            paddingBottom: 102, // <--- changed
+            scrollbarWidth: "none",
+        },
+        header: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 14,
+        },
+        title: {
+            fontSize: 34,
+            fontWeight: 900,
+            letterSpacing: -1.2,
+            lineHeight: 1,
+        },
+        profile: {
+            width: 34,
+            height: 34,
+            borderRadius: 999,
+            background: "linear-gradient(145deg, #ff2d55, #ff9f0a)",
+            display: "grid",
+            placeItems: "center",
+            fontSize: 13,
+            fontWeight: 900,
+            boxShadow: "0 10px 24px rgba(255, 45, 85, 0.35)",
+        },
+        hero: {
+            position: "relative",
+            borderRadius: 28,
+            padding: 16,
+            minHeight: 160,
+            overflow: "hidden",
+            background: currentTrack.color,
+            boxShadow: "0 22px 50px rgba(0,0,0,0.42)",
+            marginBottom: 18,
+        },
+        heroShade: {
+            position: "absolute",
+            inset: 0,
+            background: "radial-gradient(circle at 70% 20%, rgba(255,255,255,0.28), transparent 34%), linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.58))",
+        },
+        heroTop: {
+            position: "relative",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            zIndex: 1,
+        },
+        heroKicker: {
+            fontSize: 12,
+            fontWeight: 800,
+            opacity: 0.78,
+            textTransform: "uppercase",
+            letterSpacing: 1.3,
+        },
+        heroTitle: {
+            position: "relative",
+            zIndex: 1,
+            marginTop: 45,
+            fontSize: 27,
+            lineHeight: 1.02,
+            fontWeight: 950,
+            letterSpacing: -0.9,
+            maxWidth: 200,
+        },
+        heroSub: {
+            position: "relative",
+            zIndex: 1,
+            marginTop: 6,
+            fontSize: 13,
+            color: "rgba(255,255,255,0.78)",
+            fontWeight: 700,
+        },
+        playHero: {
+            position: "relative",
+            zIndex: 1,
+            width: 42,
+            height: 42,
+            borderRadius: 999,
+            border: "none",
+            background: "rgba(255,255,255,0.93)",
+            color: "#111",
+            fontSize: 18,
+            fontWeight: 900,
+            display: "grid",
+            placeItems: "center",
+            cursor: "pointer",
+        },
+        search: {
+            height: 38,
+            borderRadius: 14,
+            background: "rgba(118,118,128,0.24)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "#fff",
+            outline: "none",
+            width: "100%",
+            padding: "0 14px",
+            fontSize: 14,
+            fontWeight: 700,
+            boxSizing: "border-box",
+            marginBottom: 16,
+        },
+        sectionRow: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            margin: "0 2px 9px",
+        },
+        sectionTitle: {
+            fontSize: 20,
+            fontWeight: 900,
+            letterSpacing: -0.4,
+        },
+        seeAll: {
+            fontSize: 12,
+            fontWeight: 800,
+            color: "#ff375f",
+        },
+        card: {
+            borderRadius: 22,
+            background: "rgba(255,255,255,0.075)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            overflow: "hidden",
+            backdropFilter: "blur(16px)",
+            marginBottom: 18,
+        },
+        emptyMusicMessage: { // <--- changed
+            padding: "18px 16px",
+            color: "rgba(255,255,255,0.68)",
+            fontSize: 13,
+            fontWeight: 700,
+            lineHeight: 1.35,
+        },
+        row: {
+            width: "100%",
+            border: "none",
+            background: "transparent",
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "10px 12px",
+            textAlign: "left",
+            cursor: "pointer",
+        },
+        artwork: {
+            width: 48,
+            height: 48,
+            borderRadius: 12,
+            display: "grid",
+            placeItems: "center",
+            color: "#fff",
+            fontSize: 20,
+            fontWeight: 950,
+            flexShrink: 0,
+            boxShadow: "0 10px 22px rgba(0,0,0,0.26)",
+        },
+        rowText: {
+            minWidth: 0,
+            flex: 1,
+        },
+        trackTitle: {
+            fontSize: 15,
+            fontWeight: 850,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+        },
+        trackArtist: {
+            marginTop: 3,
+            fontSize: 12,
+            fontWeight: 700,
+            color: "rgba(255,255,255,0.52)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+        },
+        equalizer: {
+            color: "#ff375f",
+            fontSize: 13,
+            fontWeight: 950,
+            width: 30,
+            textAlign: "right",
+        },
+        chips: {
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 10,
+            marginBottom: 16,
+        },
+        chip: {
+            borderRadius: 18,
+            background: "rgba(255,255,255,0.07)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            padding: 14,
+            minHeight: 72,
+        },
+        chipIcon: {
+            fontSize: 20,
+            marginBottom: 8,
+        },
+        chipTitle: {
+            fontSize: 13,
+            fontWeight: 850,
+        },
+        mini: {
+            position: "absolute",
+            left: 12,
+            right: 12,
+            bottom: 84, // <--- changed: sits cleanly above the 76px bottom tab row
+            height: 58,
+            borderRadius: 18,
+            background: "rgba(36,36,39,0.92)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            boxShadow: "0 -10px 38px rgba(0,0,0,0.42)",
+            backdropFilter: "blur(22px)",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "7px 10px",
+            boxSizing: "border-box",
+            zIndex: 25,
+        },
+        miniArtwork: {
+            width: 42,
+            height: 42,
+            borderRadius: 10,
+            display: "grid",
+            placeItems: "center",
+            fontWeight: 950,
+            flexShrink: 0,
+        },
+        miniText: {
+            flex: 1,
+            minWidth: 0,
+            cursor: "pointer",
+        },
+        miniTitle: {
+            fontSize: 13,
+            fontWeight: 850,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+        },
+        miniArtist: {
+            fontSize: 11,
+            color: "rgba(255,255,255,0.55)",
+            fontWeight: 700,
+            marginTop: 2,
+        },
+        miniButton: {
+            width: 31,
+            height: 31,
+            borderRadius: 999,
+            border: "none",
+            background: "transparent",
+            color: "#fff",
+            fontSize: 18,
+            fontWeight: 950,
+            cursor: "pointer",
+        },
+        tabs: {
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 76, // <--- changed: same height as Phone app bottom tabs
+            background: "rgba(18,18,20,0.88)",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(24px)",
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            paddingTop: 8, // <--- changed: matches Phone app tab row start
+            zIndex: 24,
+            paddingBottom: 20, // <--- changed: same lower padding as Phone app
+            boxSizing: "border-box", // <--- changed
+        },
+        tabButton: {
+            height: 52, // <--- changed: same tab item height as Phone app
+            border: "none",
+            background: "transparent",
+            color: "rgba(255,255,255,0.48)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 3,
+            fontSize: 10,
+            fontWeight: 750,
+            cursor: "pointer",
+        },
+        tabActive: {
+            color: "#ff375f",
+        },
+        playerSheet: {
+            position: "absolute",
+            inset: 0,
+            zIndex: 40,
+            background: currentTrack.color,
+            padding: "54px 22px 34px",
+            boxSizing: "border-box",
+            color: "#fff",
+            animation: "phoneAppExpandIn 260ms cubic-bezier(0.22, 1, 0.36, 1) both",
+        },
+        playerOverlay: {
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.76))",
+        },
+        playerContent: {
+            position: "relative",
+            zIndex: 2,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+        },
+        closePlayer: {
+            width: 34,
+            height: 34,
+            borderRadius: 999,
+            border: "none",
+            background: "rgba(255,255,255,0.18)",
+            color: "#fff",
+            fontSize: 22,
+            fontWeight: 900,
+            cursor: "pointer",
+        },
+        bigArt: {
+            width: "100%",
+            aspectRatio: "1 / 1",
+            borderRadius: 30,
+            margin: "42px 0 28px",
+            display: "grid",
+            placeItems: "center",
+            background: "rgba(255,255,255,0.17)",
+            boxShadow: "0 28px 70px rgba(0,0,0,0.38)",
+            fontSize: 84,
+            fontWeight: 950,
+        },
+        playerTrack: {
+            fontSize: 24,
+            fontWeight: 950,
+            letterSpacing: -0.6,
+        },
+        playerArtist: {
+            marginTop: 3,
+            fontSize: 16,
+            fontWeight: 800,
+            color: "rgba(255,255,255,0.68)",
+        },
+        range: {
+            width: "100%",
+            accentColor: "#ffffff",
+            marginTop: 22,
+        },
+        timeRow: {
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 11,
+            color: "rgba(255,255,255,0.62)",
+            fontWeight: 750,
+        },
+        controls: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 28,
+            marginTop: 24,
+        },
+        controlButton: {
+            border: "none",
+            background: "transparent",
+            color: "#fff",
+            fontSize: 28,
+            fontWeight: 950,
+            cursor: "pointer",
+        },
+        bigPlay: {
+            width: 68,
+            height: 68,
+            borderRadius: 999,
+            border: "none",
+            background: "rgba(255,255,255,0.95)",
+            color: "#111",
+            fontSize: 28,
+            fontWeight: 950,
+            cursor: "pointer",
+        },
+    };
+
+    function renderTrackRow(track: MusicTrack) { // <--- changed
+        const index = musicTracks.indexOf(track); // <--- changed
+        const selected = index === selectedIndex; // <--- changed
+
+        return (
+            <button key={track.file} type="button" style={musicStyles.row} onClick={() => playTrack(index, true)}>
+                <div style={{ ...musicStyles.artwork, background: track.color }}>{track.title.slice(0, 1)}</div>
+                <div style={musicStyles.rowText}>
+                    <div style={{ ...musicStyles.trackTitle, color: selected ? "#ff375f" : "#fff" }}>{track.title}</div>
+                    <div style={musicStyles.trackArtist}>{track.artist} • {track.album}</div>
+                </div>
+                <div style={musicStyles.equalizer}>{selected && isPlaying ? "▮▮▮" : "•••"}</div>
+            </button>
+        );
     }
 
-    function refreshSafariPage() { // <--- changed
-        if (!safariPageUrl) return; // <--- changed
-        setIframeLoadKey((currentKey) => currentKey + 1); // <--- changed
+    return (
+        <div style={musicStyles.page}>
+            {/* Persistent audio is outside the phone UI, so closing the phone will not stop music. */} {/* <--- changed */}
+            <div style={musicStyles.scroll}>
+                <div style={musicStyles.header}>
+                    <div style={musicStyles.title}>{activeTab === "search" ? "Search" : activeTab === "listen" ? "Listen Now" : "Library"}</div>
+                    <div style={musicStyles.profile}>JA</div>
+                </div>
+
+                {activeTab === "search" ? (
+                    <>
+                        <input
+                            value={searchValue}
+                            onChange={(event) => setSearchValue(event.target.value)}
+                            placeholder="Artists, Songs, Lyrics, and More"
+                            style={musicStyles.search}
+                        />
+                        <div style={musicStyles.sectionRow}>
+                            <div style={musicStyles.sectionTitle}>Results</div>
+                            <div style={musicStyles.seeAll}>{filteredTracks.length} songs</div>
+                        </div>
+                        <div style={musicStyles.card}>{filteredTracks.map(renderTrackRow)}</div>
+                    </>
+                ) : (
+                    <>
+                        <div style={musicStyles.hero}>
+                            <div style={musicStyles.heroShade} />
+                            <div style={musicStyles.heroTop}>
+                                <div>
+                                    <div style={musicStyles.heroKicker}>Now Playing</div>
+                                </div>
+                                <button type="button" style={musicStyles.playHero} onClick={togglePlay}>{isPlaying ? "Ⅱ" : "▶"}</button>
+                            </div>
+                            <div style={musicStyles.heroTitle}>{currentTrack.title}</div>
+                            <div style={musicStyles.heroSub}>{currentTrack.artist} • From public/sounds/Music App</div>
+                        </div>
+
+                        <div style={musicStyles.chips}>
+                            <div style={musicStyles.chip}><div style={musicStyles.chipIcon}>🎵</div><div style={musicStyles.chipTitle}>Songs</div></div>
+                            <div style={musicStyles.chip}><div style={musicStyles.chipIcon}>💿</div><div style={musicStyles.chipTitle}>Albums</div></div>
+                            <div style={musicStyles.chip}><div style={musicStyles.chipIcon}>⭐</div><div style={musicStyles.chipTitle}>Favorites</div></div>
+                            <div style={musicStyles.chip}><div style={musicStyles.chipIcon}>⬇</div><div style={musicStyles.chipTitle}>Downloaded</div></div>
+                        </div>
+
+                        <div style={musicStyles.sectionRow}>
+                            <div style={musicStyles.sectionTitle}>{activeTab === "listen" ? "Made For You" : "Recently Added"}</div>
+                            <div style={musicStyles.seeAll}>See All</div>
+                        </div>
+                        {musicTracks.length === 0 ? ( // <--- changed
+                            <div style={musicStyles.card}>
+                                <div style={musicStyles.emptyMusicMessage}>{musicLibraryStatus}</div>
+                            </div>
+                        ) : ( // <--- changed
+                            <div style={musicStyles.card}>{musicTracks.map(renderTrackRow)}</div>
+                        )}
+                    </>
+                )}
+            </div>
+
+            <div style={musicStyles.mini}>
+                <div style={{ ...musicStyles.miniArtwork, background: currentTrack.color }}>{currentTrack.title.slice(0, 1)}</div>
+                <div style={musicStyles.miniText} onClick={() => setPlayerOpen(true)}>
+                    <div style={musicStyles.miniTitle}>{currentTrack.title}</div>
+                    <div style={musicStyles.miniArtist}>{currentTrack.artist}</div>
+                </div>
+                <button type="button" style={musicStyles.miniButton} onClick={togglePlay}>{isPlaying ? "Ⅱ" : "▶"}</button>
+                <button type="button" style={musicStyles.miniButton} onClick={() => playTrack(selectedIndex + 1, isPlaying)}>›</button>
+            </div>
+
+            <div style={musicStyles.tabs}>
+                {[
+                    { id: "library", icon: "♫", label: "Library" },
+                    { id: "listen", icon: "▶", label: "Listen Now" },
+                    { id: "search", icon: "⌕", label: "Search" },
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        style={{ ...musicStyles.tabButton, ...(activeTab === tab.id ? musicStyles.tabActive : {}) }}
+                        onClick={() => setActiveTab(tab.id as "library" | "listen" | "search")}
+                    >
+                        <span style={{ fontSize: 18 }}>{tab.icon}</span>
+                        <span>{tab.label}</span>
+                    </button>
+                ))}
+            </div>
+
+            {playerOpen ? (
+                <div style={musicStyles.playerSheet}>
+                    <div style={musicStyles.playerOverlay} />
+                    <div style={musicStyles.playerContent}>
+                        <button type="button" style={musicStyles.closePlayer} onClick={() => setPlayerOpen(false)}>⌄</button>
+                        <div style={musicStyles.bigArt}>{currentTrack.title.slice(0, 1)}</div>
+                        <div style={musicStyles.playerTrack}>{currentTrack.title}</div>
+                        <div style={musicStyles.playerArtist}>{currentTrack.artist}</div>
+                        <input
+                            type="range"
+                            min={0}
+                            max={100}
+                            value={progress}
+                            onChange={(event) => seekTo(Number(event.target.value))}
+                            style={musicStyles.range}
+                        />
+                        <div style={musicStyles.timeRow}>
+                            <span>{formatMusicTime(currentTime)}</span>
+                            <span>-{formatMusicTime(Math.max(0, duration - currentTime))}</span>
+                        </div>
+                        <div style={musicStyles.controls}>
+                            <button type="button" style={musicStyles.controlButton} onClick={() => playTrack(selectedIndex - 1, isPlaying)}>‹‹</button>
+                            <button type="button" style={musicStyles.bigPlay} onClick={togglePlay}>{isPlaying ? "Ⅱ" : "▶"}</button>
+                            <button type="button" style={musicStyles.controlButton} onClick={() => playTrack(selectedIndex + 1, isPlaying)}>››</button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
+        </div>
+    );
+}
+
+
+
+function IPhoneSafariApp({ closing }: { closing: boolean }) { // <--- changed
+    const [addressText, setAddressText] = useState(""); // <--- changed
+    const [googleText, setGoogleText] = useState(""); // <--- changed
+    const [loadedSite, setLoadedSite] = useState(""); // <--- changed
+    const [sourceType, setSourceType] = useState<"address" | "search" | null>(null); // <--- changed
+
+    const safariStyles: Record<string, CSSProperties> = { // <--- changed: local styles prevent duplicate global style keys
+        page: {
+            background: "#f5f5f7",
+            color: "#111",
+            overflow: "hidden",
+        },
+        topBar: {
+            position: "absolute",
+            top: 66, // <--- changed: lowered clearly below Dynamic Island and status icons
+            left: 0,
+            right: 0,
+            height: 42,
+            padding: "0 13px",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            zIndex: 4,
+        },
+        topButton: {
+            width: 25,
+            height: 25,
+            borderRadius: 999,
+            border: "none",
+            background: "rgba(118,118,128,0.13)",
+            color: "#007aff",
+            display: "grid",
+            placeItems: "center",
+            fontSize: 17,
+            fontWeight: 900,
+            padding: 0,
+            flexShrink: 0,
+        },
+        addressForm: {
+            flex: 1,
+            height: 32,
+            borderRadius: 10,
+            background: "rgba(118,118,128,0.13)",
+            border: "1px solid rgba(60,60,67,0.08)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "0 9px",
+            minWidth: 0,
+        },
+        addressIcon: {
+            color: "rgba(60,60,67,0.45)",
+            fontSize: 12,
+            fontWeight: 900,
+            flexShrink: 0,
+        },
+        addressInput: {
+            flex: 1,
+            border: "none",
+            outline: "none",
+            background: "transparent",
+            color: "#1d1d1f",
+            fontSize: 11.5,
+            fontWeight: 700,
+            textAlign: "center",
+            minWidth: 0,
+        },
+        refreshButton: {
+            width: 18,
+            height: 18,
+            borderRadius: 999,
+            border: "none",
+            background: "transparent",
+            color: "rgba(60,60,67,0.55)",
+            display: "grid",
+            placeItems: "center",
+            fontSize: 12,
+            fontWeight: 900,
+            padding: 0,
+            flexShrink: 0,
+        },
+        content: {
+            position: "absolute",
+            top: 112, // <--- changed: content follows lowered Safari toolbar
+            left: 0,
+            right: 0,
+            bottom: 76,
+            overflow: "hidden",
+            padding: "0 15px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+        },
+        homeWrap: {
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            paddingTop: 52, // <--- changed: keeps Google content balanced after lower Safari toolbar
+        },
+        googleLogo: {
+            fontFamily: "Arial, sans-serif",
+            fontSize: 42,
+            fontWeight: 800,
+            letterSpacing: -3,
+            lineHeight: 1,
+            marginBottom: 22,
+        },
+        googleSearchForm: {
+            width: "100%",
+            height: 46,
+            borderRadius: 999,
+            background: "#ffffff",
+            boxShadow: "0 8px 26px rgba(0,0,0,0.12)",
+            display: "flex",
+            alignItems: "center",
+            gap: 9,
+            padding: "0 15px",
+            border: "1px solid rgba(0,0,0,0.05)",
+        },
+        googleIcon: {
+            color: "rgba(60,60,67,0.48)",
+            fontSize: 14,
+            fontWeight: 900,
+            flexShrink: 0,
+        },
+        googleInput: {
+            flex: 1,
+            border: "none",
+            outline: "none",
+            background: "transparent",
+            color: "#1d1d1f",
+            fontSize: 13,
+            fontWeight: 650,
+            minWidth: 0,
+        },
+        homeMaintenanceCard: {
+            width: "100%",
+            marginTop: 38,
+            borderRadius: 26,
+            background: "#ffffff",
+            boxShadow: "0 18px 42px rgba(0,0,0,0.11)",
+            border: "1px solid rgba(0,0,0,0.05)",
+            padding: "25px 18px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            gap: 10,
+        },
+        badge: {
+            width: 42,
+            height: 42,
+            borderRadius: 14,
+            background: "linear-gradient(145deg, #ff453a, #ff9f0a)",
+            color: "#fff",
+            display: "grid",
+            placeItems: "center",
+            fontSize: 25,
+            fontWeight: 950,
+            boxShadow: "0 12px 24px rgba(255,69,58,0.28)",
+        },
+        title: {
+            color: "#111",
+            fontSize: 17,
+            fontWeight: 950,
+            lineHeight: 1.08,
+            textAlign: "center",
+            maxWidth: 230,
+        },
+        body: {
+            color: "rgba(60,60,67,0.72)",
+            fontSize: 12.5,
+            fontWeight: 650,
+            lineHeight: 1.38,
+            textAlign: "center",
+            maxWidth: 230,
+        },
+        loadedWrap: {
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingBottom: 18,
+        },
+        browserHeader: {
+            fontSize: 11,
+            fontWeight: 850,
+            color: "rgba(60,60,67,0.54)",
+            letterSpacing: 0.4,
+            textTransform: "uppercase",
+            marginBottom: 12,
+        },
+        loadedCard: {
+            width: "100%",
+            minHeight: 315,
+            borderRadius: 31,
+            background: "#ffffff",
+            boxShadow: "0 22px 55px rgba(0,0,0,0.14)",
+            border: "1px solid rgba(0,0,0,0.05)",
+            padding: "30px 20px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            gap: 13,
+        },
+        largeBadge: {
+            width: 62,
+            height: 62,
+            borderRadius: 20,
+            background: "linear-gradient(145deg, #ff453a, #ff9f0a)",
+            color: "#fff",
+            display: "grid",
+            placeItems: "center",
+            fontSize: 36,
+            fontWeight: 950,
+            boxShadow: "0 16px 30px rgba(255,69,58,0.32)",
+        },
+        loadedTitle: {
+            color: "#111",
+            fontSize: 23,
+            fontWeight: 950,
+            lineHeight: 1.05,
+            textAlign: "center",
+            maxWidth: 255,
+            overflowWrap: "anywhere",
+        },
+        loadedBody: {
+            color: "rgba(60,60,67,0.74)",
+            fontSize: 13,
+            fontWeight: 650,
+            lineHeight: 1.4,
+            textAlign: "center",
+            maxWidth: 245,
+        },
+        urlPill: {
+            borderRadius: 15,
+            background: "rgba(118,118,128,0.12)",
+            color: "rgba(60,60,67,0.78)",
+            fontSize: 11.5,
+            fontWeight: 750,
+            padding: "9px 12px",
+            maxWidth: 245,
+            overflowWrap: "anywhere",
+        },
+        backButton: {
+            marginTop: 4,
+            border: "none",
+            borderRadius: 999,
+            background: "#007aff",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 850,
+            padding: "10px 18px",
+            boxShadow: "0 12px 22px rgba(0,122,255,0.26)",
+        },
+        bottomBar: {
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0, // <--- changed: matches Phone app bottom row
+            height: 76, // <--- changed: same height as Phone app bottom tabs
+            padding: "8px 26px 20px", // <--- changed: same top/bottom spacing logic as Phone app
+            display: "flex",
+            alignItems: "start",
+            justifyContent: "space-between",
+            background: "rgba(245,245,247,0.88)",
+            borderTop: "1px solid rgba(0,0,0,0.06)",
+            backdropFilter: "blur(18px)",
+            zIndex: 5,
+        },
+        bottomButton: {
+            width: 34, // <--- changed
+            height: 42, // <--- changed: sits in same visual row as Phone app tabs
+            border: "none",
+            background: "transparent",
+            color: "#007aff",
+            fontSize: 18,
+            fontWeight: 900,
+            display: "grid",
+            placeItems: "center",
+            padding: 0,
+        },
+    };
+
+    function cleanSite(value: string) { // <--- changed
+        const trimmed = value.trim();
+        if (!trimmed) return "";
+
+        const cleaned = trimmed
+            .replace(/^https?:\/\//i, "")
+            .replace(/^www\./i, "")
+            .replace(/\/.*$/, "")
+            .trim();
+
+        if (cleaned.includes(".")) return cleaned.toLowerCase();
+
+        const compact = cleaned.toLowerCase().replace(/[^a-z0-9-]/g, "");
+        return `${compact || "website"}.com`;
+    }
+
+    function fakeLoadFromAddress() { // <--- changed
+        const site = cleanSite(addressText);
+        if (!site) return;
+
+        setAddressText(site);
+        setLoadedSite(site);
+        setSourceType("address");
+    }
+
+    function fakeLoadFromGoogle() { // <--- changed
+        const site = cleanSite(googleText);
+        if (!site) return;
+
+        setLoadedSite(site);
+        setSourceType("search");
+    }
+
+    function resetSafari() { // <--- changed
+        setAddressText("");
+        setGoogleText("");
+        setLoadedSite("");
+        setSourceType(null);
     }
 
     return (
         <div
             style={{
                 ...styles.phoneAppPage,
-                ...styles.safariAppPage,
+                ...safariStyles.page,
                 ...(closing ? styles.phoneAppPageClosing : {}),
             }}
         >
-            <div style={styles.safariStatusSearchBar}> {/* <--- changed */}
-                <button type="button" style={styles.safariChromeButton} onClick={goSafariBack} aria-label="Back">‹</button>
+            <div style={safariStyles.topBar}>
+                <button type="button" style={safariStyles.topButton} aria-label="Back">‹</button>
+
                 <form
-                    style={styles.safariMiniAddressBar}
-                    onSubmit={(event) => { // <--- changed
-                        event.preventDefault(); // <--- changed
-                        runSafariSearch(); // <--- changed
+                    style={safariStyles.addressForm}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        fakeLoadFromAddress();
                     }}
                 >
-                    <span style={styles.safariMiniSearchIcon}>⌕</span>
+                    <span style={safariStyles.addressIcon}>⌕</span>
                     <input
-                        value={safariQuery}
-                        onChange={(event) => setSafariQuery(event.target.value)}
+                        style={safariStyles.addressInput}
+                        value={addressText}
+                        onChange={(event) => setAddressText(event.target.value)}
                         placeholder="Search or enter website"
-                        style={styles.safariMiniAddressInput}
                     />
+                    <button
+                        type="button"
+                        style={safariStyles.refreshButton}
+                        onClick={fakeLoadFromAddress}
+                        aria-label="Load"
+                    >
+                        ↻
+                    </button>
                 </form>
-                <button type="button" style={styles.safariChromeButton} onClick={refreshSafariPage} aria-label="Refresh">↻</button>
+
+                <button type="button" style={safariStyles.topButton} aria-label="Tabs">□</button>
             </div>
 
-            <div style={styles.safariGoogleContent}> {/* <--- changed */}
-                {isWebPageOpen ? ( // <--- changed
-                    <div style={styles.safariIframeWrap}> {/* <--- changed */}
-                        <iframe
-                            key={`${safariPageUrl}-${iframeLoadKey}`} // <--- changed
-                            title="Fake iPhone Safari Web View" // <--- changed
-                            src={safariPageUrl} // <--- changed: real page loads here inside the phone
-                            style={styles.safariIframe}
-                            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation" // <--- changed
-                        />
-                    </div>
-                ) : (
-                    <>
-                        <div style={styles.safariGoogleLogo} aria-label="Fake Google"> {/* <--- changed */}
+            <div style={safariStyles.content}>
+                {!loadedSite ? (
+                    <div style={safariStyles.homeWrap}>
+                        <div style={safariStyles.googleLogo}>
                             <span style={{ color: "#4285f4" }}>G</span>
                             <span style={{ color: "#ea4335" }}>o</span>
                             <span style={{ color: "#fbbc05" }}>o</span>
@@ -1771,50 +2746,63 @@ function IPhoneSafariApp({ closing }: { closing: boolean }) { // <--- changed
                         </div>
 
                         <form
-                            style={styles.safariMainSearchCard}
-                            onSubmit={(event) => { // <--- changed
-                                event.preventDefault(); // <--- changed
-                                runSafariSearch(); // <--- changed
+                            style={safariStyles.googleSearchForm}
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                fakeLoadFromGoogle();
                             }}
                         >
-                            <span style={styles.safariMainSearchIcon}>⌕</span>
+                            <span style={safariStyles.googleIcon}>⌕</span>
                             <input
-                                value={safariQuery}
-                                onChange={(event) => setSafariQuery(event.target.value)}
+                                style={safariStyles.googleInput}
+                                value={googleText}
+                                onChange={(event) => setGoogleText(event.target.value)}
                                 placeholder="Search Google or type a URL"
-                                style={styles.safariMainSearchInput}
                             />
-                            <button type="submit" style={styles.safariSearchSubmitButton}>Go</button>
                         </form>
 
-                        <div style={styles.safariQuickGrid}> {/* <--- changed */}
-                            {quickSearches.map((item) => (
-                                <button
-                                    key={item}
-                                    type="button"
-                                    style={styles.safariQuickChip}
-                                    onClick={() => runSafariSearch(item)}
-                                >
-                                    {item}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div style={styles.safariStartCard}> {/* <--- changed */}
-                            <div style={styles.safariStartTitle}>Safari Web View</div>
-                            <div style={styles.safariStartText}>
-                                Pages now load inside this phone screen with an iframe. Some websites block iframe embedding, so those may show a browser security refusal instead of the page.
+                        <div style={safariStyles.homeMaintenanceCard}>
+                            <div style={safariStyles.badge}>!</div>
+                            <div style={safariStyles.title}>Website is down for maintenance</div>
+                            <div style={safariStyles.body}>
+                                This browser preview is temporarily unavailable. Please try again later.
                             </div>
                         </div>
-                    </>
+                    </div>
+                ) : (
+                    <div style={safariStyles.loadedWrap}>
+                        <div style={safariStyles.browserHeader}>Safari</div>
+
+                        <div style={safariStyles.loadedCard}>
+                            <div style={safariStyles.largeBadge}>!</div>
+                            <div style={safariStyles.loadedTitle}>
+                                {loadedSite} is currently down
+                            </div>
+                            <div style={safariStyles.loadedBody}>
+                                {sourceType === "address"
+                                    ? "Safari could not open this page because the website is temporarily under maintenance."
+                                    : "Google Search reached the site, but the page is temporarily unavailable for scheduled maintenance."}
+                            </div>
+                            <div style={safariStyles.urlPill}>
+                                Requested page: <strong>{loadedSite}</strong>
+                            </div>
+                            <button
+                                type="button"
+                                style={safariStyles.backButton}
+                                onClick={resetSafari}
+                            >
+                                Back to Search
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
 
-            <div style={styles.safariBottomToolbar}> {/* <--- changed */}
-                <button type="button" style={styles.safariToolbarButton} onClick={goSafariBack}>‹</button>
-                <button type="button" style={styles.safariToolbarButton} onClick={goSafariForward}>›</button>
-                <button type="button" style={styles.safariToolbarButton} onClick={startNewSafariTab}>＋</button>
-                <button type="button" style={styles.safariToolbarButton}>□</button>
+            <div style={safariStyles.bottomBar}>
+                <button type="button" style={safariStyles.bottomButton}>‹</button>
+                <button type="button" style={safariStyles.bottomButton}>›</button>
+                <button type="button" style={safariStyles.bottomButton}>＋</button>
+                <button type="button" style={safariStyles.bottomButton}>☰</button>
             </div>
         </div>
     );
@@ -2834,7 +3822,10 @@ export default function TradingGame() {
     const [settingsOpen, setSettingsOpen] = useState(false); // <--- changed
     const [phoneOpen, setPhoneOpen] = useState(false); // <--- changed
     const [phoneClosing, setPhoneClosing] = useState(false); // <--- changed
-    const [activePhoneApp, setActivePhoneApp] = useState<"home" | "phone" | "safari">("home"); // <--- changed
+    const [activePhoneApp, setActivePhoneApp] = useState<"home" | "phone" | "safari" | "music">("home"); // <--- changed
+    const [phoneChromeVisualApp, setPhoneChromeVisualApp] = useState<"home" | "phone" | "safari" | "music">("home"); // <--- changed: status/home chrome color changes only while faded out
+    const [phoneChromeFading, setPhoneChromeFading] = useState(false); // <--- changed: fades top phone chrome during app transitions
+    const [musicAppKeepMounted, setMusicAppKeepMounted] = useState(false); // <--- changed: keeps Music mounted so songs continue playing
     const [phoneAppClosing, setPhoneAppClosing] = useState(false); // <--- changed
     const [dialedPhoneNumber, setDialedPhoneNumber] = useState(""); // <--- changed
     const [homeButtonAnimating, setHomeButtonAnimating] = useState(false); // <--- changed: locks home button while its press/close animation runs
@@ -3044,10 +4035,24 @@ export default function TradingGame() {
         showPhonePanel(); // <--- changed
     }
 
+
+    function transitionPhoneChromeTo(nextApp: "home" | "phone" | "safari" | "music", delayMs = 190) { // <--- changed
+        setPhoneChromeFading(true); // <--- changed
+
+        window.setTimeout(() => { // <--- changed
+            setPhoneChromeVisualApp(nextApp); // <--- changed: color swaps while invisible
+        }, delayMs); // <--- changed
+
+        window.setTimeout(() => { // <--- changed
+            setPhoneChromeFading(false); // <--- changed
+        }, delayMs + 180); // <--- changed
+    }
+
     function closePhonePanel() {
         if (!phoneOpen || phoneClosing) return; // <--- changed
 
         playPhoneSound(phoneLockSoundRef); // <--- changed
+        transitionPhoneChromeTo("home", 120); // <--- changed
         setPhoneClosing(true); // <--- changed
         phoneOpeningAfterPreloadRef.current = false; // <--- changed
 
@@ -3061,12 +4066,21 @@ export default function TradingGame() {
 
     function openFakePhoneApp() { // <--- changed
         setPhoneAppClosing(false); // <--- changed
+        transitionPhoneChromeTo("phone"); // <--- changed
         setActivePhoneApp("phone"); // <--- changed
     }
 
     function openFakeSafariApp() { // <--- changed
         setPhoneAppClosing(false); // <--- changed
+        transitionPhoneChromeTo("safari"); // <--- changed
         setActivePhoneApp("safari"); // <--- changed
+    }
+
+    function openFakeMusicApp() { // <--- changed
+        setPhoneAppClosing(false); // <--- changed
+        setMusicAppKeepMounted(true); // <--- changed: once opened, keep mounted so audio keeps playing
+        transitionPhoneChromeTo("music"); // <--- changed
+        setActivePhoneApp("music"); // <--- changed
     }
 
     function handlePhoneHomePress() { // <--- changed
@@ -3082,6 +4096,8 @@ export default function TradingGame() {
         }, 95); // <--- changed
 
         if (shouldCloseApp) { // <--- changed
+            transitionPhoneChromeTo("home", 210); // <--- changed: fade out, switch color while app closes, fade back in
+
             window.setTimeout(() => {
                 setPhoneAppClosing(true); // <--- changed: app begins its slide-down close after the home bar press starts
             }, 115); // <--- changed
@@ -5656,8 +6672,20 @@ export default function TradingGame() {
                                         >
                                             <div style={styles.phonePanel}>
                                                 <div style={styles.phoneDevice}>
-                                                    <div style={{ ...styles.phoneStatusBar, ...(isDesktopStatusRender ? styles.phoneStatusBarDesktop : {}) }}>
-                                                        <div style={styles.phoneStatusLeft}>
+                                                    <div
+                                                        style={{
+                                                            ...styles.phoneStatusBar,
+                                                            ...(isDesktopStatusRender ? styles.phoneStatusBarDesktop : {}),
+                                                            ...(phoneChromeVisualApp === "safari" ? styles.phoneSafariChromeBlack : {}), // <--- changed: Safari chrome color applies after fade swap
+                                                        }}
+                                                    >
+                                                        <div
+                                                            style={{
+                                                                ...styles.phoneStatusLeft,
+                                                                ...(phoneChromeVisualApp === "safari" ? { color: "#000000", textShadow: "none" } : {}),
+                                                                ...(phoneChromeFading ? styles.phoneChromeFadeHidden : {}), // <--- changed: fade status details only, not Dynamic Island
+                                                            }}
+                                                        >
                                                             <span>{phoneStatusTime}</span>
 
                                                             <span
@@ -5671,7 +6699,10 @@ export default function TradingGame() {
                                                                     width="15"
                                                                     height="15"
                                                                     viewBox="0 0 24 24"
-                                                                    style={styles.phoneLocationSvg}
+                                                                    style={{
+                                                                        ...styles.phoneLocationSvg,
+                                                                        ...(phoneChromeVisualApp === "safari" ? { color: "#000000", filter: "none" } : {}),
+                                                                    }}
                                                                     aria-label="Location services"
                                                                 >
                                                                     <path
@@ -5686,10 +6717,15 @@ export default function TradingGame() {
                                                             <span style={styles.phoneCameraDot} />
                                                         </div>
 
-                                                        <div style={styles.phoneStatusRight}>
+                                                        <div
+                                                            style={{
+                                                                ...styles.phoneStatusRight,
+                                                                ...(phoneChromeVisualApp === "safari" ? { color: "#000000", filter: "none" } : {}),
+                                                                ...(phoneChromeFading ? styles.phoneChromeFadeHidden : {}), // <--- changed: fade status details only, not Dynamic Island
+                                                            }}>
                                                             <PhoneServiceSvg strength={cellStrength} /> {/* <--- changed: crisp SVG status icon */}
                                                             <PhoneWifiSvg strength={wifiStrength} /> {/* <--- changed: crisp SVG status icon */}
-                                                            <PhoneBatterySvg percent={batteryPercent} /> {/* <--- changed: crisp SVG status icon */}
+                                                            <PhoneBatterySvg percent={batteryPercent} black={phoneChromeVisualApp === "safari"} /> {/* <--- changed: battery switches black only in Safari */} {/* <--- changed: crisp SVG status icon */}
                                                         </div>                                    </div>
 
                                                     <div style={styles.phoneHomeScreen}> {/* <--- changed */}
@@ -5748,9 +6784,9 @@ export default function TradingGame() {
                                                                 <div
                                                                     key={app.name}
                                                                     style={styles.phoneDockSlot}
-                                                                    onClick={app.icon === "phone" ? openFakePhoneApp : app.icon === "safari" ? openFakeSafariApp : undefined}
-                                                                    role={app.icon === "phone" || app.icon === "safari" ? "button" : undefined}
-                                                                    aria-label={app.icon === "phone" ? "Open Phone app" : app.icon === "safari" ? "Open Safari app" : undefined}
+                                                                    onClick={app.icon === "phone" ? openFakePhoneApp : app.icon === "safari" ? openFakeSafariApp : app.icon === "music" ? openFakeMusicApp : undefined}
+                                                                    role={app.icon === "phone" || app.icon === "safari" || app.icon === "music" ? "button" : undefined}
+                                                                    aria-label={app.icon === "phone" ? "Open Phone app" : app.icon === "safari" ? "Open Safari app" : app.icon === "music" ? "Open Music app" : undefined}
                                                                 >
                                                                     <div
                                                                         style={{
@@ -5793,11 +6829,27 @@ export default function TradingGame() {
                                                         <IPhoneSafariApp closing={phoneAppClosing} />
                                                     )}
 
+                                                    {musicAppKeepMounted && ( // <--- changed: keep mounted so audio continues after closing app/phone
+                                                        <div
+                                                            style={{
+                                                                display: activePhoneApp === "music" ? "block" : "none",
+                                                            }}
+                                                        >
+                                                            <IPhoneMusicApp closing={activePhoneApp === "music" && phoneAppClosing} />
+                                                        </div>
+                                                    )}
+
                                                     <button
                                                         type="button"
                                                         style={{
                                                             ...styles.phoneHomeBarButton,
-                                                            ...(homeButtonAnimating ? styles.phoneHomeBarButtonLocked : {}), // <--- changed
+                                                            ...(activePhoneApp === "safari"
+                                                                ? {
+                                                                    zIndex: 10050,
+                                                                    pointerEvents: "auto",
+                                                                }
+                                                                : {}),
+                                                            ...(homeButtonAnimating ? styles.phoneHomeBarButtonLocked : {}),
                                                         }}
                                                         onPointerDown={(event) => { // <--- changed: starts swipe-up detection on mobile and desktop
                                                             homeSwipeStartYRef.current = event.clientY; // <--- changed
@@ -5831,8 +6883,15 @@ export default function TradingGame() {
                                                         <span
                                                             style={{
                                                                 ...styles.phoneHomeBar,
-                                                                ...(homeButtonAnimating ? styles.phoneHomeBarPressing : {}), // <--- changed
-                                                                ...(homeButtonHidden ? styles.phoneHomeBarHidden : {}), // <--- changed
+                                                                ...(phoneChromeVisualApp === "safari"
+                                                                    ? {
+                                                                        background: "#000000",
+                                                                        opacity: 1,
+                                                                        boxShadow: "0 1px 8px rgba(0,0,0,0.25)",
+                                                                    }
+                                                                    : {}),
+                                                                ...(homeButtonAnimating ? styles.phoneHomeBarPressing : {}),
+                                                                ...(homeButtonHidden ? styles.phoneHomeBarHidden : {}),
                                                             }}
                                                         />
                                                     </button>
@@ -7927,318 +8986,465 @@ const styles: Record<string, CSSProperties> = {
         padding: "30px 17px 24px", // <--- changed
         boxSizing: "border-box", // <--- changed
         background: "linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)", // <--- changed
-    },
-    safariGoogleLogo: { // <--- changed
-        display: "flex", // <--- changed
-        justifyContent: "center", // <--- changed
-        alignItems: "center", // <--- changed
-        fontSize: 43, // <--- changed
-        lineHeight: 1, // <--- changed
-        fontWeight: 800, // <--- changed
-        letterSpacing: -3.1, // <--- changed
-        fontFamily: "Arial, sans-serif", // <--- changed
-        marginBottom: 21, // <--- changed
-        userSelect: "none", // <--- changed
-    },
-    safariMainSearchCard: { // <--- changed
-        width: "100%", // <--- changed
-        minHeight: 50, // <--- changed
-        borderRadius: 999, // <--- changed
-        background: "#ffffff", // <--- changed
-        display: "grid", // <--- changed
-        gridTemplateColumns: "22px 1fr auto", // <--- changed
-        alignItems: "center", // <--- changed
-        gap: 8, // <--- changed
-        padding: "7px 8px 7px 15px", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        boxShadow: "0 8px 28px rgba(60,64,67,0.18), inset 0 0 0 1px rgba(60,64,67,0.11)", // <--- changed
-    },
-    safariMainSearchIcon: { // <--- changed
-        color: "#5f6368", // <--- changed
-        fontSize: 20, // <--- changed
-        fontWeight: 900, // <--- changed
-    },
-    safariMainSearchInput: { // <--- changed
-        minWidth: 0, // <--- changed
-        border: "none", // <--- changed
-        outline: "none", // <--- changed
-        background: "transparent", // <--- changed
-        color: "#202124", // <--- changed
-        fontSize: 14, // <--- changed
-        fontWeight: 650, // <--- changed
-        fontFamily: "Arial, sans-serif", // <--- changed
-    },
-    safariSearchSubmitButton: { // <--- changed
-        height: 35, // <--- changed
-        border: "none", // <--- changed
-        borderRadius: 999, // <--- changed
-        background: "#1a73e8", // <--- changed
-        color: "#ffffff", // <--- changed
-        fontSize: 12, // <--- changed
-        fontWeight: 850, // <--- changed
-        padding: "0 12px", // <--- changed
-        cursor: "pointer", // <--- changed
-        WebkitTapHighlightColor: "transparent", // <--- changed
-    },
-    safariQuickGrid: { // <--- changed
-        display: "grid", // <--- changed
-        gridTemplateColumns: "1fr 1fr", // <--- changed
-        gap: 9, // <--- changed
-        marginTop: 21, // <--- changed
-    },
-    safariQuickChip: { // <--- changed
-        minHeight: 42, // <--- changed
-        border: "1px solid rgba(60,64,67,0.12)", // <--- changed
-        borderRadius: 16, // <--- changed
-        background: "#ffffff", // <--- changed
-        color: "#202124", // <--- changed
-        fontSize: 12.5, // <--- changed
-        fontWeight: 750, // <--- changed
-        textAlign: "left", // <--- changed
-        padding: "0 12px", // <--- changed
-        boxShadow: "0 5px 16px rgba(60,64,67,0.09)", // <--- changed
-        cursor: "pointer", // <--- changed
-        WebkitTapHighlightColor: "transparent", // <--- changed
-    },
-    safariStartCard: { // <--- changed
-        marginTop: 17, // <--- changed
-        borderRadius: 24, // <--- changed
-        background: "linear-gradient(145deg, rgba(66,133,244,0.10), rgba(52,168,83,0.08))", // <--- changed
-        border: "1px solid rgba(66,133,244,0.14)", // <--- changed
-        padding: 17, // <--- changed
-        boxSizing: "border-box", // <--- changed
-    },
-    safariStartTitle: { // <--- changed
-        color: "#202124", // <--- changed
-        fontSize: 17, // <--- changed
-        fontWeight: 900, // <--- changed
-        letterSpacing: -0.2, // <--- changed
-        marginBottom: 6, // <--- changed
-    },
-    safariStartText: { // <--- changed
-        color: "#5f6368", // <--- changed
-        fontSize: 12.5, // <--- changed
-        fontWeight: 650, // <--- changed
-        lineHeight: 1.42, // <--- changed
-    },
-    safariResultsPanel: { // <--- changed
-        marginTop: 19, // <--- changed
-        display: "flex", // <--- changed
-        flexDirection: "column", // <--- changed
-        gap: 11, // <--- changed
-    },
-    safariResultsMeta: { // <--- changed
-        color: "#70757a", // <--- changed
-        fontSize: 12, // <--- changed
-        fontWeight: 650, // <--- changed
-        padding: "0 3px", // <--- changed
-    },
-    safariResultCard: { // <--- changed
-        display: "block", // <--- changed
-        width: "100%", // <--- changed
-        textAlign: "left", // <--- changed
-        border: "none", // <--- changed
-        textDecoration: "none", // <--- changed
-        borderRadius: 19, // <--- changed
-        background: "#ffffff", // <--- changed
-        boxShadow: "0 7px 20px rgba(60,64,67,0.10)", // <--- changed
-        padding: "13px 14px", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        WebkitTapHighlightColor: "transparent", // <--- changed
-    },
-    safariResultDisplayUrl: { // <--- changed
-        color: "#188038", // <--- changed
-        fontSize: 11.5, // <--- changed
-        fontWeight: 750, // <--- changed
-        marginBottom: 4, // <--- changed
-        whiteSpace: "nowrap", // <--- changed
-        overflow: "hidden", // <--- changed
-        textOverflow: "ellipsis", // <--- changed
-    },
-    safariResultTitle: { // <--- changed
-        color: "#1a0dab", // <--- changed
-        fontSize: 16, // <--- changed
-        fontWeight: 760, // <--- changed
-        lineHeight: 1.18, // <--- changed
-        marginBottom: 5, // <--- changed
-    },
-    safariResultText: { // <--- changed
-        color: "#4d5156", // <--- changed
-        fontSize: 12.4, // <--- changed
-        fontWeight: 600, // <--- changed
-        lineHeight: 1.35, // <--- changed
-    },
-    safariBottomToolbar: { // <--- changed
-        position: "absolute", // <--- changed
-        left: 0, // <--- changed
-        right: 0, // <--- changed
-        bottom: 0, // <--- changed
-        height: 76, // <--- changed: exact same bottom bar height as the Phone app
-        display: "grid", // <--- changed
-        gridTemplateColumns: "repeat(4, 1fr)", // <--- changed
-        alignItems: "start", // <--- changed: matches Phone app tab spacing
-        paddingTop: 8, // <--- changed: matches Phone app top spacing
-        paddingBottom: 20, // <--- changed: matches Phone app bottom safe spacing
-        boxSizing: "border-box", // <--- changed
-        background: "rgba(248,248,248,0.96)", // <--- changed
-        borderTop: "1px solid rgba(0,0,0,0.08)", // <--- changed
-        backdropFilter: "blur(18px)", // <--- changed
-        zIndex: 5, // <--- changed
-        transform: "translateZ(0)", // <--- changed
-        willChange: "transform", // <--- changed
-    },
-    safariToolbarButton: { // <--- changed
-        height: 52, // <--- changed: exact same tab item box as Phone app tabs
-        border: "none", // <--- changed
-        background: "transparent", // <--- changed
-        color: "#1a73e8", // <--- changed
-        fontSize: 25, // <--- changed
-        fontWeight: 850, // <--- changed
-        cursor: "pointer", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        padding: 0, // <--- changed
-        WebkitAppearance: "none", // <--- changed
-        appearance: "none", // <--- changed
-        WebkitTapHighlightColor: "transparent", // <--- changed
-        lineHeight: 1, // <--- changed
-    },
-    safariFakeWebPage: { // <--- changed
-        minHeight: "100%", // <--- changed
-        paddingTop: 4, // <--- changed
-        boxSizing: "border-box", // <--- changed
-    },
-    safariFakePageTopLine: { // <--- changed
-        color: "#188038", // <--- changed
-        fontSize: 11.5, // <--- changed
-        fontWeight: 760, // <--- changed
-        marginBottom: 11, // <--- changed
-        whiteSpace: "nowrap", // <--- changed
-        overflow: "hidden", // <--- changed
-        textOverflow: "ellipsis", // <--- changed
-    },
-    safariFakePageTitle: { // <--- changed
-        color: "#202124", // <--- changed
-        fontSize: 29, // <--- changed
-        lineHeight: 1.05, // <--- changed
-        fontWeight: 950, // <--- changed
-        letterSpacing: -1.2, // <--- changed
-        marginBottom: 7, // <--- changed
-    },
-    safariFakePageSearchTerm: { // <--- changed
-        color: "#5f6368", // <--- changed
-        fontSize: 14, // <--- changed
-        fontWeight: 750, // <--- changed
-        marginBottom: 18, // <--- changed
-    },
-    safariFakeBrowserCard: { // <--- changed
-        borderRadius: 24, // <--- changed
-        background: "linear-gradient(145deg, rgba(66,133,244,0.12), rgba(52,168,83,0.10))", // <--- changed
-        border: "1px solid rgba(66,133,244,0.14)", // <--- changed
-        padding: 18, // <--- changed
-        boxShadow: "0 10px 28px rgba(60,64,67,0.10)", // <--- changed
-        boxSizing: "border-box", // <--- changed
-    },
-    safariFakeBrowserCardTitle: { // <--- changed
-        color: "#202124", // <--- changed
-        fontSize: 17, // <--- changed
-        fontWeight: 900, // <--- changed
-        marginBottom: 7, // <--- changed
-    },
-    safariFakeBrowserCardText: { // <--- changed
-        color: "#5f6368", // <--- changed
-        fontSize: 12.5, // <--- changed
-        fontWeight: 650, // <--- changed
-        lineHeight: 1.42, // <--- changed
-    },
-    safariFakeContentStack: { // <--- changed
-        display: "flex", // <--- changed
-        flexDirection: "column", // <--- changed
-        gap: 10, // <--- changed
-        marginTop: 21, // <--- changed
-    },
-    safariFakeContentBlock: { // <--- changed
-        width: "100%", // <--- changed
-        height: 16, // <--- changed
-        borderRadius: 999, // <--- changed
-        background: "rgba(60,64,67,0.10)", // <--- changed
-    },
+    }, safariRefreshIconButton: { // <--- changed
+        border: "none",
+        background: "transparent",
+        color: "rgba(255,255,255,0.68)",
+        fontSize: 13,
+        fontWeight: 900,
+        padding: 0,
+        width: 18,
+        height: 18,
+        display: "grid",
+        placeItems: "center",
+        cursor: "pointer",
+    } as CSSProperties,
 
-    phonePlaceholderPage: { // <--- changed
-        width: "100%", // <--- changed
-        height: "100%", // <--- changed
-        padding: "70px 28px 92px", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        display: "flex", // <--- changed
-        flexDirection: "column", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        textAlign: "center", // <--- changed
-    },
-    phonePlaceholderIcon: { // <--- changed
-        width: 72, // <--- changed
-        height: 72, // <--- changed
-        borderRadius: 24, // <--- changed
-        background: "rgba(255,255,255,0.08)", // <--- changed
-        color: "rgba(255,255,255,0.78)", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        marginBottom: 18, // <--- changed
-    },
-    phonePlaceholderTitle: { // <--- changed
-        color: "#ffffff", // <--- changed
-        fontSize: 24, // <--- changed
-        fontWeight: 800, // <--- changed
-        letterSpacing: -0.4, // <--- changed
-    },
-    phonePlaceholderSub: { // <--- changed
-        marginTop: 7, // <--- changed
-        maxWidth: 230, // <--- changed
-        color: "rgba(255,255,255,0.48)", // <--- changed
-        fontSize: 13.5, // <--- changed
-        fontWeight: 600, // <--- changed
-        lineHeight: "19px", // <--- changed
-    },
-    phoneHomeBarButton: { // <--- changed
-        position: "absolute", // <--- changed
-        left: "50%", // <--- changed: hitbox is centered on the visible home bar only
-        bottom: PHONE_HOME_BAR_BOTTOM_OFFSET - 10, // <--- changed: small vertical tap area around the actual home bar
-        width: 120, // <--- changed: clickable area no longer spans the full phone width
-        height: 24, // <--- changed: clickable area stays close to the visible home bar
-        transform: "translateX(-50%)", // <--- changed
-        zIndex: 12, // <--- changed
-        border: "none", // <--- changed
-        background: "transparent", // <--- changed
-        padding: 0, // <--- changed
-        margin: 0, // <--- changed
-        cursor: "pointer", // <--- changed
-        WebkitTapHighlightColor: "transparent", // <--- changed
-        touchAction: "none", // <--- changed: lets mobile swipe-up on the home bar trigger the app close animation
-    },
-    phoneHomeBarButtonLocked: { // <--- changed
-        pointerEvents: "none", // <--- changed: home button cannot work again until fade-in is finished
-    },
-    phoneHomeBar: {
-        position: "absolute", // <--- changed
-        left: "50%", // <--- changed
-        bottom: PHONE_HOME_BAR_BOTTOM_OFFSET, // <--- changed: home bar vertical knob
-        transform: "translateX(-50%)", // <--- changed
-        width: 100, // <--- changed
-        height: 4, // <--- changed
-        borderRadius: 999, // <const HOME_SEARCH_VERTICAL_OFFSET--- changed
-        background: "rgba(255,255,255,0.78)", // <--- changed
-        opacity: 1, // <--- changed
-        transition: "opacity 440ms ease, transform 180ms ease", // <--- changed: slightly slower smooth fade-in from resting position
-    },
+    safariGoogleHero: { // <--- changed
+        width: "100%",
+        paddingTop: 56,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 18,
+    } as CSSProperties,
+
+    safariGoogleLogo: { // <--- changed
+        fontSize: 48,
+        fontWeight: 800,
+        letterSpacing: -3,
+        fontFamily: "Arial, sans-serif",
+        lineHeight: 1,
+    } as CSSProperties,
+
+    safariGoogleSearchBar: { // <--- changed
+        width: "calc(100% - 30px)",
+        height: 44,
+        borderRadius: 999,
+        background: "rgba(255,255,255,0.96)",
+        boxShadow: "0 10px 28px rgba(0,0,0,0.16)",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "0 15px",
+    } as CSSProperties,
+
+    safariGoogleSearchIcon: { // <--- changed
+        color: "rgba(60,60,67,0.58)",
+        fontSize: 16,
+        fontWeight: 800,
+    } as CSSProperties,
+
+    safariGoogleSearchInput: { // <--- changed
+        flex: 1,
+        border: "none",
+        outline: "none",
+        background: "transparent",
+        color: "#111",
+        fontSize: 13,
+        fontWeight: 600,
+        minWidth: 0,
+    } as CSSProperties,
+
+    safariMaintenanceCard: { // <--- changed
+        width: "calc(100% - 38px)",
+        margin: "38px auto 0",
+        borderRadius: 24,
+        background: "rgba(255,255,255,0.9)",
+        border: "1px solid rgba(0,0,0,0.06)",
+        boxShadow: "0 18px 38px rgba(0,0,0,0.12)",
+        padding: "24px 18px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        gap: 9,
+    } as CSSProperties,
+
+    safariMaintenanceIcon: { // <--- changed
+        width: 38,
+        height: 38,
+        borderRadius: 999,
+        background: "linear-gradient(145deg, #ff453a, #ff9f0a)",
+        color: "#fff",
+        display: "grid",
+        placeItems: "center",
+        fontSize: 24,
+        fontWeight: 950,
+        boxShadow: "0 10px 20px rgba(255,69,58,0.28)",
+    } as CSSProperties,
+
+    safariMaintenanceTitle: { // <--- changed
+        color: "#111",
+        fontSize: 16,
+        fontWeight: 900,
+        lineHeight: 1.12,
+        textAlign: "center",
+    } as CSSProperties,
+
+    safariMaintenanceText: { // <--- changed
+        color: "rgba(60,60,67,0.72)",
+        fontSize: 12,
+        fontWeight: 650,
+        lineHeight: 1.35,
+        textAlign: "center",
+        maxWidth: 220,
+    } as CSSProperties,
+
+    safariFakePageWrap: { // <--- changed
+        width: "100%",
+        height: "100%",
+        padding: "34px 16px 96px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 14,
+    } as CSSProperties,
+
+    safariFakePageTopLine: { // <--- changed
+        color: "rgba(60,60,67,0.62)",
+        fontSize: 12,
+        fontWeight: 800,
+        letterSpacing: 0.4,
+        textTransform: "uppercase",
+        textAlign: "center",
+    } as CSSProperties,
+
+    safariMaintenanceCardLarge: { // <--- changed
+        width: "100%",
+        minHeight: 292,
+        borderRadius: 30,
+        background: "rgba(255,255,255,0.94)",
+        border: "1px solid rgba(0,0,0,0.06)",
+        boxShadow: "0 24px 50px rgba(0,0,0,0.16)",
+        padding: "28px 20px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        gap: 12,
+    } as CSSProperties,
+
+    safariMaintenanceIconLarge: { // <--- changed
+        width: 56,
+        height: 56,
+        borderRadius: 18,
+        background: "linear-gradient(145deg, #ff453a, #ff9f0a)",
+        color: "#fff",
+        display: "grid",
+        placeItems: "center",
+        fontSize: 34,
+        fontWeight: 950,
+        boxShadow: "0 16px 28px rgba(255,69,58,0.3)",
+    } as CSSProperties,
+
+    safariMaintenanceTitleLarge: { // <--- changed
+        color: "#111",
+        fontSize: 22,
+        fontWeight: 950,
+        lineHeight: 1.05,
+        textAlign: "center",
+        maxWidth: 250,
+        overflowWrap: "anywhere",
+    } as CSSProperties,
+
+    safariMaintenanceTextLarge: { // <--- changed
+        color: "rgba(60,60,67,0.74)",
+        fontSize: 13,
+        fontWeight: 650,
+        lineHeight: 1.38,
+        textAlign: "center",
+        maxWidth: 250,
+    } as CSSProperties,
+
+    safariMaintenanceSubBox: { // <--- changed
+        marginTop: 4,
+        borderRadius: 14,
+        background: "rgba(118,118,128,0.12)",
+        color: "rgba(60,60,67,0.78)",
+        fontSize: 11,
+        fontWeight: 700,
+        lineHeight: 1.35,
+        padding: "9px 12px",
+        textAlign: "center",
+        maxWidth: 250,
+        overflowWrap: "anywhere",
+    } as CSSProperties,
+
+    safariMaintenanceHomeButton: { // <--- changed
+        marginTop: 8,
+        border: "none",
+        borderRadius: 999,
+        background: "#007aff",
+        color: "#fff",
+        fontSize: 13,
+        fontWeight: 850,
+        padding: "10px 18px",
+        boxShadow: "0 12px 22px rgba(0,122,255,0.26)",
+        cursor: "pointer",
+    } as CSSProperties,
+
+    phoneHomeBarButton: { // <--- changed: restored actual clickable home indicator layout
+        position: "absolute",
+        left: "50%",
+        bottom: -2, // <--- changed: moved further down on the Y closer to original placement // <--- changed: moved back down closer to original phone position
+        width: 118,
+        height: 24,
+        transform: "translateX(-50%)",
+        border: "none",
+        background: "transparent",
+        padding: 0,
+        margin: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        zIndex: 10000,
+        WebkitTapHighlightColor: "transparent",
+        touchAction: "none",
+    } as CSSProperties,
+
+    phoneHomeBar: { // <--- changed: restored visible iPhone home bar
+        width: 104,
+        height: 4,
+        borderRadius: 999,
+        background: "#ffffff",
+        opacity: 0.96,
+        display: "block",
+        pointerEvents: "none",
+        transition: "background 160ms ease, opacity 160ms ease, transform 160ms ease",
+    } as CSSProperties,
+
     phoneHomeBarPressing: { // <--- changed
-        animation: "phoneHomeBarPressOut 260ms ease-in both", // <--- changed: moves up slightly, drops down, and fades quickly
-    },
+        transform: "translateY(-2px) scaleX(0.96)",
+        opacity: 0.82,
+    } as CSSProperties,
+
     phoneHomeBarHidden: { // <--- changed
-        opacity: 0, // <--- changed
-        transform: "translateX(-50%) translateY(0)", // <--- changed: hidden/fade-in starts from the normal resting position, not the dropped position
-    },
+        opacity: 0,
+        transform: "translateY(8px)",
+    } as CSSProperties,
+
+    phoneHomeBarButtonLocked: { // <--- changed
+        pointerEvents: "none",
+    } as CSSProperties,
+
+
+    phoneChromeFadeHidden: { // <--- changed
+        opacity: 0,
+        transition: "opacity 160ms ease",
+    } as CSSProperties,
+
+
+    tradePanel: { // <--- restored: original full-size Buy/Sell/Pending row
+        background: "#1b1b1b",
+        padding: "24px 22px 30px",
+        display: "grid",
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        gridTemplateRows: "52px 52px",
+        columnGap: 8,
+        rowGap: 14,
+        borderRadius: "24px 24px 0 0",
+        alignItems: "stretch",
+        justifyItems: "stretch",
+        width: "100%",
+        boxSizing: "border-box",
+    } as CSSProperties,
+
+    input: { // <--- restored
+        gridColumn: "1",
+        gridRow: "1",
+        background: "#050505",
+        color: "white",
+        border: "1px solid #222",
+        borderRadius: 18,
+        textAlign: "center",
+        fontSize: 28,
+        fontWeight: 900,
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
+        padding: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: 0,
+        maxWidth: "100%",
+        justifySelf: "stretch",
+        alignSelf: "stretch",
+    } as CSSProperties,
+
+    buy: { // <--- restored
+        gridColumn: "2",
+        gridRow: "1",
+        background: GREEN,
+        color: "white",
+        border: "none",
+        borderRadius: 18,
+        fontSize: 26,
+        fontWeight: 900,
+        cursor: "pointer",
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxSizing: "border-box",
+        minWidth: 0,
+        maxWidth: "100%",
+        justifySelf: "stretch",
+        alignSelf: "stretch",
+    } as CSSProperties,
+
+    sell: { // <--- restored
+        gridColumn: "3",
+        gridRow: "1",
+        background: "#ff2f3a",
+        color: "white",
+        border: "none",
+        borderRadius: 18,
+        fontSize: 26,
+        fontWeight: 900,
+        cursor: "pointer",
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxSizing: "border-box",
+        minWidth: 0,
+        maxWidth: "100%",
+        justifySelf: "stretch",
+        alignSelf: "stretch",
+    } as CSSProperties,
+
+    closePosition: { // <--- restored
+        gridColumn: "2 / 4",
+        gridRow: "1",
+        background: "#ff2f3a",
+        color: "#ffffff",
+        border: "none",
+        borderRadius: 14,
+        fontSize: 16,
+        fontWeight: 900,
+        cursor: "pointer",
+        minWidth: 0,
+        width: "100%",
+        maxWidth: "100%",
+        height: "100%",
+        justifySelf: "stretch",
+        alignSelf: "stretch",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        boxSizing: "border-box",
+        padding: "0 6px",
+    } as CSSProperties,
+
+    closePartials: { // <--- restored
+        gridColumn: "1",
+        gridRow: "2",
+        background: "#f1f1f1",
+        color: "#111111",
+        border: "none",
+        borderRadius: 14,
+        fontSize: 11,
+        fontWeight: 900,
+        cursor: "pointer",
+        minWidth: 0,
+        width: "100%",
+        maxWidth: "100%",
+        height: "100%",
+        justifySelf: "stretch",
+        alignSelf: "stretch",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        boxSizing: "border-box",
+        padding: "0 2px",
+        whiteSpace: "nowrap",
+    } as CSSProperties,
+
+    breakeven: { // <--- restored
+        gridColumn: "2",
+        gridRow: "2",
+        background: "#f1f1f1",
+        color: "#111111",
+        border: "none",
+        borderRadius: 14,
+        fontSize: 11,
+        fontWeight: 900,
+        cursor: "pointer",
+        minWidth: 0,
+        width: "100%",
+        maxWidth: "100%",
+        height: "100%",
+        justifySelf: "stretch",
+        alignSelf: "stretch",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        boxSizing: "border-box",
+        padding: "0 2px",
+        whiteSpace: "nowrap",
+    } as CSSProperties,
+
+    trailingStop: { // <--- restored
+        gridColumn: "3",
+        gridRow: "2",
+        background: "#f1f1f1",
+        color: "#111111",
+        border: "none",
+        borderRadius: 14,
+        fontSize: 11,
+        fontWeight: 900,
+        cursor: "pointer",
+        minWidth: 0,
+        width: "100%",
+        maxWidth: "100%",
+        height: "100%",
+        justifySelf: "stretch",
+        alignSelf: "stretch",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        boxSizing: "border-box",
+        padding: "0 2px",
+        whiteSpace: "nowrap",
+    } as CSSProperties,
+
+    pendingOrder: { // <--- restored
+        gridColumn: "1 / 4",
+        gridRow: "2",
+        background: PENDING_BUTTON_BLUE,
+        color: "#ffffff",
+        border: "none",
+        borderRadius: 14,
+        fontSize: 26,
+        fontWeight: 900,
+        cursor: "pointer",
+        minWidth: 0,
+        width: "100%",
+        maxWidth: "100%",
+        height: "100%",
+        justifySelf: "stretch",
+        alignSelf: "stretch",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        boxSizing: "border-box",
+        padding: "0 6px",
+    } as CSSProperties,
+
+
     pauseButton: {
         position: "absolute", // <--- changed
         right: 16, // <--- changed
@@ -8258,19 +9464,7 @@ const styles: Record<string, CSSProperties> = {
         padding: 0, // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
     },
-    pauseIcon: {
-        display: "flex", // <--- changed
-        gap: 5, // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-    },
-    pauseBar: {
-        width: 5, // <--- changed
-        height: 18, // <--- changed
-        borderRadius: 4, // <--- changed
-        background: "#ffffff", // <--- changed
-        display: "block", // <--- changed
-    },
+
     playIcon: {
         width: 0, // <--- changed
         height: 0, // <--- changed
@@ -8279,200 +9473,20 @@ const styles: Record<string, CSSProperties> = {
         borderLeft: "14px solid #ffffff", // <--- changed
         transform: "translateX(2px)", // <--- changed
     },
-    tradePanel: {
-        background: "#1b1b1b",
-        padding: "24px 22px 30px", // <--- changed
-        display: "grid",
-        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-        gridTemplateRows: "52px 52px", // <--- changed
-        columnGap: 8, // <--- changed
-        rowGap: 14, // <--- changed
-        borderRadius: "24px 24px 0 0",
-        alignItems: "stretch",
-        justifyItems: "stretch",
-        width: "100%", // <--- changed
-        boxSizing: "border-box", // <--- changed
-    },
-    input: {
-        gridColumn: "1", // <--- changed
-        gridRow: "1", // <--- changed
-        background: "#050505",
-        color: "white",
-        border: "1px solid #222",
-        borderRadius: 18,
-        textAlign: "center",
-        fontSize: 28,
-        fontWeight: 900,
-        width: "100%",
-        height: "100%", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        padding: 0, // <--- changed
+
+    pauseIcon: {
         display: "flex", // <--- changed
+        gap: 5, // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
-        minWidth: 0, // <--- changed
-        maxWidth: "100%", // <--- changed
-        justifySelf: "stretch", // <--- changed
-        alignSelf: "stretch", // <--- changed
     },
-    buy: {
-        gridColumn: "2",
-        gridRow: "1",
-        background: GREEN,
-        color: "white",
-        border: "none",
-        borderRadius: 18,
-        fontSize: 26,
-        fontWeight: 900,
-        cursor: "pointer",
-        width: "100%", // <--- changed
-        height: "100%", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        minWidth: 0, // <--- changed
-        maxWidth: "100%", // <--- changed
-        justifySelf: "stretch", // <--- changed
-        alignSelf: "stretch", // <--- changed
+
+    pauseBar: {
+        width: 5, // <--- changed
+        height: 18, // <--- changed
+        borderRadius: 4, // <--- changed
+        background: "#ffffff", // <--- changed
+        display: "block", // <--- changed
     },
-    sell: {
-        gridColumn: "3",
-        gridRow: "1",
-        background: "#ff2f3a",
-        color: "white",
-        border: "none",
-        borderRadius: 18,
-        fontSize: 26,
-        fontWeight: 900,
-        cursor: "pointer",
-        width: "100%", // <--- changed
-        height: "100%", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        minWidth: 0, // <--- changed
-        maxWidth: "100%", // <--- changed
-        justifySelf: "stretch", // <--- changed
-        alignSelf: "stretch", // <--- changed
-    },
-    closePosition: {
-        gridColumn: "2 / 4",
-        gridRow: "1",
-        background: "#ff2f3a", // <--- changed
-        color: "#ffffff", // <--- changed,
-        border: "none",
-        borderRadius: 14,
-        fontSize: 16,
-        fontWeight: 900,
-        cursor: "pointer",
-        minWidth: 0, // <--- changed
-        width: "100%", // <--- changed
-        maxWidth: "100%", // <--- changed
-        height: "100%", // <--- changed
-        justifySelf: "stretch", // <--- changed
-        alignSelf: "stretch", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        textAlign: "center", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        padding: "0 6px", // <--- changed
-    },
-    closePartials: {
-        gridColumn: "1",
-        gridRow: "2",
-        background: "#f1f1f1",
-        color: "#111111",
-        border: "none",
-        borderRadius: 14,
-        fontSize: 11, // <--- changed
-        fontWeight: 900,
-        cursor: "pointer",
-        minWidth: 0, // <--- changed
-        width: "100%", // <--- changed
-        maxWidth: "100%", // <--- changed
-        height: "100%", // <--- changed
-        justifySelf: "stretch", // <--- changed
-        alignSelf: "stretch", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        textAlign: "center", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        padding: "0 2px", // <--- changed
-        whiteSpace: "nowrap", // <--- changed
-    },
-    breakeven: {
-        gridColumn: "2",
-        gridRow: "2",
-        background: "#f1f1f1",
-        color: "#111111",
-        border: "none",
-        borderRadius: 14,
-        fontSize: 11, // <--- changed
-        fontWeight: 900,
-        cursor: "pointer",
-        minWidth: 0, // <--- changed
-        width: "100%", // <--- changed
-        maxWidth: "100%", // <--- changed
-        height: "100%", // <--- changed
-        justifySelf: "stretch", // <--- changed
-        alignSelf: "stretch", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        textAlign: "center", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        padding: "0 2px", // <--- changed
-        whiteSpace: "nowrap", // <--- changed
-    },
-    trailingStop: {
-        gridColumn: "3",
-        gridRow: "2",
-        background: "#f1f1f1",
-        color: "#111111",
-        border: "none",
-        borderRadius: 14,
-        fontSize: 11, // <--- changed
-        fontWeight: 900,
-        cursor: "pointer",
-        minWidth: 0, // <--- changed
-        width: "100%", // <--- changed
-        maxWidth: "100%", // <--- changed
-        height: "100%", // <--- changed
-        justifySelf: "stretch", // <--- changed
-        alignSelf: "stretch", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        textAlign: "center", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        padding: "0 2px", // <--- changed
-        whiteSpace: "nowrap", // <--- changed
-    },
-    pendingOrder: {
-        gridColumn: "1 / 4",
-        gridRow: "2",
-        background: PENDING_BUTTON_BLUE, // <--- changed
-        color: "#ffffff", // <--- changed
-        border: "none",
-        borderRadius: 14,
-        fontSize: 26,
-        fontWeight: 900,
-        cursor: "pointer",
-        minWidth: 0, // <--- changed
-        width: "100%", // <--- changed
-        maxWidth: "100%", // <--- changed
-        height: "100%", // <--- changed
-        justifySelf: "stretch", // <--- changed
-        alignSelf: "stretch", // <--- changed
-        display: "flex", // <--- changed
-        alignItems: "center", // <--- changed
-        justifyContent: "center", // <--- changed
-        textAlign: "center", // <--- changed
-        boxSizing: "border-box", // <--- changed
-        padding: "0 6px", // <--- changed
-    },
+
 };
