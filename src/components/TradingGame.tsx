@@ -283,6 +283,7 @@ const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage h
 const MOBILE_STAGE_SAFE_WIDTH_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame left/right
 const MOBILE_STAGE_SAFE_HEIGHT_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame top/bottom
 const MOBILE_STAGE_SCALE_TWEAK = 1; // <--- changed: restores full Safari-frame fill after login
+const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 76; // <--- changed: extra vertical room only when saved to iPhone Home Screen/PWA so top Ticker/Balance never sits under the status area
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -6883,11 +6884,20 @@ export default function TradingGame() {
             const isPhoneSizedScreen =
                 Math.min(window.innerWidth, window.innerHeight) <= 768; // <--- changed
 
+            const isIosHomeScreenApp = // <--- changed: detects Add-to-Home-Screen/PWA mode, which has a different usable height than Safari
+                window.matchMedia?.("(display-mode: standalone)").matches ||
+                (window.navigator as Navigator & { standalone?: boolean }).standalone === true; // <--- changed
+
+            const viewportHeight = window.visualViewport?.height ?? window.innerHeight; // <--- changed: PWA/mobile Safari-safe viewport height
+            const verticalSafePadding = isIosHomeScreenApp && isPhoneSizedScreen
+                ? IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING
+                : 0; // <--- changed: normal Safari keeps the old size; installed app gets breathing room
+
             const nextAppScale = Math.min(
                 window.innerWidth / GAME_BASE_WIDTH,
-                window.innerHeight / GAME_BASE_HEIGHT,
+                Math.max(320, viewportHeight - verticalSafePadding) / GAME_BASE_HEIGHT,
                 1
-            ); // <--- changed: restored original pre-sign-in sizing behavior
+            ); // <--- changed: restores old Safari sizing but prevents iPhone Home Screen/PWA top cutoff
 
             setAppScale(nextAppScale); // <--- changed
             setMobilePhoneScale(1.11); // <--- changed: phone remains PC-perfect inside the scaled app stage
@@ -6908,6 +6918,7 @@ export default function TradingGame() {
         window.addEventListener("contextmenu", preventContextMenu);
         window.addEventListener("resize", updateOrientationState); // <--- changed
         window.addEventListener("orientationchange", updateOrientationState); // <--- changed
+        window.visualViewport?.addEventListener("resize", updateOrientationState); // <--- changed: iPhone PWA can change usable viewport without a normal resize
 
         updateOrientationState(); // <--- changed
 
@@ -6929,6 +6940,7 @@ export default function TradingGame() {
             window.removeEventListener("contextmenu", preventContextMenu);
             window.removeEventListener("resize", updateOrientationState); // <--- changed
             window.removeEventListener("orientationchange", updateOrientationState); // <--- changed
+            window.visualViewport?.removeEventListener("resize", updateOrientationState); // <--- changed
         };
     }, []);
 
