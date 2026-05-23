@@ -283,7 +283,7 @@ const GAME_BASE_HEIGHT = 980; // <--- changed: fixed professional design-stage h
 const MOBILE_STAGE_SAFE_WIDTH_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame left/right
 const MOBILE_STAGE_SAFE_HEIGHT_PADDING = 0; // <--- changed: lets the logged-in game fill the Safari frame top/bottom
 const MOBILE_STAGE_SCALE_TWEAK = 1; // <--- changed: restores full Safari-frame fill after login
-const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 58; // <--- changed: slightly less PWA safe padding so Balance/Open P-L/Ticker/timeframes sit higher while still clearing the iPhone status bar
+const IOS_HOME_SCREEN_VERTICAL_SAFE_PADDING = 50; // <--- changed: PWA top content sits slightly higher while the dark header color still reaches the very top
 
 const HOME_APP_GRID_COLUMNS = 4; // <--- changed: locks app columns the same on PC and iPhone
 const HOME_APP_GRID_ROWS = 5; // <--- changed: locks app rows the same on PC and iPhone
@@ -8379,7 +8379,7 @@ export default function TradingGame() {
                             {currentGameUser && ( // <--- changed: account/level row now lives in the bottom-left chart controls area
                                 <button
                                     type="button"
-                                    style={styles.chartAccountChip}
+                                    style={{ ...styles.chartAccountChip, ...(isIosStandaloneApp ? styles.chartAccountChipStandaloneLower : {}) }}
                                     onClick={handleGameLogout}
                                     title="Save and sign out"
                                 >
@@ -8388,7 +8388,7 @@ export default function TradingGame() {
                             )}
 
                             <button
-                                style={styles.pauseButton}
+                                style={{ ...styles.pauseButton, ...(isIosStandaloneApp ? styles.pauseButtonStandaloneLower : {}) }}
                                 onClick={handleToggleSimulationPause}
                                 aria-label={simulationPaused ? "Resume simulation" : "Pause simulation"}
                             >
@@ -11037,9 +11037,9 @@ const styles: Record<string, CSSProperties> = {
         boxSizing: "border-box",
     } as CSSProperties,
 
-    tradePanelStandaloneBottomFill: { // <--- changed: Home Screen/PWA only; keeps the dark gray trade panel visually extended all the way to the bottom edge
-        paddingBottom: 46, // <--- changed: gives the lower control area more dark-gray depth toward the iPhone bottom edge
-        boxShadow: "0 140px 0 #1b1b1b", // <--- changed: fills any remaining PWA bottom gap with the same dark gray panel color
+    tradePanelStandaloneBottomFill: { // <--- changed: Home Screen/PWA only; pushes the bottom controls lower and fills the remaining bottom edge with dark gray
+        padding: "38px 22px 66px", // <--- changed: moves Buy/Sell/Pending controls down while keeping the panel extended to the iPhone bottom
+        boxShadow: "0 240px 0 #1b1b1b", // <--- changed: hard-fills any remaining PWA bottom gap with the exact same dark gray panel color
     } as CSSProperties,
 
     input: { // <--- restored
@@ -11263,6 +11263,11 @@ const styles: Record<string, CSSProperties> = {
         textOverflow: "ellipsis", // <--- changed
     } as CSSProperties,
 
+    chartAccountChipStandaloneLower: { // <--- changed: Home Screen/PWA only; lowers Lv/XP/user chip closer to the bottom controls
+        bottom: -8, // <--- changed
+        transform: "translateY(8px)", // <--- changed: moves with the lower PWA bottom layout without affecting Safari
+    } as CSSProperties,
+
     pauseButton: {
         position: "absolute", // <--- changed
         right: 16, // <--- changed
@@ -11282,6 +11287,11 @@ const styles: Record<string, CSSProperties> = {
         padding: 0, // <--- changed
         WebkitTapHighlightColor: "transparent", // <--- changed
     },
+
+    pauseButtonStandaloneLower: { // <--- changed: Home Screen/PWA only; lowers play/pause button with the Lv/XP chip
+        bottom: -2, // <--- changed
+        transform: "translateY(8px)", // <--- changed
+    } as CSSProperties,
 
     playIcon: {
         width: 0, // <--- changed
