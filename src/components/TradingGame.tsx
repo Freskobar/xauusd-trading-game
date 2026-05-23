@@ -1745,6 +1745,13 @@ function IPhoneMessagesApp({ closing }: { closing: boolean }) { // <--- changed:
         { name: "Mia Carter", initials: "MC", preview: "The animation feels way smoother now.", time: "Yesterday", unread: 1, gradient: "linear-gradient(145deg, #ff8ad8, #ff2d55)" },
         { name: "Jayden Brooks", initials: "JB", preview: "Make the messages app look like iPhone.", time: "Sunday", unread: 0, gradient: "linear-gradient(145deg, #64d2ff, #5856d6)" },
         { name: "Everybody Eats", initials: "EE", preview: "Trial button copy is ready to review.", time: "Fri", unread: 0, gradient: "linear-gradient(145deg, #bf8cff, #7d5fff)" },
+        { name: "Futures Control", initials: "FC", preview: "The chart panel changes are pushed.", time: "Thu", unread: 0, gradient: "linear-gradient(145deg, #5e5ce6, #0a84ff)" }, // <--- changed
+        { name: "Safari App Test", initials: "SA", preview: "Search animation is ready for another pass.", time: "Wed", unread: 0, gradient: "linear-gradient(145deg, #64d2ff, #0a84ff)" }, // <--- changed
+        { name: "Music App", initials: "MA", preview: "Viewport fix stayed untouched.", time: "Tue", unread: 0, gradient: "linear-gradient(145deg, #ff375f, #af52de)" }, // <--- changed
+        { name: "Design Notes", initials: "DN", preview: "Recent box now scrolls inside the card.", time: "Mon", unread: 0, gradient: "linear-gradient(145deg, #ffd60a, #ff9f0a)" }, // <--- changed
+        { name: "Home Screen", initials: "HS", preview: "Dock animation stayed untouched.", time: "Sun", unread: 0, gradient: "linear-gradient(145deg, #8e8e93, #3a3a3c)" }, // <--- changed: extra row confirms internal scrolling
+        { name: "UI Review", initials: "UR", preview: "Recent section extends lower now.", time: "Sat", unread: 0, gradient: "linear-gradient(145deg, #00c7be, #0a84ff)" }, // <--- changed: extra row confirms internal scrolling
+        { name: "Mobile Test", initials: "MT", preview: "Swipe inside the Recent card to scroll.", time: "Fri", unread: 0, gradient: "linear-gradient(145deg, #ff453a, #ff9f0a)" }, // <--- changed: extra row confirms internal scrolling
     ];
 
     return (
@@ -1783,27 +1790,29 @@ function IPhoneMessagesApp({ closing }: { closing: boolean }) { // <--- changed:
             <div style={styles.messagesListCard}>
                 <div style={styles.messagesListTitle}>Recent</div>
 
-                {messageThreads.map((thread) => (
-                    <button key={thread.name} type="button" style={styles.messagesThreadRow}>
-                        <div style={{ ...styles.messagesThreadAvatar, background: thread.gradient }}>
-                            {thread.initials}
-                        </div>
-
-                        <div style={styles.messagesThreadBody}>
-                            <div style={styles.messagesThreadTopLine}>
-                                <span style={styles.messagesThreadName}>{thread.name}</span>
-                                <span style={styles.messagesThreadTime}>{thread.time}</span>
+                <div style={styles.messagesThreadScroll}> {/* <--- changed: only the Recent box contents scroll, not the whole Messages app */}
+                    {messageThreads.map((thread) => (
+                        <button key={thread.name} type="button" style={styles.messagesThreadRow}>
+                            <div style={{ ...styles.messagesThreadAvatar, background: thread.gradient }}>
+                                {thread.initials}
                             </div>
-                            <div style={styles.messagesThreadPreview}>{thread.preview}</div>
-                        </div>
 
-                        {thread.unread > 0 ? (
-                            <div style={styles.messagesUnreadBadge}>{thread.unread}</div>
-                        ) : (
-                            <div style={styles.messagesChevron}>›</div>
-                        )}
-                    </button>
-                ))}
+                            <div style={styles.messagesThreadBody}>
+                                <div style={styles.messagesThreadTopLine}>
+                                    <span style={styles.messagesThreadName}>{thread.name}</span>
+                                    <span style={styles.messagesThreadTime}>{thread.time}</span>
+                                </div>
+                                <div style={styles.messagesThreadPreview}>{thread.preview}</div>
+                            </div>
+
+                            {thread.unread > 0 ? (
+                                <div style={styles.messagesUnreadBadge}>{thread.unread}</div>
+                            ) : (
+                                <div style={styles.messagesChevron}>›</div>
+                            )}
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
     );
@@ -8503,10 +8512,11 @@ const styles: Record<string, CSSProperties> = {
     messagesAppPage: { // <--- changed
         width: "100%", // <--- changed
         height: "100%", // <--- changed
-        padding: "54px 16px 38px", // <--- changed
+        padding: "50px 14px 2px", // <--- changed: pushes the Recent card bottom much lower toward the phone home bar
         background: "linear-gradient(180deg, #050505 0%, #101014 44%, #000000 100%)", // <--- changed
         alignItems: "stretch", // <--- changed
-        gap: 12, // <--- changed
+        gap: 8, // <--- changed: tighter vertical spacing gives the Recent card more height
+        minHeight: 0, // <--- changed: allows the internal Recent list to become the scroll area
     },
     messagesHeader: { // <--- changed
         height: 42, // <--- changed
@@ -8571,7 +8581,7 @@ const styles: Record<string, CSSProperties> = {
         flexShrink: 0, // <--- changed
     },
     messagesPinnedCard: { // <--- changed
-        minHeight: 116, // <--- changed
+        minHeight: 96, // <--- changed: shorter pinned cards so the Recent box can extend lower
         borderRadius: 24, // <--- changed
         border: "1px solid rgba(255,255,255,0.08)", // <--- changed
         background: "linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.045))", // <--- changed
@@ -8586,9 +8596,9 @@ const styles: Record<string, CSSProperties> = {
         cursor: "pointer", // <--- changed
     },
     messagesPinnedAvatar: { // <--- changed
-        width: 45, // <--- changed
-        height: 45, // <--- changed
-        borderRadius: 22.5, // <--- changed
+        width: 39, // <--- changed: compact pinned avatar gives the Recent box more room
+        height: 39, // <--- changed
+        borderRadius: 19.5, // <--- changed
         display: "flex", // <--- changed
         alignItems: "center", // <--- changed
         justifyContent: "center", // <--- changed
@@ -8619,8 +8629,10 @@ const styles: Record<string, CSSProperties> = {
         overflow: "hidden", // <--- changed
     },
     messagesListCard: { // <--- changed
-        flex: 1, // <--- changed
+        flex: "1 1 0", // <--- changed: forces the Recent box to take all remaining vertical space
         minHeight: 0, // <--- changed
+        height: "auto", // <--- changed: prevents fake 100% height from fighting the flex layout
+        marginBottom: 0, // <--- changed: keeps the Recent box bottom lowered
         borderRadius: 28, // <--- changed
         border: "1px solid rgba(255,255,255,0.08)", // <--- changed
         background: "rgba(28,28,30,0.86)", // <--- changed
@@ -8639,6 +8651,18 @@ const styles: Record<string, CSSProperties> = {
         letterSpacing: 0.2, // <--- changed
         textTransform: "uppercase", // <--- changed
         flexShrink: 0, // <--- changed
+    },
+    messagesThreadScroll: { // <--- changed
+        flex: "1 1 0", // <--- changed: this is the scrollable area inside the Recent card
+        minHeight: 0, // <--- changed: required so flex children can actually scroll instead of stretching the card
+        maxHeight: "100%", // <--- changed: keeps scrolling contained inside the Recent box
+        overflowY: "scroll", // <--- changed: always scrolls inside the Recent box, not the whole Messages page
+        overflowX: "hidden", // <--- changed
+        WebkitOverflowScrolling: "touch", // <--- changed: smoother iPhone-style scrolling
+        scrollbarWidth: "none", // <--- changed: hides Firefox scrollbar
+        overscrollBehaviorY: "contain", // <--- changed: keeps swipe scrolling locked inside the Recent box
+        touchAction: "pan-y", // <--- changed: lets mobile users drag-scroll the Recent list itself
+        paddingBottom: 18, // <--- changed: last row has breathing room at the lower card edge
     },
     messagesThreadRow: { // <--- changed
         height: 68, // <--- changed
