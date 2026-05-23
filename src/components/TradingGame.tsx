@@ -426,7 +426,6 @@ function parseNumber(value: string | undefined) {
 }
 
 const MARKET_TIME_ZONE = "America/New_York"; // <--- changed: one timezone source for display/session/candle boundaries
-const CSV_CONFIRMED_TIME_ZONE = "America/New_York"; // <--- changed: user confirmed CSV timestamps are New York wall-clock time
 const CSV_TIMESTAMP_PARSE_ERROR = "CSV timestamp could not be parsed. The app is using the confirmed CSV timezone: America/New_York."; // <--- changed: no silent unknown-timezone guessing
 
 function getTimeZoneOffsetMs(timeZone: string, timestamp: number) { // <--- changed: DST-safe timezone offset helper
