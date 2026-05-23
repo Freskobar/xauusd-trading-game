@@ -1982,14 +1982,23 @@ function IPhoneMusicApp({ closing }: { closing: boolean }) { // <--- changed
             ...(closing ? styles.phoneAppPageClosing : {}),
             background: "linear-gradient(180deg, #19191d 0%, #0b0b0d 52%, #000000 100%)",
             color: "#ffffff",
+            width: "100%", // <--- changed: locks Music app content inside the phone screen width
+            maxWidth: "100%", // <--- changed: prevents the Music app from stretching outside the phone shell
+            minWidth: 0, // <--- changed: prevents flex shrink/overflow clipping inside the phone
+            alignItems: "stretch", // <--- changed: overrides phoneAppPage center alignment so Music fills the same screen as other apps
             padding: "55px 16px 102px", // <--- changed
             overflow: "hidden",
         },
         scroll: {
+            width: "100%", // <--- changed: keeps Library/search content inside the phone app viewport
+            maxWidth: "100%", // <--- changed
+            minWidth: 0, // <--- changed
             height: "100%",
             overflowY: "auto",
+            overflowX: "hidden", // <--- changed: stops sideways content from being clipped outside the phone
             paddingBottom: 102, // <--- changed
             scrollbarWidth: "none",
+            boxSizing: "border-box", // <--- changed
         },
         header: {
             display: "flex",
@@ -6995,6 +7004,12 @@ export default function TradingGame() {
                                                     {musicAppKeepMounted && ( // <--- changed: keep mounted so audio continues after closing app/phone
                                                         <div
                                                             style={{
+                                                                position: "absolute", // <--- changed: mounted Music wrapper now fills the phone viewport instead of behaving like normal page content
+                                                                inset: 0, // <--- changed
+                                                                width: "100%", // <--- changed
+                                                                height: "100%", // <--- changed
+                                                                overflow: "hidden", // <--- changed: clips Music app to the same phone screen as the other apps
+                                                                pointerEvents: activePhoneApp === "music" ? "auto" : "none", // <--- changed
                                                                 display: activePhoneApp === "music" ? "block" : "none",
                                                             }}
                                                         >
