@@ -8512,7 +8512,7 @@ const styles: Record<string, CSSProperties> = {
     messagesAppPage: { // <--- changed
         width: "100%", // <--- changed
         height: "100%", // <--- changed
-        padding: "50px 14px 2px", // <--- changed: pushes the Recent card bottom much lower toward the phone home bar
+        padding: "50px 14px 46px", // <--- changed: raises the Messages Recent card above the fake home button while keeping the inner list scrollable
         background: "linear-gradient(180deg, #050505 0%, #101014 44%, #000000 100%)", // <--- changed
         alignItems: "stretch", // <--- changed
         gap: 8, // <--- changed: tighter vertical spacing gives the Recent card more height
